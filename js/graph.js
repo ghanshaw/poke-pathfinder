@@ -2,8 +2,14 @@
 var Node = function(id) {
     this.type = 'land';
     this.id = id.toString();
+    this.cell = {
+        row: id[0],
+        col: id[1]
+    };
     this.special = null;
     this.edges = [];  
+    this.visited = false;
+    this.parent = null;
 }
 
 Node.prototype.addEdge = function(uNode) {
@@ -13,12 +19,16 @@ Node.prototype.addEdge = function(uNode) {
 Node.prototype.removeEdge = function(uNode) {
     var uId = uNode.id
     for (let i = 0; i < this.edges.length; i++) {
-        if (this.edges[i].id === uid) {
+        if (this.edges[i].id === uId) {
             this.edges.splice(i, 1)
         }
     }
 }
 
+
+Node.prototype.edges = function() {
+    return this.edges;   
+}
 
 // Graph class
 var Graph = function() {
