@@ -2,27 +2,48 @@ var pokemonApp = angular.module('pokemonApp', []);
 
 pokemonApp.controller('mainController', function($scope, $log) {
 
-    $scope.items = [{
-      id: 1,
-      label: 'Breadth First Search',
-    }, {
-      id: 2,
-      label: 'Depth First Search',
-    }, {
-      id: 3,
-      label: 'Dijkstra\'s',
-    }, {
-      id: 4,
-      label: 'A*',
-    }];
+    $scope.algorithms = {
+        
+        availableOptions: [
+            {
+              id: 1,
+              name: 'Breadth-First Search',
+            }, 
+            {
+              id: 2,
+              name: 'Depth-First Search',
+            }, 
+            {
+              id: 3,
+              name: 'Dijkstra\'s',
+            }, 
+            {
+              id: 4,
+              name: 'A*',
+            },
+        ],
+        
+        selectedAlgo: { id: 1, name: 'Breadth-First Search' }  
+    };
+        
     
-    $scope.targets = [{
-        name: 'Entrance',
-    },
-    {
-        name: 'Mewtwo',
-    }]
-       
+    $scope.targetTiles = {
+        
+        availableOptions: [
+            {
+                id: '1',
+                name: 'Entrance',
+            },
+            {
+                id: '2',
+                name: 'Mewtwo',
+            }
+        ],
+        
+        startTile: { id: '1', name: 'Entrance' },
+        endTile: { id: '2', name: 'Mewtwo' } 
+        
+    };
            
 });
 

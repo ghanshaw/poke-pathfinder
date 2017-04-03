@@ -21,6 +21,7 @@
         <script src="js/graph.js"></script>
         <script src="js/map.js"></script>
         <script src="js/pathfinding.js"></script>
+        <script src="js/draw.js"></script>
         <script src="app.js"></script>
         
         <link rel="stylesheet" href="css/style.css">
@@ -56,15 +57,25 @@
                 </div>
                 <div class="col-sm-6 col-md-4">
                     
-                    <div>
+                    
+                    <div class="dropdown">
                         <label>Select Algorithm</label><br>
-                        <select ng-options="item.label for item in items" ng-model="algo"></select>
+                         <select ng-options="option.name for option in algorithms.availableOptions track by option.id" ng-model="algorithms.selectedAlgo"></select>
                     </div>
                     
-                    <div>
-                        <label>Target</label><br>
-                        <select ng-options="target.name for target in targets" ng-model="t"></select>
+                    <div class="dropdown">
+                        <label>Start</label><br>
+                        <select ng-options="option.name for option in targetTiles.availableOptions track by option.id" ng-model="targetTiles.startTile"></select>
                     </div>
+                    
+                    
+                    <div class="dropdown">
+                        <label>End</label><br>
+                        <select ng-options="option.name for option in targetTiles.availableOptions track by option.id" ng-model="targetTiles.endTile"></select>
+                    </div>
+                    
+                    <hr>
+
                     
                     <label>Run Times</label>
                 

@@ -1,3 +1,28 @@
+html, body, h1, h2, h3, h4,h5, h6, p, label {
+    font-family: 'Open-Sans', sans-serif;   
+    font-weight: 100;
+}
+
 #myCanvas {
     border: 1px solid grey;
+}
+
+.dropdown select {
+       -webkit-appearance: none;
+    -moz-appearance: none;
+    height: 36px;   
+    background: none;
+    background: url('../images/down-arrow-small.png') no-repeat right center;
+   height: 34px;
+   width: 240px;
+    border: 2px solid slategrey;
+}
+
+.dropdown {
+    margin-bottom: 30px; 
+    
+}
+
+.dropdown option {
+    padding: 10px 10px;
 }

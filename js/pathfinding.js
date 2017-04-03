@@ -27,9 +27,7 @@ function bfs(graph, source, target) {
                 q.push(edge);  
             }
         }
-
-    }
-        
+    }        
 }
     
     

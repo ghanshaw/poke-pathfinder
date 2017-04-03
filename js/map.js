@@ -1,3 +1,4 @@
+// Floor object Constructor
 var Floor = function(id, rows, cols) {
     this.id = id;
     this.rows = rows;
@@ -14,11 +15,12 @@ var Floor = function(id, rows, cols) {
     console.log(this.tiles);
 }
 
-
+// Check if row/col is in bounds
 Floor.prototype.inBounds = function(row, col) {
     return row >= 0 && col >= 0 && row < this.rows && col < this.cols;        
 }
 
+// Update floor to reflect map details
 Floor.prototype.updateTiles = function(tiles) {
     
     var rocks = tiles.rocks();
@@ -41,8 +43,9 @@ Floor.prototype.updateTiles = function(tiles) {
     }
 }
 
-
-Floor.prototype.getType = function(row, col) {
+// Get type of tile
+Floor.prototype.getTileType = function(row, col) {
+    
     if (!this.inBounds(row, col)) {
         return null;
     }
@@ -59,8 +62,10 @@ Floor.prototype.getType = function(row, col) {
             return null
 
     }
+    
 }
 
+// Add data from floor to Graph
 Floor.prototype.createGraph = function(tiles) {
     
     var graph_1F = new Graph();
@@ -93,9 +98,7 @@ Floor.prototype.createGraph = function(tiles) {
                 }
             }        
         }
-    }
-    
-    
+    }  
     
     // Remove egdes between certain tiles
     for (edge of tiles.noEdges()) {
@@ -105,12 +108,105 @@ Floor.prototype.createGraph = function(tiles) {
         
     }
     
-    
-    
     console.log(graph_1F);
     return graph_1F;
 }
+
+
+/*******************************************/
+/**********    Canvas Methods    **********/
+/*******************************************/
+
+Floor.prototype.initCanvas = function(canvasId) {
+    
+    var canvas = document.getElementById(canvasId);
+    var ctx = canvas.getContext('2d');
+    
+    this.canvas = canvas;
+    this.ctx = ctx;
+    
+    canvas.width = this.width;
+    canvas.height = this.height;
+    ctx.fillStyle = 'white';
+
+    var cellSize = {};
+    cellSize['width'] = canvas.width / floorObj.cols;
+    cellSize['height'] = canvas.height / floorObj.rows;
+    
+}
+
+
+Floor.prototype.drawGrid = function() {
+    
+    
+    for (let r = 0; r < this.rows; r++) {
+        for (let c = 0; c < this.cols; c++) {
+
+            let type = this.getType(r, c);
+
+            if (type === 'land') {
+               ctx.fillStyle = '#ccc';
+            }
+
+            if (type == 'rock') {
+               ctx.fillStyle = '#4CAF50';
+            }
+
+            if (type == 'water') {
+               ctx.fillStyle = '#337ab7';
+            }
+
+            ctx.strokeStyle = 'purple';
+
+            let x = c*cellSize['width'];
+            let y = r*cellSize['height'];
+            ctx.fillRect(x, y, cellSize['width'], cellSize['height']); 
+            ctx.strokeRect(x, y, cellSize['width'], cellSize['height']);
+
+            ctx.strokeStyle = 'red';
+
+            if (r == 20 && c == 32) {
+                console.log('freeze');   
+            }
+        }
+    }
+    
+    this.gridBackground = ctx.getImageData(0, 0, canvas.width, canvas.height);
+}
+
+
+Floor.prototype.drawEdges(graph) {
+     
+    //Draw dots to represent edges. Mostly for debugging purposes
+    nodeV = graph_1F.getNode([r,c]);
+    
+    for (let e of nodeV.edges) {
+        let dot_y = e.cell.row;
+        let dot_x = e.cell.col;
+
+        dot_x = dot_x*cellSize['width'];
+        dot_y = dot_y*cellSize['height'];
+
+        if (dot_y > y) { }
+        else if (dot_y == y) { dot_y += ((.5) * cellSize['height']); }
+        else if (dot_y < y) { dot_y += cellSize['height']; }
+
+        if (dot_x > x) { }
+        else if (dot_x == x) { dot_x += ((.5) * cellSize['width']); }
+        else if (dot_x < x) { dot_x += cellSize['width']; }
+
+        ctx.moveTo(dot_x, dot_y);
+        ctx.arc(dot_x, dot_y, 1, 0, Math.PI * 2, true);
+        ctx.stroke();
+    }
+
+    this.grid = ctx.getImageData(0, 0, this.width, this.height);
+}
             
+
+
+
+
 
 var _1F_data = function() {
     
@@ -203,114 +299,3 @@ var _1F_data = function() {
     }
     
 }
-    
-$(document).ready(function() {
-    
-    // Create Floor object to represent 1st Floor
-    var _1F = new Floor('1F', 21, 38);
-    var _1F_tiles = _1F_data();
-    _1F.updateTiles(_1F_tiles);
-        
-    // Create Graph object, add 1st Floor
-    var graph_1F = _1F.createGraph(_1F_tiles);
-
-        
-        
-        
-    var canvas = document.getElementById('myCanvas');
-    var ctx = canvas.getContext('2d');
-    canvas.width = 570;
-    canvas.height = 315;
-    ctx.fillStyle = 'white';
-
-    var cellSize = {};
-    cellSize['width'] = canvas.width / _1F.cols;
-    cellSize['height'] = canvas.height / _1F.rows;
-
-    //ctx.fillRect(0, 0, cellSize['width'], cellSize['height']);
-    //ctx.fillStyle = 'white';
-    //ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = 'black';
-
-    console.log(cellSize);
-    
-    ctx.beginPath();
-    for (let r = 0; r < _1F.rows; r++) {
-        for (let c = 0; c < _1F.cols; c++) {
-
-            let type = _1F.getType(r, c);
-
-            if (type === 'land') {
-               ctx.fillStyle = '#ccc';
-            }
-
-            if (type == 'rock') {
-               ctx.fillStyle = '#4CAF50';
-            }
-
-            if (type == 'water') {
-               ctx.fillStyle = '#337ab7';
-            }
-            
-            ctx.strokeStyle = 'purple';
-            
-            let x = c*cellSize['width'];
-            let y = r*cellSize['height'];
-            ctx.fillRect(x, y, cellSize['width'], cellSize['height']); 
-            ctx.strokeRect(x, y, cellSize['width'], cellSize['height']);
-            
-            ctx.strokeStyle = 'red';
-            
-            if (r == 20 && c == 32) {
-                console.log('freeze');   
-            }
-            
-            // Draw dots to represent edges
-            // Mostly for debugging purposes
-            nodeV = graph_1F.getNode([r,c]);
-            for (let e of nodeV.edges) {
-                let dot_y = e.cell.row;
-                let dot_x = e.cell.col;
-                
-                dot_x = dot_x*cellSize['width'];
-                dot_y = dot_y*cellSize['height'];
-                
-                if (dot_y > y) { }
-                else if (dot_y == y) { dot_y += ((.5) * cellSize['height']); }
-                else if (dot_y < y) { dot_y += cellSize['height']; }
-                
-                if (dot_x > x) { }
-                else if (dot_x == x) { dot_x += ((.5) * cellSize['width']); }
-                else if (dot_x < x) { dot_x += cellSize['width']; }
-                
-//                
-//                let x = ;
-//                let y = ;
-                
-                ctx.moveTo(dot_x, dot_y);
-                ctx.arc(dot_x, dot_y, 1, 0, Math.PI * 2, true);
-                ctx.stroke();
-            }
-        }
-    }
-    
-    
-    target = [12, 23]
-    
-    bfs(graph_1F, [20,32], target);
-    
-    tNode = graph_1F.getNode(target);
-    
-    while (tNode) {
-        
-        ctx.fillStyle = 'pink';
-        let x = tNode.cell.col*cellSize['width'];
-        let y = tNode.cell.row*cellSize['height'];
-        ctx.fillRect(x, y, cellSize['width'], cellSize['height']); 
-        tNode = tNode.parent;
-        
-    }     
-
-});
-
-
