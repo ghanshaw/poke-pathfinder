@@ -10,19 +10,27 @@
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
         
         
-        <!-- AngularJS -->
+        <!-- AngularJS --> 
         <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.3/angular.min.js"></script> 
         <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.3/angular-route.min.js"></script> 
         <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.3/angular-resource.min.js"></script> 
+
         
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
         
         
+        
+        
         <script src="js/graph.js"></script>
+        <script src="js/floor.js"></script>
         <script src="js/map.js"></script>
+        <script src="js/sprite.js"></script>
         <script src="js/pathfinding.js"></script>
-        <script src="js/draw.js"></script>
-        <script src="app.js"></script>
+        
+        
+        <script src="app/app.js"></script> 
+        <script src="app/services/services.js"></script> 
+        <script src="app/controllers/controllers.js"></script> 
         
         <link rel="stylesheet" href="css/style.css">
         <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400" rel="stylesheet">
@@ -41,7 +49,7 @@
                      
                 </div>
                   <ul class="nav navbar-nav navbar-right">
-                    <li><a class="link" href="#!/forecast">Link</a></li>
+                    <li><a class="link" href="">Link</a></li>
                   </ul>
               </div><!-- /.container-fluid -->
             </nav>
@@ -51,8 +59,9 @@
         <div class="container">
             <div class="row">
                 <div class="col-sm-6 col-md-8">
-                    
-                    <canvas id="myCanvas"></canvas>
+                    <div class="mapWrapper">
+                        <canvas id="floor-1F"></canvas>
+                    </div>
                 
                 </div>
                 <div class="col-sm-6 col-md-4">
@@ -62,17 +71,19 @@
                         <label>Select Algorithm</label><br>
                          <select ng-options="option.name for option in algorithms.availableOptions track by option.id" ng-model="algorithms.selectedAlgo"></select>
                     </div>
-                    
+
                     <div class="dropdown">
                         <label>Start</label><br>
-                        <select ng-options="option.name for option in targetTiles.availableOptions track by option.id" ng-model="targetTiles.startTile"></select>
+                        <select ng-options="option.name for option in keyTiles.availableOptions track by option.id" ng-model="keyTiles.startTile"></select>
                     </div>
                     
                     
                     <div class="dropdown">
                         <label>End</label><br>
-                        <select ng-options="option.name for option in targetTiles.availableOptions track by option.id" ng-model="targetTiles.endTile"></select>
+                        <select ng-options="option.name for option in keyTiles.availableOptions track by option.id" ng-model="keyTiles.endTile"></select>
                     </div>
+                    
+                    <div class="btn btn-primary" ng-click="findPath()">Find Route</div>
                     
                     <hr>
 

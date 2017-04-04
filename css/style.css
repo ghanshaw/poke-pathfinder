@@ -3,7 +3,11 @@ html, body, h1, h2, h3, h4,h5, h6, p, label {
     font-weight: 100;
 }
 
-#myCanvas {
+.mapWrapper {
+    width: 100%;   
+}
+
+#floor-1F {
     border: 1px solid grey;
 }
 
@@ -16,6 +20,8 @@ html, body, h1, h2, h3, h4,h5, h6, p, label {
    height: 34px;
    width: 240px;
     border: 2px solid slategrey;
+    border-radius: 0;
+    padding-left: 10px;
 }
 
 .dropdown {

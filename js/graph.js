@@ -2,7 +2,7 @@
 var Node = function(id) {
     this.type = 'land';
     this.id = id.toString();
-    this.cell = {
+    this.tile = {
         row: id[0],
         col: id[1]
     };

@@ -20,21 +20,7 @@ DrawFloor.prototype.createPath() {
 
 $(document).ready(function() {
 
-// Create Floor object to represent 1st Floor
-var _1F = new Floor('1F', 21, 38);
-var _1F_tiles = _1F_data();
-_1F.updateTiles(_1F_tiles);
 
-// Create Graph object, add 1st Floor
-var graph_1F = _1F.createGraph(_1F_tiles);
-
-
-// Create Floor Canvas Object
-_1F_draw = new DrawFloor(_1F, 570, 315)
-
-
-// Construct path
-bfs(graph_1F, source, target);
 
 
 //ctx.fillRect(0, 0, cellSize['width'], cellSize['height']);
@@ -166,35 +152,7 @@ function getDirection(start, end) {
 //console.log(visual_path);
 
     console.log(path);
-var drawPath = function(path) {
-    if (path.length) {
 
-        //ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.putImageData(background, 0, 0);
-
-        let node = path.pop()
-        let x = node.cell.col*cellSize['width'];
-        let y = node.cell.row*cellSize['height'];
-
-        x = x + (.5 * cellSize['width']);
-        y = y + (.5 * cellSize['height']);
-
-        ctx.moveTo(x, y);
-        ctx.beginPath();
-        ctx.arc(x, y, 4, 0, Math.PI * 2, true);
-
-        ctx.fill()
-        ctx.closePath();
-        node = node.parent;
-        
-    }
-}
-
-setInterval(drawPath.bind(this, visual_path), 10);
-
-if (!visual_path.length) {
-    clearInterval(drawPath);
-}
 
 
 });
