@@ -308,14 +308,219 @@ Floor.prototype.getXY = function(row, col) {
 }
             
 
-Floor.prototype.drawSprite = function(sprite) {
+Floor.prototype.drawSprite = function() {
+    
+    var sprite = this.sprite;
     
     //var xy = this.getXY(row, col)
     this.ctx.drawImage(sprite.canvas, sprite.x, sprite.y); 
     
 }
 
-Floor.prototype.moveSprite = function(sprite, start, end) {
+
+Floor.prototype.followPath = function() {        
+    
+    var sprite = this.sprite;
+    var path = this.path;
+    
+    if (!path) {
+        return;
+    }
+    
+    if (sprite.status != 'WALKING' && path.index < path.length - 1) {
+        
+        let i = path.index;
+        path.index += 1;
+        //this.moveTile(path[i].tile, path[i+1].tile, sprite);
+        this.initMove(path[i].tile, path[i+1].tile, sprite);
+        
+    }
+       
+}
+
+Floor.prototype.initMove = function(start, end, sprite) {
+
+    sprite.start = start;
+    sprite.end = end;
+    
+    xy = this.getXY(start.row, start.col);
+    start.x = xy.x;
+    start.y = xy.y;
+    
+    xy = this.getXY(end.row, end.col);
+    end.x = xy.x;
+    end.y = xy.y;  
+    
+    sprite.time.start = new Date();
+    sprite.status = 'WALKING';
+    sprite.dir = this.getDirection(start, end);
+    
+}
+
+
+
+Floor.prototype.lerpMove = function() {
+    
+    var _speed = 10;   // tiles per second
+    var sprite = this.sprite;
+    
+    if (sprite.status !== 'WALKING') {
+        return;
+    }
+    
+    var start = sprite.start;
+    var end = sprite.end;
+    var time = sprite.time;
+    var dir = sprite.dir;
+    
+    time.current = new Date();
+    time.delta = (time.current - time.start)/Math.pow(1000, 2);
+    
+//    var new_x = start.x + (dir.x * _speed * 1000) * time.delta;
+//    var new_y = start.y + (dir.y * _speed * 1000) * time.delta;
+
+    var new_col = start.col + (dir.x * _speed * 1000) * time.delta;
+    var new_row = start.row + (dir.y * _speed * 1000) * time.delta;
+    
+    var newXY = this.getXY(new_row, new_col);
+    
+    //console.log(new_x, new_y);
+
+//    var a = Math.abs(new_x - start.x);
+//    var b = Math.abs(end.x - start.x);
+//    var c = Math.abs(new_y - start.y);
+//    var d = Math.abs(end.y - start.y);
+    
+    var a = Math.abs(newXY.x - start.x);
+    var b = Math.abs(end.x - start.x);
+    var c = Math.abs(newXY.y - start.y);
+    var d = Math.abs(end.y - start.y);
+
+    console.log(a, b, c, d);
+
+    if (a > b || c > d) {
+
+        newXY.x = end.x;
+        newXY.y = end.y;
+        
+//        new_x = end.x;
+//        new_y = end.y;
+
+        sprite.status = 'STANDING';
+        sprite.start = null;
+        sprite.end = null;
+        sprite.time = {};
+        sprite.updateXY(newXY.x, newXY.y);
+    
+    }
+
+    // Update sprite with new positions
+    //sprite.updateXY(new_x, new_y);
+    sprite.updateXY(newXY.x, newXY.y);
+    //that.drawTileBackground();
+    
+}
+
+
+
+Floor.prototype.moveTile = function(start, end, sprite) {
+    // Exit if sprite is currently walking
+    if (sprite.status == 'WALKING') {
+        return;   
+    }
+    
+    // Exit if end tile is out of bounds
+    if (!this.inBounds(end.row, end.col)) {
+        return; 
+    }   
+    
+    
+    //sprite.floor = floor.id;
+    sprite.row = end.row;
+    sprite.col = end.col;
+    
+    var xy = this.getXY(sprite.row, sprite.col);
+    sprite.x = xy.x;
+    sprite.y = xy.y;
+
+}
+
+
+Floor.prototype.moveSprite = function(sprite, start, end, delta_t) {
+    
+    // Magic number
+    var _speed = 500;
+    
+    var xy = this.getXY(start.row, start.col);
+    start.x = xy.x;
+    start.y = xy.y;
+    
+    xy = this.getXY(end.row, end.col);
+    end.x = xy.x;
+    end.y = xy.y;
+    
+    
+    // Indicate that sprite is moving
+    var that = this;
+    this.isMoving = true;
+    
+    // Define starting time
+    var time = {};
+    time.start = new Date();
+    
+    // Get direction of sprite
+    var dir = this.getDirection(start, end);
+        
+    // Interpolate movement
+    var lerp = function() {
+        
+        
+        time.current = new Date();
+        time.delta = (time.current - time.start)/Math.pow(1000, 2);
+        
+        var new_x = start.x + (dir.x * _speed * 1000) * time.delta;
+        var new_y = start.y + (dir.y * _speed * 1000) * time.delta;
+        
+        console.log(new_x, new_y);
+        
+        var a = Math.abs(new_x - start.x);
+        var b = Math.abs(end.x - start.x);
+        var c = Math.abs(new_y - start.y);
+        var d = Math.abs(end.y - start.y);
+        
+        console.log(a, b, c, d);
+        
+        if (a > b || c > d) {
+            
+            new_x = end.x;
+            new_y = end.y;
+            
+            clearInterval(move);
+            that.isMoving = false;
+            console.log('cleared');
+        
+        }
+
+        // Update sprite with new positions
+        sprite.updateXY(new_x, new_y);
+        //that.drawTileBackground();
+        //that.drawRowsCols();
+        //that.drawSprite(sprite);
+    } 
+    
+    var move = setInterval(lerp, 16);
+
+//    var new_x = end.x;
+//    var new_y = end.y;
+//    
+//    sprite.updateXY(new_x, new_y);
+//    that.drawSprite(sprite);
+
+
+};
+
+
+Floor.prototype.moveSpriteOld = function(sprite, start, end) {
     
     // Magic number
     var _speed = 500;

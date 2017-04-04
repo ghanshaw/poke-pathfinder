@@ -1,5 +1,7 @@
 var Map = function() {
+    
     this.floors = {}
+    this.sprite = null;
     
 }
 

@@ -22,9 +22,12 @@ var pathfinding = (function() {
         target = target.toString();
 
         var q = [];
+        var visited = new Set();
 
+        
         sNode = graph.getNode(source);
-        sNode.visited = true;
+        sNode.parent = null;
+        visited.add(sNode.id);
 
         q.push(sNode); 
 
@@ -40,8 +43,8 @@ var pathfinding = (function() {
             for (let edge of vNode.edges) {
                 let uNode = edge;
 
-                if (!uNode.visited) {
-                    uNode.visited = true;
+                if (!visited.has(uNode.id)) {
+                    visited.add(uNode.id);
                     uNode.parent = vNode;
                     q.push(uNode);  
                 }

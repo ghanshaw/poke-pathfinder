@@ -55,22 +55,54 @@ pokemonApp.service('pokeGame', function($log, $interval, pokeGraph) {
     //map.createEdges();
     map.createTileBackground();
     
+    map.sprite = sprite;
+    
     
     map.drawTileBackground();
     map.drawRowsCols();
+    map.followPath();
     map.drawSprite(sprite);     
     
+    var time = {}
+    var ticks = 0
     
-    
+    var that = this;
     
     // Define game loop
     var gameLoop = function() {
+        ticks += 1
         
         $log.info('Game is running');
+                
+        
+        var current_time = new Date();
+                  
         map.drawTileBackground();
         map.drawRowsCols();
+        
+        if (ticks % 1 == 0) {
+            map.followPath();
+        }
+        
+        map.lerpMove();
         //map.drawEdges();
-        map.drawSprite(sprite);       
+        
+        // Update sprite's location if it's currently moving
+        
+        
+        
+        
+        
+//        // 1. Auto move sprite if path isn't empty
+//        map.autoMove(sprite);
+//        
+//        // 2. Lerp sprite if sprite is currently moving
+//        map.lerpSprite(sprite);
+//        
+//        // 3. Draw sprite
+          map.drawSprite(); 
+        //console.log(this);  
+        that.updateGameboy();
         
     }
     
@@ -81,7 +113,10 @@ pokemonApp.service('pokeGame', function($log, $interval, pokeGraph) {
     
     
     this.drawPath = function(path) {
-        map.drawPath(sprite, path);
+        map.path = path;
+        map.path.index = 0;
+        
+        //map.drawPath(sprite, path);
     }
     
     this.keyTiles = [
