@@ -22,7 +22,10 @@
         
         
         <script src="js/graph.js"></script>
+        <script src="js/floor_data.js"></script>
         <script src="js/floor.js"></script>
+        <script src="js/tile.js"></script>
+        <script src="js/map_data.js"></script>
         <script src="js/map.js"></script>
         <script src="js/sprite.js"></script>
         <script src="js/pathfinding.js"></script>
@@ -55,17 +58,48 @@
             </nav>
     </header>
         
+        <div class="map-files" style="display: none">
+            <img id="tile-rock" src="images/map/tile_rock.png">
+            <img id="F1-floor" src="images/map/F1.png">
+            <img id="F2-floor" src="images/map/F2.png">
+            <img id="BF1-floor" src="images/map/BF1.png">
+        </div>
+        
     <div ng-controller='mainController'>
         <div class="container">
             <div class="row">
                 <div class="col-sm-6 col-md-8">
                     <div class="mapWrapper">
-                        <canvas id="floor-1F"></canvas>
+                        <canvas id="F1-canvas"></canvas>
+                    </div>
+                    <div class="mapWrapper">
+                        <canvas id="F2-canvas"></canvas>
+                    </div>
+                    <div class="mapWrapper">
+                        <canvas id="BF1-canvas"></canvas>
                     </div>
                 
                 </div>
                 <div class="col-sm-6 col-md-4">
                     
+                    
+                    <div class="btn btn-primary" 
+                         ng-click="viewButton = 'bitmap'; onBitmapLayers()"
+                         ng-class="{ active: viewButton === 'bitmap' }" 
+                         ng-mouseenter="onBitmapLayers()" 
+                         ng-mouseleave="offBitmapLayers()">Bitmap View</div>
+                    <br>
+                    
+                    <div class="btn btn-primary" 
+                         ng-click="viewButton = 'graphic'; onGraphicLayers()"
+                         ng-class="{ active: viewButton === 'graphic' }" 
+                         ng-mouseenter="onGraphicLayers()" 
+                         ng-mouseleave="offGraphicLayers()">Grid View</div>
+                    
+                    <br>
+                    <div class="btn btn-primary" ng-click="findPath()">Grid Lines</div>
+                    <br>
+                    <div class="btn btn-primary" ng-click="findPath()">Edges</div>
                     
                     <div class="dropdown">
                         <label>Select Algorithm</label><br>
