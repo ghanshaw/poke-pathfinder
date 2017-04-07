@@ -82,24 +82,39 @@
                 </div>
                 <div class="col-sm-6 col-md-4">
                     
+                    <div class="btn btn-primary" 
+                         ng-click="clickBitmapLayer()"
+                         ng-class="{ active: layer.click === 'bitmap' }" 
+                         ng-mouseenter="enterBitmapLayer()" 
+                         ng-mouseleave="leaveBitmapLayer()">Bitmap Layer</div>
+                    
+                    
                     
                     <div class="btn btn-primary" 
-                         ng-click="viewButton = 'bitmap'; onBitmapLayers()"
-                         ng-class="{ active: viewButton === 'bitmap' }" 
-                         ng-mouseenter="onBitmapLayers()" 
-                         ng-mouseleave="offBitmapLayers()">Bitmap View</div>
-                    <br>
+                         ng-click="clickGraphicLayer()"
+                         ng-class="{ active: layer.click === 'graphic' }" 
+                         ng-mouseenter="enterGraphicLayer()" 
+                         ng-mouseleave="leaveGraphicLayer()">Graphic Layer</div>
                     
                     <div class="btn btn-primary" 
-                         ng-click="viewButton = 'graphic'; onGraphicLayers()"
-                         ng-class="{ active: viewButton === 'graphic' }" 
-                         ng-mouseenter="onGraphicLayers()" 
-                         ng-mouseleave="offGraphicLayers()">Grid View</div>
+                         ng-click="clickRowsCols()"
+                         ng-class="{ active: rowscols.click }" 
+                         ng-mouseenter="enterRowsCols()" 
+                         ng-mouseleave="leaveRowsCols()">Grid Lines</div>
+        
                     
-                    <br>
-                    <div class="btn btn-primary" ng-click="findPath()">Grid Lines</div>
-                    <br>
-                    <div class="btn btn-primary" ng-click="findPath()">Edges</div>
+                    <div class="btn btn-primary" 
+                         ng-click=""
+                         ng-class="" 
+                         ng-mouseenter="" 
+                         ng-mouseleave="">Edges</div>
+                    
+                    <div class="btn btn-primary" 
+                         ng-click=""
+                         ng-class="" 
+                         ng-mouseenter="" 
+                         ng-mouseleave="">Highlight Ladders</div>
+                    
                     
                     <div class="dropdown">
                         <label>Select Algorithm</label><br>

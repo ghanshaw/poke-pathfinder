@@ -22,6 +22,10 @@ img, canvas {
 }
 
 
+.btn {
+    margin: 10px 10px 10px 0px;   
+}
+
 .dropdown select {
     -webkit-appearance: none;
     -moz-appearance: none;

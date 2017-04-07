@@ -1,49 +1,88 @@
-pokemonApp.controller('mainController', function($scope, $log, pokeMap) {
-    
+pokemonApp.controller('mainController', function($scope, $log, pokeMap) { 
     
     var map = pokeMap.map;
-    
-    $scope.currentView = 'bitmap';
-    $scope.prevView = 'bitmap';
-    $scope.viewButton = 'bitmap';
-    
-    // Toggle gridview layers on/off
-    $scope.onGraphicLayers = function() {  
-        $scope.prevView = $scope.currentView;
-        $scope.currentView = 'graphic';
-    }
-    
-    
-    $scope.offGraphicLayers = function() {
-        $scope.currentView = $scope.prevView;
-        $scope.prevView = 'graphic';
-    }
 
+    /********* -- Turn Layers on and off -- ************/
     
-    // Toggle bitmap layers on/off
-    $scope.onBitmapLayers = function() {
-        $scope.prevView = $scope.currentView;
-        $scope.currentView = 'bitmap';       
-    }
+    $scope.layer = {
+        click: 'bitmap',
+        hover: null,
+    };
     
+    // Toggle Graphic layer on/off
+    $scope.enterGraphicLayer = function() { $scope.layer.hover = 'graphic'; }
     
-    $scope.offBitmapLayers = function() {
-        $scope.currentView = $scope.prevView;
-        $scope.prevView = 'bitmap';        
-    }
-
+    $scope.leaveGraphicLayer = function() { $scope.layer.hover = null; }
+    
+    $scope.clickGraphicLayer = function() { $scope.layer.click = 'graphic'; }
+    
+    // Toggle Bitmap layer on/off
+    $scope.enterBitmapLayer = function() { $scope.layer.hover = 'bitmap'; }
+    
+    $scope.leaveBitmapLayer = function() { $scope.layer.hover = null; }
+    
+    $scope.clickBitmapLayer = function() { $scope.layer.click = 'bitmap'; }
+    
     // Update active view as necessary
-    $scope.$watch('currentView', function(newValue, oldValue) {
+    $scope.$watch('layer', function(newValue, oldValue) { $scope.updateCanvas(); }, true);
+    
+    
+    /********* -- Turn Rows/Columns on and off -- ************/
+    
+    // Toggle rows/cols
+    $scope.rowscols = {
+        click: false,
+        hover: false,
+    };
+    
+    $scope.enterRowsCols = function() { $scope.rowscols.hover = true; }
+    
+    $scope.leaveRowsCols = function() { $scope.rowscols.hover = false; }
+    
+    $scope.clickRowsCols = function() { $scope.rowscols.click = !$scope.rowscols.click; }
+    
+    
+    // Update active view as necessary
+    $scope.$watch('rowscols', function(newValue, oldValue) {
+        $scope.updateCanvas();
+    }, true);
+    
+    
+    $scope.updateCanvas = function() {
+        
+        
+        // Turn Graphic/Bitmap layers on/off based on variables
+        var layer = $scope.layer;
+        
+        if (layer.hover) {
+            if (layer.hover === 'bitmap') {
+                map.drawBitmapLayers();
+            } 
+            else {
+                map.drawGraphicLayers();
+            }
+        }
+        else {
+            if (layer.click === 'bitmap') {
+                map.drawBitmapLayers();
+            }
+            else {
+                map.drawGraphicLayers();
+            }
+        }
 
-        if ($scope.currentView === 'graphic') {
-            map.drawGraphicLayers();
-        } else if ($scope.currentView === 'bitmap') {
-            map.drawBitmapLayers();
+        // Turn rows/cols on/off
+        var rowscols = $scope.rowscols;
+        
+        if (rowscols.hover) {
+            map.drawGraphicRowsCols();   
+        }
+        else if (rowscols.click) {
+            map.drawGraphicRowsCols();
         }
         
-    });
-    
-    $log.log($scope);
+        $log.log($scope);
+    }
     
 });
 
