@@ -1,27 +1,209 @@
-pokemonApp.controller('mainController', function($scope, $log, pokeMap) { 
+pokemonApp.controller('mainController', function($scope, $log, pokeMap, pokeGame) { 
+    
     
     var map = pokeMap.map;
+    var game = pokeGame.game;
+    
+    //map.sprite.MOVE_STATE = 'ON';
+    //map.sprite.DIRECTION = 'LEFT';
 
+    /********* -- Change Game Direction -- **********/ 
+    
+    $scope.cancelDirection = function(event) {
+        var keyCode = event.keyCode;
+        if (game.keyCode === keyCode) {
+            $log.log('no longer pressing down');
+            $log.log(event);        
+            game.DIRECTION = null;
+        }
+    };
+    
+    
+    $scope.changeDirection = function(event) {
+        $log.log(event);      
+        var keyCode = event.keyCode;
+        game.keyCode = keyCode;
+        
+        switch(keyCode) {
+            case 37:
+                // Left arrow
+                $log.log('left arrow');
+                event.preventDefault();
+                game.DIRECTION = 'LEFT';
+                
+                //map.moveSprite('left');
+                break;
+            case 38:
+                // Up arrow
+                $log.log('up arrow');
+                event.preventDefault();
+                game.DIRECTION = 'UP';
+                //map.moveSprite('up');
+                
+                break;
+            case 39:
+                // Right arrow
+                $log.log('right arrow');
+                event.preventDefault();
+                game.DIRECTION = 'RIGHT';
+                //map.moveSprite('right');
+                break;
+                
+            case 40:
+                // Down arrow
+                $log.log('down arrow');
+                event.preventDefault();
+                game.DIRECTION = 'DOWN';
+                //map.moveSprite('down');
+                break;
+                      }
+        
+        //$scope.spriteTile = map.sprite.tile;
+        
+
+    };
+    
+    
+
+    
+    $scope.$watch('spriteTile', function(oldValue, newValue) {
+        //$scope.updateCanvas();
+    });
+    
+    $scope.updateCanvas = function() {
+        
+        // Redraw sprite at current location
+        //map.drawSprite();
+        
+        $log.log($scope);
+    };
+    
+    $scope.highlightTile = function($event) {
+        
+        var layerX = $event.layerX;
+        var layerY = $event.layerY;
+        
+        var targetCanvas = event.target.id;
+        
+        map.highlightTile(layerX, layerY, targetCanvas);
+                
+    };
+    
+    $scope.selectTile = function($event) {
+        
+        var layerX = $event.layerX;
+        var layerY = $event.layerY;
+        
+        var targetCanvas = event.target.id;
+        
+        
+        
+        if ($scope.game_mode === 'selectingStartTile') {
+        
+            //$scope.startTile =
+            map.moveSprite(layerX, layerY, targetCanvas);
+            
+            var startTile = tiles.options[0];
+            
+            
+        }
+        
+        else if ($scope.game_mode === 'selectingEndTile') {
+         
+            map.moveTarget(layerX, layerY, targetCanvas);
+            var endTile = tiles.options[4];
+            
+        }
+        
+        
+    }
+    
+});
+
+
+pokemonApp.controller('userController', function($scope, $log, pokeMap) { 
+   
+    var map = pokeMap.map;
+    
+    
+    /********* -- Select Algorithm -- ************/
+    
+    
+    $scope.algorithms = {
+        options: [
+            {
+                id: 0,
+                label: 'Breadth-first search'
+            },
+            {
+                id: 1,
+                label: 'Depth-first search'
+            },
+            {   
+                id: 2,
+                label: 'Dijkstra\'s'
+            },
+            {
+                id: 3,
+                label: 'A*'
+            }
+        ],
+        selected: { id: 0, label: 'Breadth-first search' }
+    }
+    
+    
+    /********* -- Select Starting and Stopping Tiles -- ************/
+    
+    $scope.tiles = {
+        options: [
+            {
+                id: 0,
+                label: 'Current Tile'
+            },
+            {
+                id: 1,
+                label: 'Entrance'
+            },
+            {   
+                id: 2,
+                label: 'Mewtwo'
+            },
+            {
+                id: 3,
+                label: 'Random Tile'
+            },
+            {
+                id: 4,
+                label: 'User-selected Tile'
+            }
+            
+        ],
+        startTile: { id: 0, label: 'Current Tile' },
+        endTile: { id: 2, label: 'Mewtwo' }
+    };
+        
+    
     /********* -- Turn Layers on and off -- ************/
+    
     
     $scope.layer = {
         click: 'bitmap',
-        hover: null,
+        hover: null
     };
     
     // Toggle Graphic layer on/off
-    $scope.enterGraphicLayer = function() { $scope.layer.hover = 'graphic'; }
+    $scope.enterGraphicLayer = function() { $scope.layer.hover = 'graphic'; };
     
-    $scope.leaveGraphicLayer = function() { $scope.layer.hover = null; }
+    $scope.leaveGraphicLayer = function() { $scope.layer.hover = null; };
     
-    $scope.clickGraphicLayer = function() { $scope.layer.click = 'graphic'; }
+    $scope.clickGraphicLayer = function() { $scope.layer.click = 'graphic'; };
     
     // Toggle Bitmap layer on/off
-    $scope.enterBitmapLayer = function() { $scope.layer.hover = 'bitmap'; }
+    $scope.enterBitmapLayer = function() { $scope.layer.hover = 'bitmap'; };
     
-    $scope.leaveBitmapLayer = function() { $scope.layer.hover = null; }
+    $scope.leaveBitmapLayer = function() { $scope.layer.hover = null; };
     
-    $scope.clickBitmapLayer = function() { $scope.layer.click = 'bitmap'; }
+    $scope.clickBitmapLayer = function() { $scope.layer.click = 'bitmap'; };
     
     // Update active view as necessary
     $scope.$watch('layer', function(newValue, oldValue) { $scope.updateCanvas(); }, true);
@@ -29,17 +211,18 @@ pokemonApp.controller('mainController', function($scope, $log, pokeMap) {
     
     /********* -- Turn Rows/Columns on and off -- ************/
     
+    
     // Toggle rows/cols
     $scope.rowscols = {
         click: false,
         hover: false,
     };
     
-    $scope.enterRowsCols = function() { $scope.rowscols.hover = true; }
+    $scope.enterRowsCols = function() { $scope.rowscols.hover = true; };
     
-    $scope.leaveRowsCols = function() { $scope.rowscols.hover = false; }
+    $scope.leaveRowsCols = function() { $scope.rowscols.hover = false; };
     
-    $scope.clickRowsCols = function() { $scope.rowscols.click = !$scope.rowscols.click; }
+    $scope.clickRowsCols = function() { $scope.rowscols.click = !$scope.rowscols.click; };
     
     
     // Update active view as necessary
@@ -56,18 +239,22 @@ pokemonApp.controller('mainController', function($scope, $log, pokeMap) {
         
         if (layer.hover) {
             if (layer.hover === 'bitmap') {
-                map.drawBitmapLayers();
+                map.LAYER_STATE = "BITMAP";
+                //map.drawBitmapLayers();
             } 
             else {
-                map.drawGraphicLayers();
+                map.LAYER_STATE = "GRAPHIC";
+                //map.drawGraphicLayers();
             }
         }
         else {
             if (layer.click === 'bitmap') {
-                map.drawBitmapLayers();
+                map.LAYER_STATE = "BITMAP";
+                //map.drawBitmapLayers();
             }
             else {
-                map.drawGraphicLayers();
+                map.LAYER_STATE = "GRAPHIC";
+                //map.drawGraphicLayers();
             }
         }
 
@@ -75,21 +262,26 @@ pokemonApp.controller('mainController', function($scope, $log, pokeMap) {
         var rowscols = $scope.rowscols;
         
         if (rowscols.hover) {
-            map.drawGraphicRowsCols();   
+            map.ROWSCOLS_STATE = 'ON';
+            //map.drawGraphicRowsCols();   
         }
         else if (rowscols.click) {
-            map.drawGraphicRowsCols();
+            map.ROWSCOLS_STATE = 'ON';
+            //map.drawGraphicRowsCols();
+        } else {
+            map.ROWSCOLS_STATE = 'OFF';       
         }
         
         $log.log($scope);
-    }
+    };
+    
     
 });
 
+/*
+ 
 pokemonApp.controller('oldMainController', function($scope, $log, pokeMap, pokeGraph, pokeGame) {
-    
-
-    
+        
     
     $scope.onGridView = function() {
         $scope.gridview = false;        
@@ -239,3 +431,5 @@ pokemonApp.controller('gameboyController', function($scope, $log, pokeGraph, pok
 //    } 
     
 });
+
+*/

@@ -33,55 +33,86 @@ pokemonApp.service('pokeMap', function() {
     this.map.updateGraph(this.graph);
     console.log(Object.keys(this.graph.adj).length);
     
-    // Draw map
-    this.map.drawMap(this.graph);
+    // Create map layers
+    this.map.createMapLayers(this.graph);
+    
+    // Create sprite
+    this.map.initSprite();
+    //this.map.drawSprite();
+    
+    // Define initial state
+    this.map.LAYER_STATE === 'BITMAP';
+    this.map.ROWSCOLS_STATE === 'OFF';
     
     
 });
 
 
-// Create graph
-pokemonApp.service('pokeGraph', function(pokeMap) {
-    
-    //console.log('sup doc');
-    
-    
-    
-    // Add floors tograph
-    
-//    //var _1F_tiles = _1F_data();
-//    _1F.updateTiles(_1F_tiles);
-//    
-//    this.floor = _1F;
-//
-//    // Add 1st Floor data to graph
-//    _1F.updateGraph(_1F_tiles, this.graph);
-//    
-//    // Initialize canvas
-//    _1F.initCanvas('floor-1F');
-//    
-//    //_1F.drawGrid();
-//    //_1F.drawRowsCols();
-//
-//    //_1F.drawSprite(sprite, 20, 32);
-//    
-//    // Create Floor Canvas Object
-//    //_1F_draw = new DrawFloor(_1F, 570, 315)
-//    // Construct path
-//    //var path = pathfinding.bfs(graph, source, target);
-//    
+// Game Service (game state, game logic and game loop)
+pokemonApp.service('pokeGame', function($log, $interval, pokeMap) {
 
      
-});
+    
+    // Initialize a new Game object
+    var game = new Game();
+    game.FPS = 10;
+    game.DIRECTION = null;
+    game.GENDER = 'BOY';
+    game.ticks = 0;
+    
+    // Attach game to different components of the game
+    var map = pokeMap.map;
+    map.game = game;
+    map.sprite.game = game;
+    
+    
+    //var game = this;
+    //$log.log('armin van buuren');
+    
+    
+    
+    
+    // Game Loop
+    var gameLoop = function() {
+        
 
+        
+        // ----- Update game ----- //
+        
+        map.updateSprite(game);
+    
+    
+        // ----- Render game ----- //
+        
+        // Draw canvas
+        if (map.LAYER_STATE === 'BITMAP') {
+            map.drawBitmapLayers();
+        } else if (map.LAYER_STATE === 'GRAPHIC') {
+            map.drawGraphicLayers();
+        }
 
-// Game loop
-pokemonApp.service('pokeGame', function($log, $interval, pokeMap) {
+        // Draw rows/cols
+        if (map.ROWSCOLS_STATE === 'ON') {
+            map.drawGraphicRowsCols();   
+        }
+
+        // Draw sprite
+        map.drawSprite();
+        
+        
+        game.ticks++;
+        
+    };
+    
+    $interval(gameLoop, 1000/this.FPS);
+    
+    this.game = game;
+    
+    
     
 //    $log.log('hello world');
 //    
-//    // FPS for game
-//    var FPS = 60;    
+
 //
 //    // Aquire map variable
 //    var map = pokeMap.map;

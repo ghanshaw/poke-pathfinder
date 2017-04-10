@@ -21,15 +21,21 @@
         
         
         
-        <script src="js/graph.js"></script>
-        <script src="js/floor_data.js"></script>
-        <script src="js/floor.js"></script>
-        <script src="js/tile.js"></script>
-        <script src="js/map_data.js"></script>
-        <script src="js/map.js"></script>
-        <script src="js/sprite.js"></script>
-        <script src="js/pathfinding.js"></script>
+        <script src="js/graph/graph.js"></script>
+        <script src="js/graph/pathfinding.js"></script>
         
+        <script src="js/game/game.js"></script>
+        
+        <script src="js/floor/floor_data.js"></script>
+        <script src="js/floor/floor.js"></script>
+        <script src="js/floor/tile.js"></script>
+        
+        <script src="js/map/map_data.js"></script>
+        <script src="js/map/map.js"></script>
+        
+        <script src="js/sprite/sprite.js"></script>
+        <script src="js/sprite/spritesheet.js"></script>
+        <script src="js/sprite/spritesheet_data.js"></script>        
         
         <script src="app/app.js"></script> 
         <script src="app/services/services.js"></script> 
@@ -59,90 +65,135 @@
     </header>
         
         <div class="map-files" style="display: none">
+            <img id="spritesheet" src="images/spritesheet.png">
             <img id="tile-rock" src="images/map/tile_rock.png">
             <img id="F1-floor" src="images/map/F1.png">
             <img id="F2-floor" src="images/map/F2.png">
             <img id="BF1-floor" src="images/map/BF1.png">
         </div>
         
-    <div ng-controller='mainController'>
+    <div >
         <div class="container">
             <div class="row">
-                <div class="col-sm-6 col-md-8">
-                    <div class="mapWrapper">
-                        <canvas id="F1-canvas"></canvas>
+                <div ng-controller='mainController' ng-mousemove="highlightTile($event)">
+                    <div class="col-sm-6 col-md-7">
+                        <div class="mapWrapper"
+                             tabindex="0"
+                             ng-keyup="cancelDirection($event)"
+                             ng-keydown="changeDirection($event)">
+                            <canvas id="F1-canvas"></canvas>
+                        </div>
+                        <div class="mapWrapper"
+                             tabindex="0"
+                             ng-keypress="moveSprite($event)"
+                             ng-keyup="cancelDirection()">
+                            <canvas id="F2-canvas"></canvas>
+                        </div>
+                        <div class="mapWrapper"
+                             tabindex="0"
+                             ng-keypress="moveSprite($event)"
+                             ng-keyup="cancelDirection()">
+                            <canvas id="BF1-canvas"></canvas>
+                        </div>
                     </div>
-                    <div class="mapWrapper">
-                        <canvas id="F2-canvas"></canvas>
-                    </div>
-                    <div class="mapWrapper">
-                        <canvas id="BF1-canvas"></canvas>
-                    </div>
-                
                 </div>
-                <div class="col-sm-6 col-md-4">
-                    
-                    <div class="btn btn-primary" 
-                         ng-click="clickBitmapLayer()"
-                         ng-class="{ active: layer.click === 'bitmap' }" 
-                         ng-mouseenter="enterBitmapLayer()" 
-                         ng-mouseleave="leaveBitmapLayer()">Bitmap Layer</div>
-                    
-                    
-                    
-                    <div class="btn btn-primary" 
-                         ng-click="clickGraphicLayer()"
-                         ng-class="{ active: layer.click === 'graphic' }" 
-                         ng-mouseenter="enterGraphicLayer()" 
-                         ng-mouseleave="leaveGraphicLayer()">Graphic Layer</div>
-                    
-                    <div class="btn btn-primary" 
-                         ng-click="clickRowsCols()"
-                         ng-class="{ active: rowscols.click }" 
-                         ng-mouseenter="enterRowsCols()" 
-                         ng-mouseleave="leaveRowsCols()">Grid Lines</div>
-        
-                    
-                    <div class="btn btn-primary" 
-                         ng-click=""
-                         ng-class="" 
-                         ng-mouseenter="" 
-                         ng-mouseleave="">Edges</div>
-                    
-                    <div class="btn btn-primary" 
-                         ng-click=""
-                         ng-class="" 
-                         ng-mouseenter="" 
-                         ng-mouseleave="">Highlight Ladders</div>
-                    
-                    
-                    <div class="dropdown">
-                        <label>Select Algorithm</label><br>
-                         <select ng-options="option.name for option in algorithms.availableOptions track by option.id" ng-model="algorithms.selectedAlgo"></select>
-                    </div>
+                <div ng-controller="userController">
+                    <div class="col-sm-6 col-md-5">
+                        <div class="row">
+                            <div class="col-sm-12">                                
+                                
+                                <h4>Choose Algorithm</h4>
+                                <div class="dropdon">
+                                     <select ng-options="option.label for option in algorithms.options track by option.id" ng-model="algorithms.selected"></select>
+                                </div>
+                                
+                                <hr>
 
-                    <div class="dropdown">
-                        <label>Start</label><br>
-                        <select ng-options="option.name for option in keyTiles.availableOptions track by option.id" ng-model="keyTiles.startTile"></select>
-                    </div>
-                    
-                    
-                    <div class="dropdown">
-                        <label>End</label><br>
-                        <select ng-options="option.name for option in keyTiles.availableOptions track by option.id" ng-model="keyTiles.endTile"></select>
-                    </div>
-                    
-                    <div class="btn btn-primary" ng-click="findPath()">Find Route</div>
-                    
-                    <hr>
+                                <h4>Choose Start</h4>
+                                <div class="row">
+                                    <div class="col-xs-5">         
+                                        <div class="dropdow">
+                                            <select ng-model="tiles.startTile" ng-options="tile.label for tile in tiles.options track by tile.id"></select>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="col-xs-2"><span>-or-</span></div>
+                                    
+                                    <div class="col-xs-5">                   
+                                        <button>Click Start Tile</button>
+                                    </div>
+                                </div>
+                                
+                                
+                                
+                                
+                                <h4>Choose End</h4>
+                                <div class="row">
+                                    <div class="col-xs-5">         
+                                        <div class="dropdow">
+                                            <select ng-model="tiles.endTile" ng-options="tile.label for tile in tiles.options track by tile.id"></select>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="col-xs-2"><span>-or-</span></div>
+                                    
+                                    <div class="col-xs-5">                   
+                                    <div class="btn btn-primary" ng-click="">Click End Tile</div>
+                                    </div>
+                                </div>
+                                <div class="col-xs-6">
+                                    <div class="btn btn-primary" ng-click="findPath()">Find Route</div>
+                                </div>
+                                <div class="col-xs-6">
+                                    <div class="btn btn-primary" ng-click="findPath()">Clear Route</div>
+                                </div>
+                                
+                                <hr>
+                                
+                                <h4>Choose Layers</h4>
+                                
+                                <div class="btn btn-primary" 
+                                     ng-click="clickBitmapLayer()"
+                                     ng-class="{ active: layer.click === 'bitmap' }" 
+                                     ng-mouseenter="enterBitmapLayer()" 
+                                     ng-mouseleave="leaveBitmapLayer()">Bitmap Layer</div>
 
-                    
-                    <label>Run Times</label>
-                    
-                    
-                
-                </div>
-            
+
+
+                                <div class="btn btn-primary" 
+                                     ng-click="clickGraphicLayer()"
+                                     ng-class="{ active: layer.click === 'graphic' }" 
+                                     ng-mouseenter="enterGraphicLayer()" 
+                                     ng-mouseleave="leaveGraphicLayer()">Graphic Layer</div>
+
+                                <div class="btn btn-primary" 
+                                     ng-click="clickRowsCols()"
+                                     ng-class="{ active: rowscols.click }" 
+                                     ng-mouseenter="enterRowsCols()" 
+                                     ng-mouseleave="leaveRowsCols()">Grid Lines</div>
+
+
+                                <div class="btn btn-primary" 
+                                     ng-click=""
+                                     ng-class="" 
+                                     ng-mouseenter="" 
+                                     ng-mouseleave="">Edges</div>
+
+                                <div class="btn btn-primary" 
+                                     ng-click=""
+                                     ng-class="" 
+                                     ng-mouseenter="" 
+                                     ng-mouseleave="">Highlight Ladders</div>
+
+                            </div>
+                        </div>
+                        
+                        <hr>
+
+
+
+                    </div>
+            </div>
             </div>
         
         </div>
@@ -150,7 +201,7 @@
         
     </div>
         
-        <div ng-controller="gameboyController">
+        <div>
         
         
             <div class="row">

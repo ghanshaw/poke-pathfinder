@@ -180,11 +180,11 @@ Floor.prototype.initCanvas = function(rows, cols, width) {
     //this.canvas.height = 736;
     
     // Computer offsets of floor from canvas
-    this.top_offset = Math.floor((this.canvas.rows - this.rows)/2);
-    this.left_offset = Math.floor((this.canvas.cols - this.cols)/2);
+    this.offset_rows = Math.floor((this.canvas.rows - this.rows)/2);
+    this.offset_cols = Math.floor((this.canvas.cols - this.cols)/2);
     
-    this.offset_x = this.left_offset * this.tile_size;
-    this.offset_y = this.top_offset * this.tile_size;
+    this.offset_x = this.offset_rows * this.tile_size;
+    this.offset_y = this.offset_cols * this.tile_size;
 
     // Store layers for both bitmap view and grid view
     this.bitmap = {};
@@ -246,14 +246,14 @@ Floor.prototype.createBitmapFloorLayer = function() {
     
     var floor_img = document.getElementById(imgId);
     
-    var x_offset = this.left_offset * this.tile_size;
-    var y_offset = this.top_offset * this.tile_size;
+    var offset_x = this.offset_cols * this.tile_size;
+    var offset_y = this.offset_rows * this.tile_size;
     
     
     ctx.drawImage(floor_img, 0, 0, canvas.width, canvas.height);
     
-    this.x_offset = x_offset;
-    this.y_offset = y_offset;
+    this.offset_x = offset_x;
+    this.offset_y = offset_y;
     this.bitmap.floorlayer = canvas;
     
 }
@@ -477,6 +477,34 @@ Floor.prototype.drawGraphicKeyTiles = function() {
 // Draw Grid view edges
 Floor.prototype.drawGraphicEdges = function() {
     this.ctx.drawImage(this.graphic.edges, this.offset_x, this.offset_y);
+}
+
+
+// Highlight tile
+Floor.prototype.highlightTile = function(row, col) {
+    
+    var x = col * this.tile_size;
+    var y = row * this.tile_size;
+    
+    this.ctx.strokeStyle = 'yellow';
+    
+    this.ctx.strokeRect(x + this.offset_x, y + this.offset_y, this.tile_size, this.tile_size);   
+}
+
+
+// Draw sprite on canvas (no longer needed)
+Floor.prototype.drawSprite = function(sprite) {
+
+    var row = sprite.tile.row;
+    var col = sprite.tile.col;     
+    
+    var x = col * this.tile_size + this.offset_x;
+    var y = row * this.tile_size + this.offset_y;
+    
+    this.ctx.drawImage(sprite.canvas, x, y, tile_size, tile_size);
+    
+    //this.ctx.drawImage(sprite.canvas, sx, sy, sh, sw, dx, dy, tile_size, tile_size);
+    
 }
 
 /*---- Reusable Canvas Images ---- */
@@ -718,16 +746,7 @@ Floor.prototype.getXY = function(row, col) {
         y: y
     }
 }
-            
-
-Floor.prototype.drawSprite = function() {
-    
-    var sprite = this.sprite;
-    
-    //var xy = this.getXY(row, col)
-    this.ctx.drawImage(sprite.canvas, sprite.x, sprite.y); 
-    
-}
+        
 
 
 Floor.prototype.followPath = function() {        

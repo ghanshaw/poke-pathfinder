@@ -87,3 +87,15 @@ Graph.prototype.removeEdge = function(v, u) {
     }
     
 }
+
+Graph.prototype.hasEdge = function(v, u) {
+    
+    // Extract edge list
+    var vEdges = this.getEdges(v)
+    
+    if (vEdges.indexOf(u) === -1) {
+        return false;
+    }
+    return true;
+    
+}
