@@ -326,7 +326,7 @@ Floor.prototype.createGraphicFloorLayer = function() {
     }
     
     this.graphic.floorlayer = canvas;
-}
+};
 
 
 // Create lines of rows/cols

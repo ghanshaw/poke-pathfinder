@@ -5,8 +5,8 @@ var map_data = (function() {
             id: 0,
             name: 'Entrance',
             floor: 'F1',
-            //tile: ['F1', 2, 33],
-            tile: ['F1', 21, 33]
+            tile: ['F1', 2, 33],
+            //tile: ['F1', 21, 33]
         },
         { 
             id: 1,

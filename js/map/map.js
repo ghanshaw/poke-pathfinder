@@ -139,7 +139,8 @@ Map.prototype.updateSprite = function(game) {
     
     var sprite = this.sprite;
     
-    if (sprite.MOVE_STATE === 'STILL') { 
+    if (sprite.MOVE_STATE === 'STILL' ||
+            sprite.MOVE_STATE === 'WALL WALK') { 
         
         if (game.DIRECTION) {           
             this.startMove();
@@ -147,7 +148,20 @@ Map.prototype.updateSprite = function(game) {
         
     }
     
-    else { sprite.interpolateMove(game); }
+    if (sprite.MOVE_STATE === 'WALK' || 
+            sprite.MOVE_STATE === 'SURF' || 
+            sprite.MOVE_STATE === 'JUMP ON' ||
+            sprite.MOVE_STATE === 'JUMP OFF' ||
+            sprite.MOVE_STATE === 'TURN' ||
+            sprite.MOVE_STATE === 'WALL WALK' ||
+            sprite.MOVE_STATE === 'LADDER') {
+        
+        if (sprite.MOVE_STATE === 'LADDER') {
+            console.log('climb  baby climb');
+        }
+        
+        sprite.interpolateMove(game);
+    } 
     
     sprite.updateSpriteOptions();
     
@@ -184,18 +198,61 @@ Map.prototype.startMove = function() {
         displacement.col = +1;
     }
     
+    // ----- 0. Climbing ladder ----- //
+    // You were sent here by the end of another move
+    if (sprite.MOVE_STATE === 'LADDER') {
+        
+        sprite.startTile = startTile;
+        sprite.endTile = this.getOtherEndLadder(startTile);
+        
+        speed = sprite.walkSpeed * .75;
+        sprite.time.total = 1/speed;
+        sprite.time.start = new Date();
+        sprite.interpolateMove();
+        return;        
+    }
     
+    // ----- 1. Turning ----- //
+    // If player is still, and user direction does not match player direction
+    if (sprite.MOVE_STATE === 'STILL') {
+        
+        if (DIRECTION !== sprite.playerOptions.FACING) {
+            sprite.MOVE_STATE = 'TURN';
+            sprite.changeDirection(DIRECTION);
+            
+            // Reset surf counter
+            sprite.surfTicks = 0;
+            
+            sprite.startTile = startTile;
+            sprite.endTile = startTile;
+            
+            speed = sprite.walkSpeed * 5;
+            sprite.time.total = 1/speed;
+            sprite.time.start = new Date();
+            sprite.interpolateMove();
+            
+            return;
+        }
+    }
+    
+    
+    // ----- 2a. Walking into Walls ----- //
+    // If user direction is same as current direction, continue walking into wall
+    // Otherwise, interrupt and process user input
+    if (sprite.MOVE_STATE === 'WALL WALK') {
+        
+        if (DIRECTION === sprite.playerOptions.FACING) {
+            sprite.interpolateMove();
+            return;
+        }
+        
+    }
     
     // Determine final tile
     var endTile = this.getTile(floor, row + displacement.row, col + displacement.col);
     
     // If tile is reachable
     if (endTile && graph.hasEdge(startTile.id, endTile.id)) {
-        
-        // If tile is ladder, get tile on other end of ladder
-        if (endTile.ladder) {  
-            endTile = this.useLadder(endTile);
-        }
         
         // Movement is admissable, begin interpolation 
         sprite.changeDirection(DIRECTION);
@@ -210,19 +267,24 @@ Map.prototype.startMove = function() {
         
         // Set move state, determine time allotted for move
         var speed;
+        // ----- 3. Jumping onto water pokemon ----- //
         if (startTile.type === 'LAND' && endTile.type === 'WATER') {
             sprite.MOVE_STATE = 'JUMP ON';  
             speed = sprite.jumpSpeed;            
         } 
+        // ----- 4. Jumping off of water pokemon ----- //
         else if (startTile.type === 'WATER' && endTile.type === 'LAND') {      
             sprite.MOVE_STATE = 'JUMP OFF';
             speed = sprite.jumpSpeed;
         }
+        // ----- 5. Walking on land ----- //
         else if (startTile.type === 'LAND') {
             sprite.MOVE_STATE = 'WALK';
             speed = sprite.walkSpeed;
         }
-        else if (startTile.type === 'WATER') {            
+        // ----- 6. Surfing on water ----- //
+        else if (startTile.type === 'WATER') {
+            
             sprite.MOVE_STATE = 'SURF';
             speed = sprite.surfSpeed;
         }
@@ -233,10 +295,34 @@ Map.prototype.startMove = function() {
         
     }
     
+    // ----- 2b. Walking into walls ----- //
+    // Animate walking against wall
+    else if (endTile && !graph.hasEdge(startTile.id, endTile.id)) {
+        
+        // Only animate walking into walls on land
+        if(startTile.type === 'LAND') {
+            
+            sprite.MOVE_STATE = 'WALL WALK';
+            sprite.changeDirection(DIRECTION);
+            
+            sprite.changeDirection(DIRECTION);
+            sprite.startTile = startTile;
+            sprite.endTile = startTile;
+            
+            speed = sprite.walkSpeed / 2;
+            sprite.time.total = 1/speed;
+            sprite.time.start = new Date();
+            sprite.interpolateMove();
+        }
+        
+    }
+    
 };
 
 
-Map.prototype.useLadder = function(endA) {
+
+
+Map.prototype.getOtherEndLadder = function(endA) {
     
     // Get the ladder associate with this tile
     var ladderId = endA.ladderId;
@@ -256,6 +342,42 @@ Map.prototype.useLadder = function(endA) {
 /*******    Layer Drawing Methods    *******/
 /*******************************************/
 
+// Create black rectangle used for transitions
+Map.prototype.createMapTransitionLayer = function() {
+  
+    var canvas = document.createElement('canvas');
+    var ctx = canvas.getContext('2d');
+    
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    ctx.fillStyle = 'black';
+
+    this.transitionLayer = canvas;
+    
+};
+
+
+Map.prototype.drawMapTransitionLayer = function() {
+    
+    if (this.sprite.MOVE_STATE === 'LADDER') {
+        
+        var transitionLayer = this.transitionLayer;
+        transitionCtx = transitionLayer.getContext('2d');
+        transitionCtx.globalAlpha =  transitionLayer.globalAlpha;
+        transitionCtx.clearRect(0, 0, transitionLayer.width, transitionLayer.height);
+        transitionCtx.fillStyle = 'black';
+        transitionCtx.fillRect(0,0,transitionLayer.width, transitionLayer.height);
+        
+        for (let f in this.floors) {           
+            var canvas = this.floors[f].canvas;
+            var ctx = canvas.getContext('2d');
+
+            ctx.drawImage(transitionLayer, 0, 0, canvas.width, canvas.height);      
+        }
+    }
+       
+};
+
 
 Map.prototype.createMapLayers = function(graph) { 
     
@@ -272,6 +394,7 @@ Map.prototype.createMapLayers = function(graph) {
         this.floors[f].createGraphicEdges(graph);
         
         
+        
         //        this.floors[f].drawBitmapRockLayer();
         //        this.floors[f].drawBitmapFloorLayer();
         ////        this.floors[f].drawGraphicRockLayer();
@@ -280,11 +403,14 @@ Map.prototype.createMapLayers = function(graph) {
         //        this.floors[f].drawGraphicKeyTiles();
         ////        this.floors[f].drawGraphicEdges();
         
-    }   
+    } 
+    
+    this.createMapTransitionLayer();
     
     //this.createKeyTiles();
     
 };
+
 
 
 Map.prototype.drawGraphicLayers = function() {
@@ -294,6 +420,8 @@ Map.prototype.drawGraphicLayers = function() {
         this.floors[f].drawGraphicFloorLayer(); 
     }
 };
+
+
 
 
 Map.prototype.drawBitmapLayers = function() {

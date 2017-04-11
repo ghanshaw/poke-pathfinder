@@ -100,6 +100,7 @@ pokemonApp.service('pokeGame', function($log, $interval, pokeMap) {
 
         // Draw sprite
         map.drawSprite();
+        map.drawMapTransitionLayer();
         
         map.drawGameboy();
         game.ticks++;
