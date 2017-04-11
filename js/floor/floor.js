@@ -477,7 +477,7 @@ Floor.prototype.drawGraphicKeyTiles = function() {
 // Draw Grid view edges
 Floor.prototype.drawGraphicEdges = function() {
     this.ctx.drawImage(this.graphic.edges, this.offset_x, this.offset_y);
-}
+};
 
 
 // Highlight tile
@@ -489,7 +489,7 @@ Floor.prototype.highlightTile = function(row, col) {
     this.ctx.strokeStyle = 'yellow';
     
     this.ctx.strokeRect(x + this.offset_x, y + this.offset_y, this.tile_size, this.tile_size);   
-}
+};
 
 
 // Draw sprite on canvas (no longer needed)
@@ -505,7 +505,7 @@ Floor.prototype.drawSprite = function(sprite) {
     
     //this.ctx.drawImage(sprite.canvas, sx, sy, sh, sw, dx, dy, tile_size, tile_size);
     
-}
+};
 
 /*---- Reusable Canvas Images ---- */
 

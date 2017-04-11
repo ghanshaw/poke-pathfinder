@@ -1,7 +1,7 @@
 var Sprite = function() {
     
     this.active = 'BITMAP',
-    this.status = 'STANDING';
+            this.status = 'STANDING';
     
     
     
@@ -20,16 +20,34 @@ var Sprite = function() {
     // activity: walk, surf, jump
     // direction: up, down, left, right
     
-    this.spriteOptions = {
+    this.playerOptions = {
+        TYPE: 'PLAYER',
         GENDER: 'BOY',
         ACTIVITY: 'WALK',
         FACING: 'DOWN',
         ORIENTATION: 'LEFT'
     };
     
-    // Speed in tile/second
-    this.speed = 2.5;
+    this.pokemonOptions = {
+        TYPE: 'POKEMON',
+        FACING: 'DOWN',
+        ORIENTATION: 'DOWN'
+    };
+    
+    this.dustOptions = {
+        TYPE: 'DUST',
+        STAGE: 1
+    };
+    
+    // Variables for different movements;
+    this.walkSpeed = 2.5;
     this.steps = 0;
+    
+    this.surfSpeed = 5;
+    this.surfTicks = 0;
+    
+    this.jumpSpeed = .5;
+    
     
     // Time measures used to account for movement
     this.time = {
@@ -84,57 +102,142 @@ Sprite.prototype.initBitmap = function() {
     
 };
 
-// Update the attributes associated with payer that dictate sprite in use
+
+// Update the attributes associated with player that dictate sprite in use
 Sprite.prototype.updateSpriteOptions = function() {
     
-    // Update spriteOptions variable with current
-    // GENDER - ACTIVITY - DIRECTION - ORIENTATION
-    var options = this.spriteOptions;
+    // Update spriteOptions of various sprites
+    // Player Options: GENDER - ACTIVITY - FACING - ORIENTATION
+    // Pokemon Options: FACING - ORIENTATON
+    // Dust Options: STAGE
+    var playerOptions = this.playerOptions;
+    var pokemonOptions = this.pokemonOptions;
+    var dustOptions = this.dustOptions;
     
     // Update sprite gender
     //options.GENDER = this.game.GENDER;
-    options.GENDER = 'BOY';    
-   
+    playerOptions.GENDER = 'BOY';    
+
+    
+    if (this.MOVE_STATE === 'JUMP ON') {
         
-    // If sprite is on land
-    if (this.tile.type === 'LAND') { 
+        // Hide dust
+        dustOptions.SHOW = false;
+        
+        // Update pokemon sprite options
+        pokemonOptions.SHOW = true;
+        pokemonOptions.FACING = playerOptions.FACING;
+        
+        // Update player sprite options
+        playerOptions.ACTIVITY = 'JUMP'; 
+        playerOptions.ORIENTATION = 'STRAIGHT';
+        
+    }
+    
+    
+    else if (this.MOVE_STATE === 'JUMP OFF') {
+        
+        // Update pokemon sprite options
+        pokemonOptions.SHOW = true;
+        pokemonOptions.FACING = playerOptions.FACING;
+        
+        // Get orientation from the surfTicks variable
+        if (this.surfTicks < 60) {
+            pokemonOptions.ORIENTATION = 'UP';
+        } else {
+            pokemonOptions.ORIENTATION = 'DOWN';
+        }
         
         
-        options.ACTIVITY = 'WALK'; 
+        // Update player sprite options
+        playerOptions.ACTIVITY = 'JUMP'; 
+        playerOptions.ORIENTATION = 'STRAIGHT';
+        
+        
+        // Refine dust, player and sprite based on progress through move
+        
+        // Dust shown/pokemon presence is based on progress through jump move
+        if (this.time.percent < .7) {  
+            dustOptions.SHOW = false;
+        }
+        else if (this.time.percent < .8) {
+            dustOptions.SHOW = true;         
+            dustOptions.STAGE = '1';
             
-        if (this.MOVE_STATE === 'MOVING') {
+            playerOptions.ACTIVITY = 'WALK'
+            pokemonOptions.SHOW = false;
+        }
+        else if (this.time.percent < .9) {
+            dustOptions.SHOW = true;
+            dustOptions.STAGE = '2';
             
-            //options.FACING = this.game.DIRECTION;
+            playerOptions.ACTIVITY = 'WALK'
+            pokemonOptions.SHOW = false;
+        }
+        
+        if (this.time.percent > .9) {
+            dustOptions.SHOW = true;
+            dustOptions.STAGE = '3';
+            
+            playerOptions.ACTIVITY = 'WALK'
+            pokemonOptions.SHOW = false;
+        }
+        
+
+        
+    }
+  
+
+    else if (this.tile.type === 'LAND') {
+        
+        // Hide dust and pokemon
+        dustOptions.SHOW = false;
+        pokemonOptions.SHOW = false;
+        
+        if (this.MOVE_STATE === 'STILL') {
+            
+            playerOptions.ACTIVITY = 'WALK'; 
+            playerOptions.ORIENTATION = 'STRAIGHT';
+            
+        }    
+        
+        if (this.MOVE_STATE === 'WALK') {
+            
+            playerOptions.ACTIVITY = 'WALK';
             
             // Orientation is based on progress through move
             if (this.time.percent < .5) {
-                // Determine orientation of sprite
-                options.ORIENTATION = 'LEFT';
-                if (this.steps % 2 === 1) {
-                    options.ORIENTATION = 'RIGHT';
-                }
                 
+                // Determine orientation of sprite
+                playerOptions.ORIENTATION = 'LEFT';
+                if (this.steps % 2 === 1) {
+                    playerOptions.ORIENTATION = 'RIGHT';
+                }    
             }
             else {
-                options.ORIENTATION = 'STRAIGHT';
+                playerOptions.ORIENTATION = 'STRAIGHT';
             }
-
         }
         
-        else if (this.MOVE_STATE === 'STILL') {   
-            
-            
-            
-            options.ORIENTATION = 'STRAIGHT';   
-        }
-         
     }
+        
+    else if (this.tile.type === 'WATER') { 
+        
+        // Hide dust and pokemon
+        dustOptions.SHOW = false;
+        pokemonOptions.SHOW = false;
+        
+        playerOptions.ACTIVITY = 'SURF'; 
     
-    // If he's on water
-    if (this.tile.type === 'WATER') { 
-        options.ACTIVITY = 'SURF'; 
-    
-    
+        if (this.surfTicks < 60) {
+            playerOptions.ORIENTATION = 'UP';
+        } else {
+            playerOptions.ORIENTATION = 'DOWN';
+        }
+        
+        this.surfTicks ++;
+        //console.log(this.surfTicks, this.game.ticks/60);
+        this.surfTicks %= 120;
     
     };
     
@@ -149,37 +252,94 @@ Sprite.prototype.drawSprite = function() {
     var col = this.current.col;     
     
     var tile_size = floor.tile_size;
-    var x = col * tile_size + floor.offset_x - (.5 * tile_size);
-    var y = row * tile_size + floor.offset_y - (.5 * tile_size);    
+    
     
     if (this.active === 'GRAPHIC') {
+        let x = col * tile_size + floor.offset_x - (.5 * tile_size);
+        let y = row * tile_size + floor.offset_y - (.5 * tile_size);
         floor.canvas.ctx.drawImage(this.graphic.canvas, x, y, tile_size, tile_size);
     }
     
     else if (this.active === 'BITMAP') {
         
-        let xy = this.spritesheet.getXY(this.spriteOptions);
+        let sprite_size = this.spritesheet.sprite_size;
+        let ctx = floor.canvas.getContext('2d');
         
+        // Draw surf pokemon sprite
+        if (this.pokemonOptions.SHOW) {
+            
+            let row;
+            let col;
+            
+            // If he's jumping on, pokemon appear on end tile
+            if (this.MOVE_STATE === 'JUMP ON') {
+                row = this.endTile.row;
+                col = this.endTile.col;
+            }    
+            
+            // If he's jumping off, pokemon appears on start tile
+            else if (this.MOVE_STATE === 'JUMP OFF') {
+                row = this.startTile.row;
+                col = this.startTile.col;   
+            }
+              
+            let x = col * tile_size + floor.offset_x - (.5 * tile_size);
+            let y = row * tile_size + floor.offset_y - (.5 * tile_size);
+            
+            let xy = this.spritesheet.getXY(this.pokemonOptions);
+            let sx = xy.x;
+            let sy = xy.y;
+            ctx.drawImage(this.spritesheet.canvas, sx, sy, sprite_size, sprite_size, x, y, tile_size * 2, tile_size * 2);
+        }
+        
+        // Draw player sprite
+        // Draw player on interpolated location
+        let row = this.current.row;
+        let col = this.current.col;    
+        let x = col * tile_size + floor.offset_x - (.5 * tile_size);
+        let y = row * tile_size + floor.offset_y - (.5 * tile_size);
+        
+        let xy = this.spritesheet.getXY(this.playerOptions);
         let sx = xy.x;
         let sy = xy.y;
-        let sprite_size = this.spritesheet.sprite_size;
-        
-        let ctx = floor.canvas.getContext('2d');
         ctx.drawImage(this.spritesheet.canvas, sx, sy, sprite_size, sprite_size, x, y, tile_size * 2, tile_size * 2);
+
+        // Draw dust sprite  
+        if (this.dustOptions.SHOW) { 
+            // Draw dust on tile player is jumping to
+            let row = this.endTile.row;
+            let col = this.endTile.col;    
+            let x = col * tile_size + floor.offset_x - (.5 * tile_size);
+            let y = row * tile_size + floor.offset_y - (.5 * tile_size);
+            
+            let xy = this.spritesheet.getXY(this.dustOptions);
+            let sx = xy.x;
+            let sy = xy.y;
+            ctx.drawImage(this.spritesheet.canvas, sx, sy, sprite_size, sprite_size, x, y, tile_size * 2, tile_size * 2);
+        }
     }
     
 };
 
 Sprite.prototype.changeDirection = function(DIRECTION) {
-    this.spriteOptions.FACING = DIRECTION;
+    this.playerOptions.FACING = DIRECTION;
 };
 
 Sprite.prototype.setTile = function(tile) {
+    var prevTile = this.tile;
+    
     this.tile = tile;
     this.current = {
         row: tile.row,
         col: tile.col
     };
+    
+    
+    // If he's on water, increment surf counter
+    if (prevTile && prevTile.type === 'LAND' && tile.type === 'WATER') { 
+        this.surfTicks = 0;
+    }
+    
 };
 
 
@@ -192,27 +352,111 @@ Sprite.prototype.startMove = function() {
 
 
 
-Sprite.prototype.interpolateMove = function(game) {
+
+
+
+Sprite.prototype.interpolateWalkSurf = function() {
+    
+    var current = this.current;
+    var start = this.start;
+    var displacement = this.displacement;
+    var time = this.time;
+    
+    
+    current.row = start.row + (displacement.row * time.percent);
+    current.col = start.col + (displacement.col * time.percent);
+    
+};
+
+
+Sprite.prototype.parabolicMove = function(x) {
+    //-8.16\left(x-\ .35\right)^{2\ }+\ 1
+    
+    // If you're jumping on, use a predictable parabola to define movement
+    // If you're jumping off, jumping should occur before 70% of move time
+    
+    var y;
+    if (this.MOVE_STATE === 'JUMP ON') {
+        y = -4*Math.pow((x - 0.5),2) + 1;
+    }
+    else if (this.MOVE_STATE === 'JUMP OFF') {
+        y = Math.max((-8.16*Math.pow((x - 0.35),2) + 1), 0);
+    }
+    
+    return y;  
+};
+
+
+Sprite.prototype.interpolateJump = function() {
+    
+    var current = this.current;
+    var start = this.start;
+    var displacement = this.displacement;
+    var time = this.time;
+    
+    
+    var formula_x = time.percent;   // Percentage through move
+    var formula_y = this.parabolicMove(formula_x);    // Height w.r.t. time
+    var sign = displacement.row + displacement.col;
+    
+    if (this.MOVE_STATE === 'JUMP ON') {
+       
+        var horizontal_displacement = sign * time.percent;
+        var vertical_displacement = formula_y;
+
+    }
+  
+    else if (this.MOVE_STATE === 'JUMP OFF') {
+        
+        // If you're jumping off, increase horizontal displacement to compensate shortened jump
+        // Player must spend last 30% of move standing still
+        var horizontal_displacement = sign * Math.min(time.percent/.7, 1);
+        var vertical_displacement = formula_y;
+        
+    }
+        
+    // If you're jumping across rows
+    if (displacement.row !== 0) {
+           
+        current.row = start.row + horizontal_displacement - vertical_displacement;
+        //current.row = start.row + (displacement.row * time.percent) - vertical_displacement;
+        current.col = start.col;
+            
+    } 
+    // Otherwise, if you're jumping across columns
+    else if (displacement.col !== 0) {
+            
+        current.col = start.col + horizontal_displacement;
+        current.row = start.row - vertical_displacement;
+            
+    }
+    
+};
+
+
+
+
+Sprite.prototype.interpolateMove = function() {
     
     var time = this.time;
-    var start = this.start;
-    var current = this.current;
-    var displacement = this.displacement;
+    //    var start = this.start;
+    //    var current = this.current;
+    //    var displacement = this.displacement;
     
     this.time.delta = (new Date() - time.start)/1000;
     this.time.percent = time.delta/time.total;
 
 
     if (this.time.percent < 1) {
-        current.row = start.row + (displacement.row * time.percent);
-        current.col = start.col + (displacement.col * time.percent);
-        return;
-//        console.log('----------');
-//        console.log(start);
-//        console.log(displacement);
-//        console.log(time);
-//        console.log(current);
-    
+        
+        if (this.MOVE_STATE === 'WALK' || this.MOVE_STATE === 'SURF') {        
+            this.interpolateWalkSurf();        
+        }
+        
+        else if (this.MOVE_STATE === 'JUMP ON' || this.MOVE_STATE === 'JUMP OFF') {          
+            this.interpolateJump();           
+        }
+
     }
     
     else if (this.game.DIRECTION) {
@@ -227,8 +471,10 @@ Sprite.prototype.interpolateMove = function(game) {
         this.steps += 1;
         return;
     }
+    
+    
+    
 };
-
 
 
 

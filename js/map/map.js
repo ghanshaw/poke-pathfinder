@@ -4,18 +4,18 @@ var Map = function(map_data) {
     this.sprite = null;
     this.map_data = map_data;
     
-//    //this.LAYER_STATE =  {
-//        BITMAP: 0,
-//        GRAPHIC: 1
-//    }
-//    
+    //    //this.LAYER_STATE =  {
+    //        BITMAP: 0,
+    //        GRAPHIC: 1
+    //    }
+    //    
 };
 
 Map.prototype.addFloor = function(floor) {
     if (!this.floors.hasOwnProperty(floor.id)) {
         this.floors[floor.id] = floor;
     }
-
+    
 };
 
 Map.prototype.getTile = function(floor, row, col) {
@@ -90,9 +90,9 @@ Map.prototype.updateGraph = function(graph) {
         graph.addEdge(ladder[0], ladder[1]);   
         graph.addEdge(ladder[1], ladder[0]);
     }
-
+    
     console.log(graph);
-        
+    
 };
 
 
@@ -100,7 +100,7 @@ Map.prototype.getTileFromId = function(tileId) {
     
     var tile_arr = tileId.split(',');
     var floorId = tile_arr[0];
-        
+    
     return this.floors[floorId].getTile(tile_arr[1], tile_arr[2]);
 };
 
@@ -128,8 +128,8 @@ Map.prototype.initSprite = function() {
 
 
 Map.prototype.drawSprite = function() {
-//    var f = this.sprite.tile.floor;
-//    this.floors[f].drawSprite(this.sprite);
+    //    var f = this.sprite.tile.floor;
+    //    this.floors[f].drawSprite(this.sprite);
     
     this.sprite.drawSprite();
 };
@@ -147,19 +147,14 @@ Map.prototype.updateSprite = function(game) {
         
     }
     
-    else if (sprite.MOVE_STATE === 'MOVING') {
-        
-        sprite.interpolateMove(game);
-        
-    }
+    else { sprite.interpolateMove(game); }
     
     sprite.updateSpriteOptions();
-    
     
 };
 
 Map.prototype.startMove = function() {
-
+    
     var DIRECTION = this.game.DIRECTION;
     var graph = this.graph;
     var sprite = this.sprite;
@@ -175,7 +170,7 @@ Map.prototype.startMove = function() {
         row: 0,
         col: 0
     };
-
+    
     if (DIRECTION === 'UP') {
         displacement.row = -1;  
     }
@@ -189,7 +184,7 @@ Map.prototype.startMove = function() {
         displacement.col = +1;
     }
     
-
+    
     
     // Determine final tile
     var endTile = this.getTile(floor, row + displacement.row, col + displacement.col);
@@ -206,84 +201,39 @@ Map.prototype.startMove = function() {
         sprite.changeDirection(DIRECTION);
         sprite.startTile = startTile;
         sprite.endTile = endTile;
-        sprite.MOVE_STATE = 'MOVING';
+        
         
         sprite.start.row = row;
         sprite.start.col = col;
         
         sprite.displacement = displacement;
-        sprite.time.total = 1/sprite.speed;
-        sprite.time.start = new Date();
         
+        // Set move state, determine time allotted for move
+        var speed;
+        if (startTile.type === 'LAND' && endTile.type === 'WATER') {
+            sprite.MOVE_STATE = 'JUMP ON';  
+            speed = sprite.jumpSpeed;            
+        } 
+        else if (startTile.type === 'WATER' && endTile.type === 'LAND') {      
+            sprite.MOVE_STATE = 'JUMP OFF';
+            speed = sprite.jumpSpeed;
+        }
+        else if (startTile.type === 'LAND') {
+            sprite.MOVE_STATE = 'WALK';
+            speed = sprite.walkSpeed;
+        }
+        else if (startTile.type === 'WATER') {            
+            sprite.MOVE_STATE = 'SURF';
+            speed = sprite.surfSpeed;
+        }
+        
+        sprite.time.total = 1/speed;
+        sprite.time.start = new Date();
         sprite.interpolateMove();
         
     }
     
 };
-
-
-
-
-
-
-Map.prototype.moveSprite = function(direction) {
-    
-    var graph = this.graph;
-    
-    var currentTile = this.sprite.tile;
-    var floor = currentTile.floor;
-    var row = currentTile.row;
-    var col = currentTile.col;
-    
-    this.sprite.changeDirection(direction);
-    
-    var dir = {
-        row: 0,
-        col: 0
-    };
-
-    if (direction === 'up') {
-        dir.row = -1;  
-    }
-    else if (direction === 'down') {
-        dir.row = +1; 
-    }
-    else if (direction === 'left') {
-        dir.col = -1;
-    }
-    else if (direction === 'right') {
-        dir.col = +1;
-    }
-    
-    
-    
-    var endTile = this.getTile(floor, row + dir.row, col + dir.col);
-    
-    if (endTile && graph.hasEdge(currentTile.id, endTile.id)) {
-        
-        // If tile is ladder, get tile on other end of ladder
-        if (endTile.ladder) {  
-            endTile = this.useLadder(endTile);
-        }
-        
-        // Movement is admissable, go to end tile
-        this.sprite.setTile(endTile);
-        this.drawSprite();
-    }
-    
-        
-    //this.sprite.moveSprite();
-    
-};
-
-// Move sprite to a new tile
-Map.prototype.moveSpriteTo = function(floor, row, col) {
-    
-    
-    
-    
-};
-
 
 
 Map.prototype.useLadder = function(endA) {
@@ -322,13 +272,13 @@ Map.prototype.createMapLayers = function(graph) {
         this.floors[f].createGraphicEdges(graph);
         
         
-//        this.floors[f].drawBitmapRockLayer();
-//        this.floors[f].drawBitmapFloorLayer();
-////        this.floors[f].drawGraphicRockLayer();
-////        this.floors[f].drawGraphicFloorLayer();
-//        this.floors[f].drawGraphicRowsCols();
-//        this.floors[f].drawGraphicKeyTiles();
-////        this.floors[f].drawGraphicEdges();
+        //        this.floors[f].drawBitmapRockLayer();
+        //        this.floors[f].drawBitmapFloorLayer();
+        ////        this.floors[f].drawGraphicRockLayer();
+        ////        this.floors[f].drawGraphicFloorLayer();
+        //        this.floors[f].drawGraphicRowsCols();
+        //        this.floors[f].drawGraphicKeyTiles();
+        ////        this.floors[f].drawGraphicEdges();
         
     }   
     
@@ -338,7 +288,7 @@ Map.prototype.createMapLayers = function(graph) {
 
 
 Map.prototype.drawGraphicLayers = function() {
-   
+    
     for (let f in this.floors) {   
         this.floors[f].drawGraphicRockLayer();
         this.floors[f].drawGraphicFloorLayer(); 
@@ -347,7 +297,7 @@ Map.prototype.drawGraphicLayers = function() {
 
 
 Map.prototype.drawBitmapLayers = function() {
-   
+    
     for (let f in this.floors) {      
         this.floors[f].drawBitmapRockLayer();
         this.floors[f].drawBitmapFloorLayer();
@@ -365,7 +315,7 @@ Map.prototype.drawGraphicRowsCols = function() {
 
 
 Map.prototype.highlightTile = function(x, y, targetCanvas) {
-
+    
     // Find corresponing floor
     for (let f in this.floors) {
         var floor = this.floors[f];
@@ -387,6 +337,40 @@ Map.prototype.highlightTile = function(x, y, targetCanvas) {
     if (tileType && tileType !== 'ROCK') {
         floor.highlightTile(floor_row, floor_col);
     }
-
+    
 };
 
+
+
+Map.prototype.initGameboy = function() {
+    
+    this.gameboy = {};
+    
+    var canvas = document.getElementById('gameboy');
+    var ctx = canvas.getContext('2d');
+    
+    var tile_size = canvas.width / 15;
+    
+    canvas.height = tile_size * 10;
+    
+    this.gameboy.canvas = canvas;
+    this.gameboy.ctx = ctx;
+    
+};
+
+Map.prototype.drawGameboy = function() {
+    
+    
+    var sprite = this.sprite;
+    var floor = this.sprite.tile.floor;
+    var floorlayer = floor.bitmap.floorlayer;
+    
+    var canvas = this.gameboy.canvas;
+    var ctx = this.gameboy.ctx;
+    
+    var sx = (sprite.current.col - 7) * floor.tile_size;
+    var sy = (sprite.current.row - 4.5) * floor.tile_size;
+    
+    ctx.drawImage(floor.canvas, sx, sy, floor.tile_size * 15, floor.tile_size * 10, 0, 0, canvas.width, canvas.height);
+    //ctx.drawSprite()
+};

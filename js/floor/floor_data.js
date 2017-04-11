@@ -62,6 +62,8 @@ var F1_data = (function() {
         15: [9, 10, 11],
     }
     
+    water[20] = [30, 31, 32]
+    
     // Remove edges
     var noEdges = [
         

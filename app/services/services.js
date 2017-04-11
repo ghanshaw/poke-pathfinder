@@ -44,6 +44,10 @@ pokemonApp.service('pokeMap', function() {
     this.map.LAYER_STATE === 'BITMAP';
     this.map.ROWSCOLS_STATE === 'OFF';
     
+    // Create gameboy
+    this.map.initGameboy();
+    this.map.drawGameboy();
+    
     
 });
 
@@ -51,11 +55,9 @@ pokemonApp.service('pokeMap', function() {
 // Game Service (game state, game logic and game loop)
 pokemonApp.service('pokeGame', function($log, $interval, pokeMap) {
 
-     
-    
     // Initialize a new Game object
     var game = new Game();
-    game.FPS = 10;
+    game.FPS = 60;
     game.DIRECTION = null;
     game.GENDER = 'BOY';
     game.ticks = 0;
@@ -99,12 +101,12 @@ pokemonApp.service('pokeGame', function($log, $interval, pokeMap) {
         // Draw sprite
         map.drawSprite();
         
-        
+        map.drawGameboy();
         game.ticks++;
         
     };
     
-    $interval(gameLoop, 1000/this.FPS);
+    $interval(gameLoop, 1000/game.FPS);
     
     this.game = game;
     

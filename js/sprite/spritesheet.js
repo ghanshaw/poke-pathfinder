@@ -1,5 +1,7 @@
 var SpriteSheet = function(spritesheet_data) {
     this.player = spritesheet_data.player();
+    this.pokemon = spritesheet_data.pokemon();
+    this.dust = spritesheet_data.dust();
     this.spritesheet_data = spritesheet_data;
 };
 
@@ -35,18 +37,36 @@ SpriteSheet.prototype.initCanvas = function() {
 
 SpriteSheet.prototype.getRowCol = function(spriteOptions) {
     
-    var player = this.player;
+    
             
     // Sprite is a player (has a gender)
-    if (spriteOptions.GENDER) {
+    if (spriteOptions.TYPE === 'PLAYER') {      
         var GENDER = spriteOptions.GENDER;
         var ACTIVITY = spriteOptions.ACTIVITY;
         var FACING = spriteOptions.FACING;
         var ORIENTATION = spriteOptions.ORIENTATION;
-        var rowcol = player[GENDER][ACTIVITY][FACING][ORIENTATION];
+        var rowcol = this.player[GENDER][ACTIVITY][FACING][ORIENTATION];
         
         return rowcol;
     }
+    
+    // Sprite is a surf pokemon
+    if (spriteOptions.TYPE === 'POKEMON') {
+        var FACING = spriteOptions.FACING;
+        var ORIENTATION = spriteOptions.ORIENTATION;
+        var rowcol = this.pokemon[FACING][ORIENTATION];
+        
+        return rowcol;
+    }
+    
+    // Sprite is a dust
+    if (spriteOptions.TYPE === 'DUST') {
+        var STAGE = spriteOptions.STAGE;
+        var rowcol = this.dust[STAGE];
+        
+        return rowcol;
+    }
+    
         
 };
 

@@ -123,8 +123,7 @@ pokemonApp.controller('mainController', function($scope, $log, pokeMap, pokeGame
 
 pokemonApp.controller('userController', function($scope, $log, pokeMap) { 
    
-    var map = pokeMap.map;
-    
+    var map = pokeMap.map;    
     
     /********* -- Select Algorithm -- ************/
     
