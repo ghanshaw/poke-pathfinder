@@ -163,7 +163,7 @@ Floor.prototype.initCanvas = function(rows, cols, width) {
     this.canvas.cols = cols || 44;
     
     // Compute dimentions of canvas
-    var mapWrapperWidth = $('.mapWrapper').width();
+    var mapWrapperWidth = $('.caveWrapperBackground').width();
     this.canvas.width = width || mapWrapperWidth;
     //this.canvas.width = 1280;
     
@@ -172,6 +172,8 @@ Floor.prototype.initCanvas = function(rows, cols, width) {
     if (this.tile_size % 2 !== 0) {
         this.tile_size--;
     }
+    
+    this.tile_size = 16;
     
     // Update canvas height
     this.canvas.width = this.tile_size * this.canvas.cols;

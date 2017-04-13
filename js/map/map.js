@@ -9,6 +9,7 @@ var Map = function(map_data) {
     //        GRAPHIC: 1
     //    }
     //    
+    this.transitionSpeed = 1.5;
 };
 
 Map.prototype.addFloor = function(floor) {
@@ -105,6 +106,7 @@ Map.prototype.getTileFromId = function(tileId) {
 };
 
 
+
 /*******************************************/
 /**********    Sprite Methods    ***********/
 /*******************************************/
@@ -138,6 +140,12 @@ Map.prototype.drawSprite = function() {
 Map.prototype.updateSprite = function(game) {
     
     var sprite = this.sprite;
+    
+    
+    if (sprite.MOVE_STATE === 'USER MOVE') {
+        // Hide sprite;
+        return;
+    }
     
     if (sprite.MOVE_STATE === 'STILL' ||
             sprite.MOVE_STATE === 'WALL WALK') { 
@@ -205,7 +213,7 @@ Map.prototype.startMove = function() {
         sprite.startTile = startTile;
         sprite.endTile = this.getOtherEndLadder(startTile);
         
-        speed = sprite.walkSpeed * .75;
+        speed = this.transitionSpeed;
         sprite.time.total = 1/speed;
         sprite.time.start = new Date();
         sprite.interpolateMove();
@@ -226,7 +234,7 @@ Map.prototype.startMove = function() {
             sprite.startTile = startTile;
             sprite.endTile = startTile;
             
-            speed = sprite.walkSpeed * 5;
+            var speed = sprite.getSpeed();
             sprite.time.total = 1/speed;
             sprite.time.start = new Date();
             sprite.interpolateMove();
@@ -269,26 +277,22 @@ Map.prototype.startMove = function() {
         var speed;
         // ----- 3. Jumping onto water pokemon ----- //
         if (startTile.type === 'LAND' && endTile.type === 'WATER') {
-            sprite.MOVE_STATE = 'JUMP ON';  
-            speed = sprite.jumpSpeed;            
+            sprite.MOVE_STATE = 'JUMP ON';    
         } 
         // ----- 4. Jumping off of water pokemon ----- //
         else if (startTile.type === 'WATER' && endTile.type === 'LAND') {      
             sprite.MOVE_STATE = 'JUMP OFF';
-            speed = sprite.jumpSpeed;
         }
         // ----- 5. Walking on land ----- //
         else if (startTile.type === 'LAND') {
             sprite.MOVE_STATE = 'WALK';
-            speed = sprite.walkSpeed;
         }
         // ----- 6. Surfing on water ----- //
-        else if (startTile.type === 'WATER') {
-            
+        else if (startTile.type === 'WATER') {         
             sprite.MOVE_STATE = 'SURF';
-            speed = sprite.surfSpeed;
         }
         
+        var speed = sprite.getSpeed();
         sprite.time.total = 1/speed;
         sprite.time.start = new Date();
         sprite.interpolateMove();
@@ -309,7 +313,7 @@ Map.prototype.startMove = function() {
             sprite.startTile = startTile;
             sprite.endTile = startTile;
             
-            speed = sprite.walkSpeed / 2;
+            var speed = sprite.getSpeed();
             sprite.time.total = 1/speed;
             sprite.time.start = new Date();
             sprite.interpolateMove();
@@ -442,29 +446,236 @@ Map.prototype.drawGraphicRowsCols = function() {
 };
 
 
-Map.prototype.highlightTile = function(x, y, targetCanvas) {
+
+
+
+
+
+
+
+
+Map.prototype.initDivs = function() {
+  
+    var sprite = this.sprite;
+    var tile_size = sprite.tile.floor.tile_size;
+    var game = this.game;
+  
+    var playerDiv = document.createElement('div');
+    
+    $('.canvasWrapper').append(playerDiv);
+    
+    $(playerDiv).attr('id', 'playerDiv');
+    $(playerDiv).css({'width': tile_size, 'height': tile_size });
+    
+    var tinyPlayerBoy = document.getElementById('tiny-player-boy');
+    var tinyPlayerGirl = document.getElementById('tiny-player-girl');
+    
+    $(tinyPlayerBoy).css({'width': tile_size * 2, 'height': tile_size * 2});
+    $(tinyPlayerGirl).css({'width': tile_size * 2, 'height': tile_size * 2});
+    
+    //var GENDER = game.GENDER;
+    var GENDER = 'BOY';
+    
+    this.playerDiv = playerDiv;
+    this.updateDivs();
+    
+    $(playerDiv).draggable({
+        addClasses: true,
+//        revert: function() {
+//            
+//            return true;
+//        },
+        cursor: "crosshair",
+        cursorAt: { top: 5, left: 5 },
+        appendTo: 'body',
+        //containment: ".mapWrapper",
+//        helper: function( event ) {
+//            
+//            console.log('help me');
+//            
+//            if (GENDER === 'BOY') {
+//                return $( tinyPlayerBoy );
+//            }
+//            else if (game.GENDER === 'GIRL') {
+//                return $( tinyPlayerGirl );
+//            }
+//
+//        }
+    });
+    
+   
+    
+};
+
+
+Map.prototype.getSpriteTopLeft = function() {
+        
+    var sprite = this.sprite;
+    var floor = this.sprite.tile.floor;
+    var tile_size = sprite.tile.floor.tile_size;
+    
+    var top = (sprite.current.row + floor.offset_rows) * tile_size;
+    var left = (sprite.current.col + floor.offset_cols) * tile_size;
+
+    // Include distance of canvas from top of canvasWrapper
+    var position = $(floor.canvas).position();
+    top += position.top;
+    left += position.left;
+    
+    
+    return {
+        top: top,
+        left: left
+    };
+    
+};
+
+
+Map.prototype.updateDivs = function() {
+        
+    var sprite = this.sprite;
+    var playerDiv = this.playerDiv;
+    var floor = this.sprite.tile.floor;
+    var tile_size = sprite.tile.floor.tile_size;
+    
+    var top = (sprite.current.row + floor.offset_rows) * tile_size;
+    var left = (sprite.current.col + floor.offset_cols) * tile_size;
+
+    // Include distance of canvas from top of canvasWrapper
+    var offset_top = $(floor.canvas).position().top;
+    top += offset_top;
+    
+    $(playerDiv).css({'top': top, 'left': left});
+    
+    //console.log(sprite);
+    
+    
+    
+};
+
+
+Map.prototype.startUserMove = function(x, y, targetId) {
+    
+    var sprite = this.sprite;
+    
+    if (targetId === this.playerDiv.id) {
+        
+       // If sprite isn't currently moveing, initiate sprite move
+        if (sprite.MOVE_STATE === 'STILL') {     
+            sprite.MOVE_STATE = 'USER MOVE';          
+        }
+        
+    }
+    
+    /*** Reserved in case div is removed ***/
+    
+//    var pointerTile = this.getTileFromPointer(x, y, targetId);
+//    var spriteTile = this.sprite.tile;
+//    
+//    // If user is clicking on sprite
+//    if (pointerTile && pointerTile.id === spriteTile.id) {
+//        
+//        // If sprite isn't currently moveing, initiate sprite move
+//        if (sprite.MOVE_STATE === 'STILL') {     
+//            sprite.MOVE_STATE = 'USER MOVE';          
+//        }
+//       
+//    }
+    
+    
+};
+
+Map.prototype.endUserMove = function() {
+    
+    var sprite = this.sprite;
+    
+    if (this.validTile) {
+        var tile = this.getTileFromId(this.validTile);
+        sprite.setTile(tile);
+        console.log('set to null');
+        this.validTile = null;
+    }
+    
+    sprite.MOVE_STATE = 'STILL';
+
+};
+
+Map.prototype.getTileFromPointer  = function(top, left) {
     
     // Find corresponing floor
     for (let f in this.floors) {
         var floor = this.floors[f];
-        if (targetCanvas === floor.canvas.id) {
+        
+        floor_position = $(floor.canvas).position();
+        floor_height = floor.canvas.height;
+        
+        if (top > floor_position.top && top < (floor_position.top + floor_height)) {
+            
+            // Adjust top, so it's within floor
+            top -= floor_position.top;
+            left -= floor_position.left;
             break;
+            console.log('correct floor');
+            console.log(floor.id);
         }
+       
     }
     
-    var canvas_col = Math.floor(x / floor.tile_size);
-    var canvas_row = Math.floor(y / floor.tile_size);
+  
+    var cave_col = Math.floor(left / floor.tile_size);
+    var cave_row = Math.floor(top / floor.tile_size);
     
     // Remove offset of row, col
-    var floor_row = canvas_row - floor.offset_rows;
-    var floor_col = canvas_col - floor.offset_cols;
+    var floor_row = cave_row - floor.offset_rows;
+    var floor_col = cave_col - floor.offset_cols;
     
     // Get tile type
-    var tileType = floor.getTileType(floor_row, floor_col);
+    var tile = floor.getTile(floor_row, floor_col);
     
-    if (tileType && tileType !== 'ROCK') {
-        floor.highlightTile(floor_row, floor_col);
+    return tile;
+    
+};
+
+Map.prototype.highlightTile = function(x, y, targetId) {
+   
+   if (targetId === this.playerDiv.id) {
+       console.log('playerDiv.id');
+      this.validTile = null;
+      return;
+   }
+    
+    var pointerTile = this.getTileFromPointer(x, y, targetId);
+    
+    if (pointerTile && pointerTile.type !== 'ROCK') {
+        this.validTile = pointerTile.id;
+    } else {
+        console.log('no tile');
+        this.validTile = null;
     }
+    
+};
+
+Map.prototype.drawHighlights = function() {
+    
+    //console.log(this.validTile);
+    
+    if (!this.hoverTile) {
+        return;
+    }
+    
+    var tile = this.getTileFromId(this.hoverTile);
+    var floor = tile.floor;
+    
+    var row = tile.row;
+    var col = tile.col;
+    var floor = tile.floor;
+    
+    var x = col * floor.tile_size;
+    var y = row * floor.tile_size;
+    
+    floor.ctx.strokeStyle = 'yellow';
+    
+    floor.ctx.strokeRect(x + floor.offset_x, y + floor.offset_y, floor.tile_size, floor.tile_size);   
     
 };
 

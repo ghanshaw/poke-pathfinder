@@ -1,6 +1,10 @@
-html, body, h1, h2, h3, h4,h5, h6, p, label {
+html, body, h1, h2, h3, h4,h5, h6, p, label, button {
     font-family: 'Open-Sans', sans-serif;   
     font-weight: 100;
+}
+
+body {
+    background-color: #eee;
 }
 
 .mapWrapper {
@@ -25,6 +29,24 @@ img, canvas {
     outline: none;
 }
     
+
+
+#player-div {
+    //position: absolute;
+    border: 2px solid turquoise;
+    height: 16px;
+    width: 16px;
+}
+
+.drag-icon {
+    position: absolute;
+    opacity: 0;
+    width: 100%;
+}
+
+.ui-draggable-dragging .drag-icon {
+    opacity: 1;
+}
 
 .btn {
     margin: 10px 10px 10px 0px;   
@@ -54,4 +76,104 @@ img, canvas {
 
 #gameboy {
     border: 10px solid purple;   
+}
+
+
+
+button, select {
+  display: inline-block;
+  margin: 0 10px 0 0;
+  padding: 6px 12px;
+  font-size: 14px;
+  line-height: 1.8;
+  vertical-align: bottom;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  -webkit-box-shadow: none;
+  -moz-box-shadow: none;
+  box-shadow: none;
+  -webkit-border-radius: 0;
+  -moz-border-radius: 0;
+  border-radius: 0;
+}
+button:focus {
+  outline: none
+}
+
+.button-3D {
+  color: #fff;
+  background-color: #cb2d3e;
+  background-image: linear-gradient(top, #ef473a, #cb2d3e);
+  border: none;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.button-3D:hover,
+.button-3D.hover {
+  box-shadow: 5px 5px 15px #777;
+}
+
+.button-3D:active,
+.button-3D.active {
+  box-shadow: inset 0 5px 30px #7b4d53;
+}
+
+
+@media all and (max-width: 960px) { 
+  button {
+    font-size: 30px
+  }
+}
+@media all and (max-width: 720px) { 
+  button {
+    font-size: 20px;
+    padding: 10px 30px;
+  }
+}
+@media all and (max-width: 540px) { 
+  section {
+    text-align: center
+  }
+  button {
+    margin: 0 10px 20px 10px;
+    font-size: 16px;
+  }
+}
+
+
+select {
+    background:  url(../images/down_caret.png) no-repeat 90% center;
+    width: 100%;
+}
+
+section .section-heading {
+    margin-bottom: 25px;   
+}
+
+section {
+    margin: 20px 0px 20px 0px;   
+}
+
+.caveWrapper {
+    box-shadow: 20px 20px 20px rgba(84, 92, 101, 0.99);
+    display: inline-block;
+    margin: 50px 0px;
+}
+
+.caveWrapperBackground {
+    background-color: slategrey;
+    display: block;
+    width: 100%;
+    text-align: center;
+}
+
+.no-padding {
+    margin: 0;
+    padding: 0;
+}
+
+.extra-padding {
+    padding: 0px 35px;
 }

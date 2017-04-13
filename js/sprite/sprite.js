@@ -47,7 +47,8 @@ var Sprite = function() {
     this.surfTicks = 0;
     
     this.jumpSpeed = 1;
-    
+    this.wallWalkSpeed = 1.75;
+    this.turnSpeed = 17.5;
     
     // Time measures used to account for movement
     this.time = {
@@ -103,19 +104,19 @@ Sprite.prototype.initBitmap = function() {
 };
 
 
+
 Sprite.prototype.changeDirection = function(DIRECTION) {
     this.playerOptions.FACING = DIRECTION;
 };
+
+
 
 Sprite.prototype.setTile = function(tile) {
     var prevTile = this.tile;
     
     this.tile = tile;
-    this.current = {
-        row: tile.row,
-        col: tile.col
-    };
-    
+    this.current.row = tile.row;
+    this.current.col = tile.col;
     
     // If he's on water, increment surf counter
     if (prevTile && prevTile.type === 'LAND' && tile.type === 'WATER') { 
@@ -126,10 +127,35 @@ Sprite.prototype.setTile = function(tile) {
 
 
 
-Sprite.prototype.startMove = function() {
+Sprite.prototype.getSpeed = function() {
     
     
+    console.log(this.factorSpeed);
     
+    
+    // Get speed corresponding to MOVE_STATE, increase by speed factor
+    switch (this.MOVE_STATE) {
+            
+        case 'WALK':
+            return this.walkSpeed * this.factorSpeed;
+            
+        case 'JUMP ON':
+            return this.jumpSpeed * this.factorSpeed;
+        
+        case 'JUMP OFF':
+            return this.jumpSpeed * this.factorSpeed;
+            
+        case 'SURF':
+            return this.surfSpeed * this.factorSpeed;
+        
+        case 'WALL WALK':
+            return this.wallWalkSpeed * this.factorSpeed;
+        
+        case 'TURN':
+            return this.turnSpeed * this.factorSpeed;
+    
+                }
+        
 };
 
 
@@ -263,15 +289,7 @@ Sprite.prototype.interpolateMove = function() {
 
     }
     
-//    else if (this.game.DIRECTION) {
-//        this.setTile(this.endTile);
-//        this.steps += 1;
-//        this.MOVE_STATE = 'STILL';
-//        //this.map.startMove();
-//        return;
     else {
-        //console.error('NO DIRECTION');
-        //
         // If player just finished jumping onto pokemon
         // Surf is begnning, reset surf ticks
         if (this.MOVE_STATE === 'JUMP ON') {
@@ -280,32 +298,6 @@ Sprite.prototype.interpolateMove = function() {
         }
         
 
-        
-//        if (this.usingLadder) {
-//            
-//            // Make screen go black
-//            console.log(this);
-//            var canvas = this.map.floors['F1'].canvas;
-//            var ctx = canvas.getContext('2d');
-//            this.setTile(this.endTile);
-//            
-//            var blackCanvas = document.createElement('canvas');
-//            var blackCtx = canvas.getContext('2d');
-//            
-//            blackCanvas.width = canvas.width;
-//            blackCanvas.height = canvas.height;
-//            
-//            blackCtx.fillStyle = 'black';
-//            blackCtx.globalAlpha = 0.02;
-//            
-//            blackCtx.fillRect(0, 0, blackCanvas.width, blackCanvas.height);
-//            
-//            ctx.drawImage(blackCanvas, 0, 0, canvas.width, canvas.height);
-//            
-//            
-//            ctx.drawImage();
-//            // Make screen go bright
-//        }
         this.steps += 1;
         
 
@@ -341,7 +333,13 @@ Sprite.prototype.updateSpriteOptions = function() {
     
     // Update sprite gender
     //options.GENDER = this.game.GENDER;
-    playerOptions.GENDER = 'BOY';   
+    //playerOptions.GENDER = 'BOY'; 
+    playerOptions.SHOW = true;
+    
+    if (this.MOVE_STATE === 'USER MOVE') {
+        playerOptions.SHOW = false;
+        return;
+    }
     
     if (this.MOVE_STATE === 'CLIMB') {
         
@@ -488,6 +486,9 @@ Sprite.prototype.drawSprite = function() {
     
     var tile_size = floor.tile_size;
     
+    if (this.MOVE_STATE === 'USER MOVE') {
+        return;
+    }
     
     if (this.active === 'GRAPHIC') {
         let x = col * tile_size + floor.offset_x - (.5 * tile_size);
@@ -537,6 +538,10 @@ Sprite.prototype.drawSprite = function() {
         let xy = this.spritesheet.getXY(this.playerOptions);
         let sx = xy.x;
         let sy = xy.y;
+        
+//        var spritesheetCanvas = this.spritesheet.canvas;
+//        var spritesheetCtx = spritesheetCanvas.getContext('2d');
+        
         ctx.drawImage(this.spritesheet.canvas, sx, sy, sprite_size, sprite_size, x, y, tile_size * 2, tile_size * 2);
 
         // Draw dust sprite  

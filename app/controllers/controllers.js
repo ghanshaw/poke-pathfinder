@@ -1,8 +1,9 @@
-pokemonApp.controller('mainController', function($scope, $log, pokeMap, pokeGame) { 
+pokemonApp.controller('caveController', function($scope, $log, pokeMap, pokeGame) { 
     
     
     var map = pokeMap.map;
     var game = pokeGame.game;
+    var sprite = pokeMap.map.sprite;
     
     //map.sprite.MOVE_STATE = 'ON';
     //map.sprite.DIRECTION = 'LEFT';
@@ -63,12 +64,26 @@ pokemonApp.controller('mainController', function($scope, $log, pokeMap, pokeGame
 
     };
     
+    $scope.map = map;
+    $scope.sprite = pokeMap.map.sprite.current;
     
+    // Set gender for dragger directive
+    $scope.playerOptions = sprite.playerOptions;
+    
+    $scope.getCanvasXY = function(row, col, floorId) {
+        
+        map.getTileFromId([floorId, row, col])
+        
+    };
+    
+    $scope.$watch('sprite', function() {
+        
+        //console.log($scope.sprite);
+        //$log.info("sprite is changing");
+        
+    }, true);
 
-    
-    $scope.$watch('spriteTile', function(oldValue, newValue) {
-        //$scope.updateCanvas();
-    });
+
     
     $scope.updateCanvas = function() {
         
@@ -78,45 +93,58 @@ pokemonApp.controller('mainController', function($scope, $log, pokeMap, pokeGame
         $log.log($scope);
     };
     
-    $scope.highlightTile = function($event) {
+    $scope.startXY = {};
+    
+    $scope.getPointerXY = function(event) {
         
-        var layerX = $event.layerX;
-        var layerY = $event.layerY;
         
+        
+        var layerX = event.layerX;
+        var layerY = event.layerY; 
         var targetCanvas = event.target.id;
         
-        map.highlightTile(layerX, layerY, targetCanvas);
-                
+        return {
+            X: layerX,
+            Y: layerY,
+            canvas: targetCanvas
+        }
     };
     
-    $scope.selectTile = function($event) {
+    $scope.startUserMove = function(event) {
         
-        var layerX = $event.layerX;
-        var layerY = $event.layerY;
+        var pointerXY = $scope.getPointerXY(event);   
+        map.startUserMove(pointerXY.X, pointerXY.Y, pointerXY.canvas);
         
-        var targetCanvas = event.target.id;
+    };
+    
+    $scope.userMove = function(event) {
+        
+        console.log('moving cursor');
+        console.log(event);
+        
+        var sprite = map.sprite;
+        //console.log(event.target.id);
         
         
-        
-        if ($scope.game_mode === 'selectingStartTile') {
-        
-            //$scope.startTile =
-            map.moveSprite(layerX, layerY, targetCanvas);
+        if (sprite.MOVE_STATE === 'USER MOVE') {  
+            var pointerXY = $scope.getPointerXY(event);
+            map.highlightTile(pointerXY.X, pointerXY.Y, pointerXY.canvas);
+        }
             
-            var startTile = tiles.options[0];
-            
-            
+    };
+    
+    
+    $scope.endUserMove = function(event) {   
+        
+        var sprite = map.sprite;
+        var pointerXY = $scope.getPointerXY(event);
+        
+        if (sprite.MOVE_STATE === 'USER MOVE') {
+            map.endUserMove(pointerXY.X, pointerXY.Y, pointerXY.canvas);
         }
         
-        else if ($scope.game_mode === 'selectingEndTile') {
-         
-            map.moveTarget(layerX, layerY, targetCanvas);
-            var endTile = tiles.options[4];
-            
-        }
-        
-        
-    }
+    };
+    
     
 });
 
@@ -124,6 +152,7 @@ pokemonApp.controller('mainController', function($scope, $log, pokeMap, pokeGame
 pokemonApp.controller('userController', function($scope, $log, pokeMap) { 
    
     var map = pokeMap.map;    
+    var sprite = map.sprite;
     
     /********* -- Select Algorithm -- ************/
     
@@ -185,27 +214,32 @@ pokemonApp.controller('userController', function($scope, $log, pokeMap) {
     /********* -- Turn Layers on and off -- ************/
     
     
-    $scope.layer = {
-        click: 'bitmap',
+    $scope.LAYER = {
+        click: 'BITMAP',
         hover: null
     };
     
-    // Toggle Graphic layer on/off
-    $scope.enterGraphicLayer = function() { $scope.layer.hover = 'graphic'; };
+    // Toggle Bitmap/Graphic layer on/off
+    $scope.enterLayer = function(LAYER) { $scope.LAYER.hover = LAYER; };
     
-    $scope.leaveGraphicLayer = function() { $scope.layer.hover = null; };
+    $scope.leaveLayer = function(LAYER) { $scope.LAYER.hover = null; };
     
-    $scope.clickGraphicLayer = function() { $scope.layer.click = 'graphic'; };
-    
-    // Toggle Bitmap layer on/off
-    $scope.enterBitmapLayer = function() { $scope.layer.hover = 'bitmap'; };
-    
-    $scope.leaveBitmapLayer = function() { $scope.layer.hover = null; };
-    
-    $scope.clickBitmapLayer = function() { $scope.layer.click = 'bitmap'; };
-    
+    $scope.clickLayer = function(LAYER) { $scope.LAYER.click = LAYER; };
+
     // Update active view as necessary
-    $scope.$watch('layer', function(newValue, oldValue) { $scope.updateCanvas(); }, true);
+    $scope.$watch('LAYER', function() { 
+        
+        // Turn Graphic/Bitmap layers on/off based on variables
+        var LAYER = $scope.LAYER;
+        
+        if (LAYER.hover) {
+            map.LAYER_STATE = LAYER.hover;
+        }
+        else {
+            map.LAYER_STATE = LAYER.click;
+        }
+        
+    }, true);
     
     
     /********* -- Turn Rows/Columns on and off -- ************/
@@ -226,37 +260,7 @@ pokemonApp.controller('userController', function($scope, $log, pokeMap) {
     
     // Update active view as necessary
     $scope.$watch('rowscols', function(newValue, oldValue) {
-        $scope.updateCanvas();
-    }, true);
-    
-    
-    $scope.updateCanvas = function() {
         
-        
-        // Turn Graphic/Bitmap layers on/off based on variables
-        var layer = $scope.layer;
-        
-        if (layer.hover) {
-            if (layer.hover === 'bitmap') {
-                map.LAYER_STATE = "BITMAP";
-                //map.drawBitmapLayers();
-            } 
-            else {
-                map.LAYER_STATE = "GRAPHIC";
-                //map.drawGraphicLayers();
-            }
-        }
-        else {
-            if (layer.click === 'bitmap') {
-                map.LAYER_STATE = "BITMAP";
-                //map.drawBitmapLayers();
-            }
-            else {
-                map.LAYER_STATE = "GRAPHIC";
-                //map.drawGraphicLayers();
-            }
-        }
-
         // Turn rows/cols on/off
         var rowscols = $scope.rowscols;
         
@@ -271,8 +275,62 @@ pokemonApp.controller('userController', function($scope, $log, pokeMap) {
             map.ROWSCOLS_STATE = 'OFF';       
         }
         
-        $log.log($scope);
+    }, true);
+    
+    
+    /********* -- Update Speed -- ************/
+    
+    $scope.speed = {
+        click: 1,
+        hover: null
     };
+    
+    $scope.enterSpeed = function(speed) { $scope.speed.hover = speed; };
+        
+    $scope.leaveSpeed = function(speed) { $scope.speed.hover = null; }; 
+    
+    $scope.clickSpeed = function(speed) { $scope.speed.click = speed; };
+    
+    // Update sprite speed
+    $scope.$watch('speed', function() {
+    
+        var speed = $scope.speed;
+        
+        if (speed.hover) {
+            sprite.factorSpeed = speed.hover;
+        }
+        else if (speed.click) {
+            sprite.factorSpeed = speed.click;
+        }
+        
+    }, true);
+    
+    /********* -- Update Gender -- ************/
+    
+    $scope.GENDER = {
+        click: 'BOY',
+        hover: null
+    };
+    
+    // Toggle Graphic layer on/off
+    $scope.enterGender = function(GENDER) { $scope.GENDER.hover = GENDER; };
+    
+    $scope.leaveGender = function(GENDER) { $scope.GENDER.hover = null; };
+    
+    $scope.clickGender = function(GENDER) { $scope.GENDER.click = GENDER; };
+    
+    $scope.$watch('GENDER', function(newValue, oldValue) {
+        
+        var GENDER = $scope.GENDER;
+        
+        if (GENDER.hover) {
+            sprite.playerOptions.GENDER = GENDER.hover;
+        }
+        else if (GENDER.click) {
+            sprite.playerOptions.GENDER = GENDER.click;
+        }
+        
+    }, true);
     
     
 });

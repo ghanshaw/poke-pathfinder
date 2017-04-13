@@ -40,6 +40,9 @@ pokemonApp.service('pokeMap', function() {
     this.map.initSprite();
     //this.map.drawSprite();
     
+    // Initializae sprite div
+    //this.map.initDivs();
+    
     // Define initial state
     this.map.LAYER_STATE === 'BITMAP';
     this.map.ROWSCOLS_STATE === 'OFF';
@@ -82,6 +85,7 @@ pokemonApp.service('pokeGame', function($log, $interval, pokeMap) {
         // ----- Update game ----- //
         
         map.updateSprite(game);
+        //map.updateDivs();
     
     
         // ----- Render game ----- //
@@ -97,13 +101,18 @@ pokemonApp.service('pokeGame', function($log, $interval, pokeMap) {
         if (map.ROWSCOLS_STATE === 'ON') {
             map.drawGraphicRowsCols();   
         }
+        
+        // Draw highilghts
+        map.drawHighlights();
 
         // Draw sprite
         map.drawSprite();
         map.drawMapTransitionLayer();
         
+        
         map.drawGameboy();
         game.ticks++;
+        
         
     };
     
