@@ -1,6 +1,7 @@
 var spritesheet_data = (function() {
     
-    var imgId = 'spritesheet';
+    var imgId = 'color-spritesheet';
+    var bwImgId = 'bw-spritesheet';
     
     var rows = 12;
     var cols = 11;

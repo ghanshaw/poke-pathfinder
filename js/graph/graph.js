@@ -30,18 +30,18 @@
 // Graph class
 var Graph = function() {
     this.adj = {};    
-}
+};
 
 
 Graph.prototype.addNode = function(v) {
     if (!this.adj.hasOwnProperty(v)) {
         this.adj[v] = [];
     }
-}
+};
 
 Graph.prototype.hasNode = function(v) {
     return this.adj.hasOwnProperty(v);
-}
+};
 
 
 Graph.prototype.addEdge = function(v, u) {
@@ -50,52 +50,53 @@ Graph.prototype.addEdge = function(v, u) {
     this.addNode(v);
     this.addNode(u);
     
-    // Extract edge list
-    var vEdges = this.getEdges(v);
+    // Extract adjacent list
+    var vAdj = this.getAdj(v);
     //var uEdges = this.getEdges(u);
     
     // Add node u to edge list of v
-    if (vEdges.indexOf(u) == -1) {
-        vEdges.push(u);
+    if (vAdj.indexOf(u) === -1) {
+        vAdj.push(u);
     }
     
-}
+};
 
 Graph.prototype.getNodes = function() {
     return this.adj;
-}
+};
 
-Graph.prototype.getEdges = function(v) {
+
+Graph.prototype.getAdj = function(v) {
     if (this.adj.hasOwnProperty(v)) {
         return this.adj[v];
     }
     
-    return null;    
-}
+    return [];    
+};
 
 
 Graph.prototype.removeEdge = function(v, u) {
     
-    // Get edge list
-    var vEdges = this.getEdges(v);
+    // Get adj list
+    var vAdj = this.getAdj(v);
     //var uEdges = this.getEdges(u);
     
     // Add node u to edge list of v
-    var index = vEdges.indexOf(u);
+    var index = vAdj.indexOf(u);
     if (index !== -1) {
-        vEdges.splice(index, 1);
+        vAdj.splice(index, 1);
     }
     
-}
+};
 
 Graph.prototype.hasEdge = function(v, u) {
     
     // Extract edge list
-    var vEdges = this.getEdges(v)
+    var vEdges = this.getAdj(v);
     
     if (vEdges.indexOf(u) === -1) {
         return false;
     }
     return true;
     
-}
+};

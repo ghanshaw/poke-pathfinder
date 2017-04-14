@@ -47,6 +47,8 @@ pokemonApp.service('pokeMap', function() {
     this.map.LAYER_STATE === 'BITMAP';
     this.map.ROWSCOLS_STATE === 'OFF';
     
+    
+    
     // Create gameboy
     this.map.initGameboy();
     this.map.drawGameboy();
@@ -62,7 +64,7 @@ pokemonApp.service('pokeGame', function($log, $interval, pokeMap) {
     var game = new Game();
     game.FPS = 60;
     game.DIRECTION = null;
-    game.GENDER = 'BOY';
+    //game.GENDER = 'BOY';
     game.ticks = 0;
     
     // Attach game to different components of the game
@@ -70,12 +72,41 @@ pokemonApp.service('pokeGame', function($log, $interval, pokeMap) {
     map.game = game;
     map.sprite.game = game;
     
+    var graph = pokeMap.graph;
+    
     
     //var game = this;
     //$log.log('armin van buuren');
     
+    // Create Pathfinder
+    this.pathfinder = new Pathfinder(map);
+    var pathfinder = this.pathfinder;
     
-    
+    this.findPath = function() {
+        
+        map.drawBitmapLayers();
+        
+        var entrance = map.keyTiles[0].tile;
+        var mewtwo = map.keyTiles[1].tile;
+        
+        console.log(entrance);
+        console.log(mewtwo);
+        
+        var source = entrance.id;
+        var target = mewtwo.id;
+        
+        var path = pathfinder.bfs(graph, source, target, map);
+        console.log(path);
+        
+        game.GAME_STATE = 'PATHFINDING';
+        game.PATH = path;
+        game.index = 0;
+        
+    };
+       
+       
+    //this.findPath();
+        
     
     // Game Loop
     var gameLoop = function() {
@@ -84,7 +115,12 @@ pokemonApp.service('pokeGame', function($log, $interval, pokeMap) {
         
         // ----- Update game ----- //
         
+        //map.pathVisualization();
+        
         map.updateSprite(game);
+        map.updatePath(game);
+        // Update rocks
+        // Update water
         //map.updateDivs();
     
     
@@ -104,6 +140,8 @@ pokemonApp.service('pokeGame', function($log, $interval, pokeMap) {
         
         // Draw highilghts
         map.drawHighlights();
+        
+        map.drawGraphicPath();
 
         // Draw sprite
         map.drawSprite();

@@ -72,7 +72,7 @@ pokemonApp.controller('caveController', function($scope, $log, pokeMap, pokeGame
     
     $scope.getCanvasXY = function(row, col, floorId) {
         
-        map.getTileFromId([floorId, row, col])
+        map.getTileFromId([floorId, row, col]);
         
     };
     
@@ -94,56 +94,7 @@ pokemonApp.controller('caveController', function($scope, $log, pokeMap, pokeGame
     };
     
     $scope.startXY = {};
-    
-    $scope.getPointerXY = function(event) {
-        
-        
-        
-        var layerX = event.layerX;
-        var layerY = event.layerY; 
-        var targetCanvas = event.target.id;
-        
-        return {
-            X: layerX,
-            Y: layerY,
-            canvas: targetCanvas
-        }
-    };
-    
-    $scope.startUserMove = function(event) {
-        
-        var pointerXY = $scope.getPointerXY(event);   
-        map.startUserMove(pointerXY.X, pointerXY.Y, pointerXY.canvas);
-        
-    };
-    
-    $scope.userMove = function(event) {
-        
-        console.log('moving cursor');
-        console.log(event);
-        
-        var sprite = map.sprite;
-        //console.log(event.target.id);
-        
-        
-        if (sprite.MOVE_STATE === 'USER MOVE') {  
-            var pointerXY = $scope.getPointerXY(event);
-            map.highlightTile(pointerXY.X, pointerXY.Y, pointerXY.canvas);
-        }
-            
-    };
-    
-    
-    $scope.endUserMove = function(event) {   
-        
-        var sprite = map.sprite;
-        var pointerXY = $scope.getPointerXY(event);
-        
-        if (sprite.MOVE_STATE === 'USER MOVE') {
-            map.endUserMove(pointerXY.X, pointerXY.Y, pointerXY.canvas);
-        }
-        
-    };
+   
     
     
 });
@@ -177,7 +128,7 @@ pokemonApp.controller('userController', function($scope, $log, pokeMap) {
             }
         ],
         selected: { id: 0, label: 'Breadth-first search' }
-    }
+    };
     
     
     /********* -- Select Starting and Stopping Tiles -- ************/
@@ -209,6 +160,19 @@ pokemonApp.controller('userController', function($scope, $log, pokeMap) {
         startTile: { id: 0, label: 'Current Tile' },
         endTile: { id: 2, label: 'Mewtwo' }
     };
+        
+    /********* -- Start/Cancel Pathfindind -- ************/
+    
+    $scope.findPath = function() {
+        
+        pokeGame.findPath();
+        
+        
+    };
+    
+        
+        
+        
         
     
     /********* -- Turn Layers on and off -- ************/
@@ -490,3 +454,55 @@ pokemonApp.controller('gameboyController', function($scope, $log, pokeGraph, pok
 });
 
 */
+
+
+ 
+//    $scope.getPointerXY = function(event) {
+//        
+//        
+//        
+//        var layerX = event.layerX;
+//        var layerY = event.layerY; 
+//        var targetCanvas = event.target.id;
+//        
+//        return {
+//            X: layerX,
+//            Y: layerY,
+//            canvas: targetCanvas
+//        }
+//    };
+//    
+//    $scope.startUserMove = function(event) {
+//        
+//        var pointerXY = $scope.getPointerXY(event);   
+//        map.startUserMove(pointerXY.X, pointerXY.Y, pointerXY.canvas);
+//        
+//    };
+//    
+//    $scope.userMove = function(event) {
+//        
+//        console.log('moving cursor');
+//        console.log(event);
+//        
+//        var sprite = map.sprite;
+//        //console.log(event.target.id);
+//        
+//        
+//        if (sprite.MOVE_STATE === 'USER MOVE') {  
+//            var pointerXY = $scope.getPointerXY(event);
+//            map.highlightTile(pointerXY.X, pointerXY.Y, pointerXY.canvas);
+//        }
+//            
+//    };
+//    
+//    
+//    $scope.endUserMove = function(event) {   
+//        
+//        var sprite = map.sprite;
+//        var pointerXY = $scope.getPointerXY(event);
+//        
+//        if (sprite.MOVE_STATE === 'USER MOVE') {
+//            map.endUserMove(pointerXY.X, pointerXY.Y, pointerXY.canvas);
+//        }
+//        
+//    };

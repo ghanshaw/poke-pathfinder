@@ -93,7 +93,7 @@ Floor.prototype.updateGraph = function(graph) {
     for (let r = 0; r < this.rows; r++) {
         for (let c = 0; c < this.cols; c++) {
             let tile = this.tiles[r][c];
-            graph.addNode(tile.id)
+            graph.addNode(tile.id);
             //vertex = [floor.id, r, c];
             //graph.addNode(vertex);
             
@@ -102,7 +102,7 @@ Floor.prototype.updateGraph = function(graph) {
                 continue;
             }
             
-            let neighbors = []
+            let neighbors = [];
             neighbors.push([r-1, c]);
             neighbors.push([r+1, c]);
             neighbors.push([r, c-1]);
@@ -112,7 +112,7 @@ Floor.prototype.updateGraph = function(graph) {
                 let row = neigh[0];
                 let col = neigh[1];
                 
-                let nTile = this.getTile(row, col)
+                let nTile = this.getTile(row, col);
                 //let type_neigh = this.getTileType(row, col);
                 
                 if (this.inBounds(row, col) && nTile.type !== "ROCK") {
@@ -123,7 +123,7 @@ Floor.prototype.updateGraph = function(graph) {
     }  
     
     // Remove egdes between certain tiles
-    for (edge of this.floor_data.noEdges()) {
+    for (let edge of this.floor_data.noEdges()) {
         let u = edge[0];
         let v = edge[1];
         
@@ -174,6 +174,7 @@ Floor.prototype.initCanvas = function(rows, cols, width) {
     }
     
     this.tile_size = 16;
+    
     
     // Update canvas height
     this.canvas.width = this.tile_size * this.canvas.cols;
@@ -365,7 +366,64 @@ Floor.prototype.createGraphicRowsCols = function() {
     this.graphic.rowscols = canvas;
     //this.ctx.drawImage(canvas, 0, 0);
     
-}
+};
+
+Floor.prototype.createGraphicPathLayer = function() {
+    
+    //Draw dots to represent edges. Mostly for debugging purposes
+    var canvas = document.createElement('canvas');
+    var ctx = canvas.getContext('2d');
+    
+    //nodeV = graph.getNode([r,c]);
+    canvas.width = this.canvas.width;
+    canvas.height = this.canvas.height;
+    tile_size = this.tile_size;
+    
+    ctx.strokeStyle = 'turquoise';
+    ctx.beginPath();
+    ctx.lineWidth = 4;
+    
+    this.graphic.path = canvas;
+    
+};
+
+Floor.prototype.appendPath = function(sprite) {
+    
+   
+    if (sprite.tile.floor.id === this.id) {
+        
+        var x = sprite.current.col * this.tile_size;
+        var y = sprite.current.row * this.tile_size;
+        
+        // Adjust path during jump on/jump off
+        if (sprite.MOVE_STATE === 'JUMP ON' || sprite.MOVE_STATE === 'JUMP OFF') {
+            if (sprite.current.row < sprite.endTile.row && sprite.playerOptions.FACING !== 'DOWN') {
+                var y = sprite.endTile.row * this.tile_size;
+            }
+        }
+        
+        x += this.tile_size / 2;
+        y += this.tile_size / 2;        
+        
+        var canvas = this.graphic.path;
+        var ctx = canvas.getContext('2d');
+        
+        //ctx.beginPath();
+        //ctx.strokeStyle = 'turquoise';
+        ctx.lineTo(x, y);
+        ctx.stroke();
+        //ctx.closePath();
+        //ctx.moveTo(x, y);
+        
+    }
+    
+    //ctx.beginPath();
+    
+    //ctx.lineTo(startXY.x, startXY.y, endXY.x, endXY.y);
+    
+    
+};
+
 
 
 // Create edges 
@@ -391,26 +449,26 @@ Floor.prototype.createGraphicEdges = function(graph) {
         let row = tile.row;
         let col = tile.col;
         
-        for (let e of graph.getEdges(v)) {
+        for (let u of graph.getAdj(v)) {
         
-            let eTile = this.getTileFromId(e);
+            let uTile = this.getTileFromId(u);
         
-            if (!eTile) { continue; }
+            if (!uTile) { continue; }
             
-            let eRow = eTile.row;
-            let eCol = eTile.col;            
+            let uRow = uTile.row;
+            let uCol = uTile.col;            
 
-            if (eRow > row) { }
-            else if (eRow == row) { eRow += (.5); }
-            else if (eRow < row) { eRow += 1; }
+            if (uRow > row) { }
+            else if (uRow === row) { uRow += (.5); }
+            else if (uRow < row) { uRow += 1; }
 
-            if (eCol > col) { }
-            else if (eCol == col) { eCol += (.5); }
-            else if (eCol < col) { eCol += 1; }
+            if (uCol > col) { }
+            else if (uCol === col) { uCol += (.5); }
+            else if (uCol < col) { uCol += 1; }
 
             
-            let dot_x = eCol * tile_size;
-            let dot_y = eRow * tile_size;
+            let dot_x = uCol * tile_size;
+            let dot_y = uRow * tile_size;
             
             ctx.moveTo(dot_x, dot_y);
             ctx.arc(dot_x, dot_y, 1, 0, Math.PI * 2, true);
@@ -419,7 +477,7 @@ Floor.prototype.createGraphicEdges = function(graph) {
     }
     
     this.graphic.edges = canvas;
-}
+};
 
 
 
@@ -453,32 +511,37 @@ Floor.prototype.createGraphicKeyTiles = function() {
     
     this.graphic.keytiles = canvas;
 
-}
+};
 
 
 // Draw Grid view rock layer
 Floor.prototype.drawGraphicRockLayer = function() {
     this.ctx.drawImage(this.graphic.rocklayer, 0, 0);
-}
+};
 
 // Draw Grid view floor layer
 Floor.prototype.drawGraphicFloorLayer = function() {
     this.ctx.drawImage(this.graphic.floorlayer, this.offset_x, this.offset_y);
-}
+};
 
 // Draw Grid view rows/cols
 Floor.prototype.drawGraphicRowsCols = function() {    
     this.ctx.drawImage(this.graphic.rowscols, 0, 0);
-}
+};
 
 // Draw Grid view key tiles
 Floor.prototype.drawGraphicKeyTiles = function() {
     this.ctx.drawImage(this.graphic.keytiles, this.offset_x, this.offset_y);
-}
+};
 
 // Draw Grid view edges
 Floor.prototype.drawGraphicEdges = function() {
     this.ctx.drawImage(this.graphic.edges, this.offset_x, this.offset_y);
+};
+
+// Draw Grid view edges
+Floor.prototype.drawGraphicPath = function() {
+    this.ctx.drawImage(this.graphic.path, this.offset_x, this.offset_y);
 };
 
 

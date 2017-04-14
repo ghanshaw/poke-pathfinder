@@ -1,9 +1,7 @@
-var Sprite = function() {
+var Player = function() {
     
-    this.active = 'BITMAP',
-            this.status = 'STANDING';
-    
-    
+    this.active = 'BITMAP';
+    this.status = 'STANDING';
     
     this.start = null;
     this.end = null;
@@ -75,7 +73,7 @@ var Sprite = function() {
 };
 
 
-Sprite.prototype.initGraphic = function() {
+Player.prototype.initGraphic = function() {
     //var img = new Image();
     
     var canvas = document.createElement('canvas');
@@ -91,12 +89,13 @@ Sprite.prototype.initGraphic = function() {
     
     this.graphic.canvas = canvas;
     
-}
+};
 
-Sprite.prototype.initBitmap = function() {
+
+Player.prototype.initBitmap = function() {
     
-    var spritesheet = new SpriteSheet(spritesheet_data);
-    spritesheet.initCanvas();
+    var spritesheet = new PlayerSheet(spritesheet_data);
+    spritesheet.initCanvas('color');
     
     this.spritesheet = spritesheet;
     //this.bitmap.canvas = spritesheet.canvas;
@@ -104,21 +103,19 @@ Sprite.prototype.initBitmap = function() {
 };
 
 
-
-Sprite.prototype.changeDirection = function(DIRECTION) {
+Player.prototype.changeDirection = function(DIRECTION) {
     this.playerOptions.FACING = DIRECTION;
 };
 
 
-
-Sprite.prototype.setTile = function(tile) {
+Player.prototype.setTile = function(tile) {
     var prevTile = this.tile;
     
     this.tile = tile;
     this.current.row = tile.row;
     this.current.col = tile.col;
     
-    // If he's on water, increment surf counter
+    // If he's entering water, reset surf counter
     if (prevTile && prevTile.type === 'LAND' && tile.type === 'WATER') { 
         this.surfTicks = 0;
     }
@@ -126,12 +123,7 @@ Sprite.prototype.setTile = function(tile) {
 };
 
 
-
-Sprite.prototype.getSpeed = function() {
-    
-    
-    console.log(this.factorSpeed);
-    
+Player.prototype.getSpeed = function() {
     
     // Get speed corresponding to MOVE_STATE, increase by speed factor
     switch (this.MOVE_STATE) {
@@ -154,16 +146,12 @@ Sprite.prototype.getSpeed = function() {
         case 'TURN':
             return this.turnSpeed * this.factorSpeed;
     
-                }
+    }
         
 };
 
 
-
-
-
-
-Sprite.prototype.interpolateWalkSurf = function() {
+Player.prototype.interpolateWalkSurf = function() {
     
     var current = this.current;
     var start = this.start;
@@ -177,7 +165,7 @@ Sprite.prototype.interpolateWalkSurf = function() {
 };
 
 
-Sprite.prototype.parabolicMove = function(x) {
+Player.prototype.parabolicMove = function(x) {
     //-8.16\left(x-\ .35\right)^{2\ }+\ 1
     
     // If you're jumping on, use a predictable parabola to define movement
@@ -197,7 +185,7 @@ Sprite.prototype.parabolicMove = function(x) {
 };
 
 
-Sprite.prototype.interpolateJump = function() {
+Player.prototype.interpolateJump = function() {
     
     var current = this.current;
     var start = this.start;
@@ -243,7 +231,7 @@ Sprite.prototype.interpolateJump = function() {
     
 };
 
-Sprite.prototype.interpolateLadder = function() {
+Player.prototype.interpolateLadder = function() {
     
     var time = this.time;
     var transitionLayer = this.map.transitionLayer;
@@ -262,7 +250,7 @@ Sprite.prototype.interpolateLadder = function() {
 
 
 
-Sprite.prototype.interpolateMove = function() {
+Player.prototype.interpolateMove = function() {
     
     var time = this.time;
     //    var start = this.start;
@@ -299,18 +287,36 @@ Sprite.prototype.interpolateMove = function() {
         
 
         this.steps += 1;
+       
+       
+        //this.startTile.floor.graphic.path.getContext('2d').moveTo();
         
 
         
-        this.setTile(this.endTile);      
-        
         if (this.endTile.ladder && !this.startTile.ladder) {
+            
             this.MOVE_STATE = 'LADDER';
+            
+            
+            //let endB = this.map.getOtherEndLadder(this.endTile);
+            this.setTile(this.endTile);    
             this.map.startMove();
             return;
         }
-
+        
+        // After using ladder, reset path on floor
+        if (this.MOVE_STATE === 'LADDER') {
+            this.map.resetPathPointer(this.startTile);
+        }
+        
+//        // If path is still being followed
+//        if (this.game.STATE === 'PATHFINDING') {
+//            this.map.spoofDirection();
+//        }
+ 
+        this.setTile(this.endTile); 
         this.MOVE_STATE = 'STILL';
+        //console.log('I stopped moving');
         
         
         return;
@@ -321,7 +327,7 @@ Sprite.prototype.interpolateMove = function() {
 
 
 // Update the attributes associated with player that dictate sprite in use
-Sprite.prototype.updateSpriteOptions = function() {
+Player.prototype.updatePlayerOptions = function() {
     
     // Update spriteOptions of various sprites
     // Player Options: GENDER - ACTIVITY - FACING - ORIENTATION
@@ -395,14 +401,14 @@ Sprite.prototype.updateSpriteOptions = function() {
             dustOptions.SHOW = true;         
             dustOptions.STAGE = '1';
             
-            playerOptions.ACTIVITY = 'WALK'
+            playerOptions.ACTIVITY = 'WALK';
             pokemonOptions.SHOW = false;
         }
         else if (this.time.percent < .9) {
             dustOptions.SHOW = true;
             dustOptions.STAGE = '2';
             
-            playerOptions.ACTIVITY = 'WALK'
+            playerOptions.ACTIVITY = 'WALK';
             pokemonOptions.SHOW = false;
         }
         
@@ -477,7 +483,7 @@ Sprite.prototype.updateSpriteOptions = function() {
 
 
 
-Sprite.prototype.drawSprite = function() {
+Player.prototype.drawPlayer = function() {
  
     var floor = this.tile.floor;
     
@@ -539,8 +545,8 @@ Sprite.prototype.drawSprite = function() {
         let sx = xy.x;
         let sy = xy.y;
         
-//        var spritesheetCanvas = this.spritesheet.canvas;
-//        var spritesheetCtx = spritesheetCanvas.getContext('2d');
+        //        var spritesheetCanvas = this.spritesheet.canvas;
+        //        var spritesheetCtx = spritesheetCanvas.getContext('2d');
         
         ctx.drawImage(this.spritesheet.canvas, sx, sy, sprite_size, sprite_size, x, y, tile_size * 2, tile_size * 2);
 
@@ -560,123 +566,3 @@ Sprite.prototype.drawSprite = function() {
     }
     
 };
-
-
-
-
-
-
-//
-//Sprite.moveSprite = function(direction) { }
-//
-//Sprite.prototype.BitampSprite = function() {
-//    
-//    var sprite_sheet = sprite_sheet();
-// 
-//    var canvas = document.createElement('canvas');
-//    var ctx = canvas.getContext('2d');
-//    
-//    sprite.boy = sprite_sheet.boy();
-//    
-//}
-//
-//Sprite.prototype.getSpriteSheetXY = function(spriteIndex) {
-//    
-//    var row = spriteIndex[0];
-//    var col = spriteIndex[1];
-//    
-//    
-//    
-//}
-//
-//Sprite.prototype.getSprite = function(spriteIndex) {
-//    
-//    
-//    
-//}
-//
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-Sprite.prototype.updateXY = function(x, y) {
-    
-    this.x = x;
-    this.y = y;
-    
-}
-
-//Sprite.prototype.followPath = function(path) {
-//    
-//    if (!path) {
-//        return;
-//    }
-//        
-//        
-//    
-//    if (this.status != 'WALKING' && path.index < path.length - 2) {
-//        
-//        let i = path.index;
-//        path.index += 1;
-//        this.moveTile(path[i].tile, path[i+1].tile);
-//        
-//    }
-//    
-//    
-//}
-
-
-
-Sprite.prototype.dropTile = function(floor, row, col) {
-    
-    xy = floor.getXY(row, col);
-    this.updateXY(xy.x, xy.y);
-    
-}
-
-
-
-
-
-
-
-Sprite.prototype.lerp = function(start, end, dir, time) {
-
-    var new_x = start.x + (dir.x * _speed * 1000) * time.delta;
-    var new_y = start.y + (dir.y * _speed * 1000) * time.delta;
-
-    console.log(new_x, new_y);
-
-    var a = Math.abs(new_x - start.x);
-    var b = Math.abs(end.x - start.x);
-    var c = Math.abs(new_y - start.y);
-    var d = Math.abs(end.y - start.y);
-
-    console.log(a, b, c, d);
-
-    if (a > b || c > d) {
-
-        new_x = end.x;
-        new_y = end.y;
-
-        sprite.status = 'STANDING';
-    
-    }
-
-    // Update sprite with new positions
-    sprite.updateXY(new_x, new_y);
-    //that.drawTileBackground();
-    
-}
-
-

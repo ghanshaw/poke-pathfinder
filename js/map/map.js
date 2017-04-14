@@ -1,7 +1,7 @@
 var Map = function(map_data) {
     
     this.floors = {};
-    this.sprite = null;
+    this.player = null;
     this.map_data = map_data;
     
     //    //this.LAYER_STATE =  {
@@ -31,7 +31,7 @@ Map.prototype.getTile = function(floor, row, col) {
     
 };
 
-Map.prototype.updateLadders = function() {
+Map.prototype.addLadders = function() {
     var map_ladders = {};
     
     for (let f in this.floors) {
@@ -85,11 +85,34 @@ Map.prototype.updateGraph = function(graph) {
         this.floors[f].updateGraph(graph);
     }
     
-    // Link ladders
+    
+    /*
+     * If a tile is adjacent to a ladder, add an edge from a tile to 
+     * the other end of the ladder. There is no edge between tiles and (physically) 
+     * adjacent ladders. This is done to prevent tile from being used by BFS
+     * 
+     */
+    
+    // Add edges from ladder's neighbors to ladder's other end
+    // Remove edges from ladder's neighbor to ladder
+    // Preserve edges from ladder to ladder's neighbors
+    // Thus creating directed path from endA's neighbors --> endB --> endB's neighbors --> endA --> endA's neighbors
     for (let l in this.ladders) {
         let ladder = this.ladders[l];
-        graph.addEdge(ladder[0], ladder[1]);   
-        graph.addEdge(ladder[1], ladder[0]);
+        let endA = ladder[0];
+        let endB = ladder[1];
+            
+        let vAdj = graph.getAdj(endA);
+        for (let v of vAdj) {
+            graph.addEdge(v, endB); 
+            graph.removeEdge(v, endA);
+        }
+        
+        vAdj = graph.getAdj(endB);
+        for (let v of vAdj) {
+            graph.addEdge(v, endA); 
+            graph.removeEdge(v, endB);
+        }
     }
     
     console.log(graph);
@@ -112,43 +135,119 @@ Map.prototype.getTileFromId = function(tileId) {
 /*******************************************/
 
 
-Map.prototype.initSprite = function() {
-    
-    var sprite = new Sprite();
-    sprite.initGraphic();
-    sprite.initBitmap();
-    
-    //sprite.BitmapSprite(sprite_sheet);
-    
-    var entrance = this.keyTiles[0].tile;
-    sprite.setTile(entrance);
-    
-    this.sprite = sprite;
-    this.sprite.map = this;
-    
-};
-
-
 Map.prototype.drawSprite = function() {
-    //    var f = this.sprite.tile.floor;
-    //    this.floors[f].drawSprite(this.sprite);
+    //    var f = this.player.tile.floor;
+    //    this.floors[f].drawSprite(this.player);
     
-    this.sprite.drawSprite();
+    this.player.drawSprite();
 };
+
+
+Map.prototype.spoofDirection = function(game) {
+    
+    
+    if (game.PATH.length <= 0 || (game.index + 1) >= game.PATH.length) {
+        game.GAME_STATE = 'NORMAL';
+        game.DIRECTION = null;
+        return;
+    }
+    
+    var DIRECTION =  game.DIRECTION;
+    
+    var startTile = game.PATH[game.index];
+    var endTile = game.PATH[game.index + 1];
+    
+    console.log(game.index);
+    if (game.index === 129) {
+        console.log('WAIT');
+    }
+    console.info(startTile, endTile);
+    
+    startTile = this.getTileFromId(startTile);
+    endTile = this.getTileFromId(endTile);
+    
+    if (endTile.ladder) {
+        endTile = this.getOtherEndLadder(endTile);        
+    }
+    
+    // Determine displacement from startTile to endTile
+    var displacement = {
+        row: 0,
+        col: 0
+    };
+    
+    displacement.row = endTile.row - startTile.row;
+    displacement.col = endTile.col - startTile.col;
+     
+    // Use displacement to determine direction
+    if (displacement.row === -1) {
+        DIRECTION = 'UP';
+    }
+    else if (displacement.row === +1) {
+        DIRECTION = 'DOWN';
+    }
+    else if (displacement.col === -1) {
+        DIRECTION = 'LEFT';
+    }
+    else if (displacement.col === +1) {
+        DIRECTION = 'RIGHT';
+    }
+    
+    game.DIRECTION = DIRECTION;
+    game.index += 1;
+    
+};
+
+Map.prototype.updatePath = function(game) {
+    
+  if (1) {
+      
+        for (let f in this.floors) {
+            this.floors[f].appendPath(this.player);
+        }
+        
+  }  
+    
+};
+
+// Reset the pointer of the context on the path layer for this tile's floor
+Map.prototype.resetPathPointer = function(tile) {
+    
+    var ctx = tile.floor.graphic.path.getContext('2d');
+    ctx.beginPath();
+    
+};
+
+Map.prototype.movePathPointerToSprite = function(game) {
+    
+  if (1) {
+      
+        for (let f in this.floors) {
+            this.floors[f].appendPath(this.player);
+        }
+        
+  }  
+    
+};
+
+
 
 
 Map.prototype.updateSprite = function(game) {
     
-    var sprite = this.sprite;
+    var player = this.player;
     
-    
-    if (sprite.MOVE_STATE === 'USER MOVE') {
-        // Hide sprite;
+    if (player.MOVE_STATE === 'USER MOVE') {
+        // Hide player;
         return;
     }
     
-    if (sprite.MOVE_STATE === 'STILL' ||
-            sprite.MOVE_STATE === 'WALL WALK') { 
+    if (player.MOVE_STATE === 'STILL' ||
+            player.MOVE_STATE === 'WALL WALK') { 
+        
+        if (game.GAME_STATE === 'PATHFINDING') {
+            this.spoofDirection(game);
+        }
         
         if (game.DIRECTION) {           
             this.startMove();
@@ -156,22 +255,22 @@ Map.prototype.updateSprite = function(game) {
         
     }
     
-    if (sprite.MOVE_STATE === 'WALK' || 
-            sprite.MOVE_STATE === 'SURF' || 
-            sprite.MOVE_STATE === 'JUMP ON' ||
-            sprite.MOVE_STATE === 'JUMP OFF' ||
-            sprite.MOVE_STATE === 'TURN' ||
-            sprite.MOVE_STATE === 'WALL WALK' ||
-            sprite.MOVE_STATE === 'LADDER') {
+    if (player.MOVE_STATE === 'WALK' || 
+            player.MOVE_STATE === 'SURF' || 
+            player.MOVE_STATE === 'JUMP ON' ||
+            player.MOVE_STATE === 'JUMP OFF' ||
+            player.MOVE_STATE === 'TURN' ||
+            player.MOVE_STATE === 'WALL WALK' ||
+            player.MOVE_STATE === 'LADDER') {
         
-        if (sprite.MOVE_STATE === 'LADDER') {
+        if (player.MOVE_STATE === 'LADDER') {
             console.log('climb  baby climb');
         }
         
-        sprite.interpolateMove(game);
+        player.interpolateMove(game);
     } 
     
-    sprite.updateSpriteOptions();
+    player.updateSpriteOptions();
     
 };
 
@@ -179,9 +278,9 @@ Map.prototype.startMove = function() {
     
     var DIRECTION = this.game.DIRECTION;
     var graph = this.graph;
-    var sprite = this.sprite;
+    var player = this.player;
     
-    var startTile = sprite.tile;
+    var startTile = player.tile;
     var floor = startTile.floor;
     var row = startTile.row;
     var col = startTile.col;  
@@ -208,36 +307,42 @@ Map.prototype.startMove = function() {
     
     // ----- 0. Climbing ladder ----- //
     // You were sent here by the end of another move
-    if (sprite.MOVE_STATE === 'LADDER') {
+    if (player.MOVE_STATE === 'LADDER') {
         
-        sprite.startTile = startTile;
-        sprite.endTile = this.getOtherEndLadder(startTile);
+        player.startTile = startTile;
+        player.endTile = this.getOtherEndLadder(startTile);
+        
+        //this.map.resetPath()
         
         speed = this.transitionSpeed;
-        sprite.time.total = 1/speed;
-        sprite.time.start = new Date();
-        sprite.interpolateMove();
+        player.time.total = 1/speed;
+        player.time.start = new Date();
+        player.interpolateMove();
         return;        
     }
     
     // ----- 1. Turning ----- //
     // If player is still, and user direction does not match player direction
-    if (sprite.MOVE_STATE === 'STILL') {
+    // and game not currently following path
+    if (player.MOVE_STATE === 'STILL' && this.game.GAME_STATE !== 'PATHFINDING') {
         
-        if (DIRECTION !== sprite.playerOptions.FACING) {
-            sprite.MOVE_STATE = 'TURN';
-            sprite.changeDirection(DIRECTION);
+        console.info('about to turn');
+        
+        if (DIRECTION !== player.playerOptions.FACING) {
+            console.info('turn');
+            player.MOVE_STATE = 'TURN';
+            player.changeDirection(DIRECTION);
             
             // Reset surf counter
-            sprite.surfTicks = 0;
+            player.surfTicks = 0;
             
-            sprite.startTile = startTile;
-            sprite.endTile = startTile;
+            player.startTile = startTile;
+            player.endTile = startTile;
             
-            var speed = sprite.getSpeed();
-            sprite.time.total = 1/speed;
-            sprite.time.start = new Date();
-            sprite.interpolateMove();
+            var speed = player.getSpeed();
+            player.time.total = 1/speed;
+            player.time.start = new Date();
+            player.interpolateMove();
             
             return;
         }
@@ -247,10 +352,10 @@ Map.prototype.startMove = function() {
     // ----- 2a. Walking into Walls ----- //
     // If user direction is same as current direction, continue walking into wall
     // Otherwise, interrupt and process user input
-    if (sprite.MOVE_STATE === 'WALL WALK') {
+    if (player.MOVE_STATE === 'WALL WALK') {
         
-        if (DIRECTION === sprite.playerOptions.FACING) {
-            sprite.interpolateMove();
+        if (DIRECTION === player.playerOptions.FACING) {
+            player.interpolateMove();
             return;
         }
         
@@ -259,43 +364,51 @@ Map.prototype.startMove = function() {
     // Determine final tile
     var endTile = this.getTile(floor, row + displacement.row, col + displacement.col);
     
+    // If startTile is a ladder
+    
+    // If endTile is a ladder
+//    if (endTile.ladder) {
+//        // Redirect player, move to ladder instead
+//        endTile = this.getOtherEndLadder(endTile);
+//    }        
+//    
     // If tile is reachable
-    if (endTile && graph.hasEdge(startTile.id, endTile.id)) {
-        
+    if (endTile && (graph.hasEdge(startTile.id, endTile.id) || endTile.ladder)) {
+          
         // Movement is admissable, begin interpolation 
-        sprite.changeDirection(DIRECTION);
-        sprite.startTile = startTile;
-        sprite.endTile = endTile;
+        player.changeDirection(DIRECTION);
+        player.startTile = startTile;
+        player.endTile = endTile;
         
         
-        sprite.start.row = row;
-        sprite.start.col = col;
+        player.start.row = row;
+        player.start.col = col;
         
-        sprite.displacement = displacement;
+        player.displacement = displacement;
         
         // Set move state, determine time allotted for move
         var speed;
         // ----- 3. Jumping onto water pokemon ----- //
         if (startTile.type === 'LAND' && endTile.type === 'WATER') {
-            sprite.MOVE_STATE = 'JUMP ON';    
+            player.MOVE_STATE = 'JUMP ON';    
         } 
         // ----- 4. Jumping off of water pokemon ----- //
         else if (startTile.type === 'WATER' && endTile.type === 'LAND') {      
-            sprite.MOVE_STATE = 'JUMP OFF';
+            player.MOVE_STATE = 'JUMP OFF';
         }
         // ----- 5. Walking on land ----- //
         else if (startTile.type === 'LAND') {
-            sprite.MOVE_STATE = 'WALK';
+            player.MOVE_STATE = 'WALK';
         }
         // ----- 6. Surfing on water ----- //
         else if (startTile.type === 'WATER') {         
-            sprite.MOVE_STATE = 'SURF';
+            player.MOVE_STATE = 'SURF';
         }
         
-        var speed = sprite.getSpeed();
-        sprite.time.total = 1/speed;
-        sprite.time.start = new Date();
-        sprite.interpolateMove();
+        var speed = player.getSpeed();
+        player.time.total = 1/speed;
+        player.time.start = new Date();
+        player.interpolateMove();
         
     }
     
@@ -306,17 +419,17 @@ Map.prototype.startMove = function() {
         // Only animate walking into walls on land
         if(startTile.type === 'LAND') {
             
-            sprite.MOVE_STATE = 'WALL WALK';
-            sprite.changeDirection(DIRECTION);
+            player.MOVE_STATE = 'WALL WALK';
+            player.changeDirection(DIRECTION);
             
-            sprite.changeDirection(DIRECTION);
-            sprite.startTile = startTile;
-            sprite.endTile = startTile;
+            player.changeDirection(DIRECTION);
+            player.startTile = startTile;
+            player.endTile = startTile;
             
-            var speed = sprite.getSpeed();
-            sprite.time.total = 1/speed;
-            sprite.time.start = new Date();
-            sprite.interpolateMove();
+            var speed = player.getSpeed();
+            player.time.total = 1/speed;
+            player.time.start = new Date();
+            player.interpolateMove();
         }
         
     }
@@ -363,19 +476,18 @@ Map.prototype.createMapTransitionLayer = function() {
 
 Map.prototype.drawMapTransitionLayer = function() {
     
-    if (this.sprite.MOVE_STATE === 'LADDER') {
+    if (this.player.MOVE_STATE === 'LADDER') {
         
         var transitionLayer = this.transitionLayer;
-        transitionCtx = transitionLayer.getContext('2d');
+        var transitionCtx = transitionLayer.getContext('2d');
         transitionCtx.globalAlpha =  transitionLayer.globalAlpha;
         transitionCtx.clearRect(0, 0, transitionLayer.width, transitionLayer.height);
         transitionCtx.fillStyle = 'black';
-        transitionCtx.fillRect(0,0,transitionLayer.width, transitionLayer.height);
+        transitionCtx.fillRect(0, 0, transitionLayer.width, transitionLayer.height);
         
         for (let f in this.floors) {           
             var canvas = this.floors[f].canvas;
             var ctx = canvas.getContext('2d');
-
             ctx.drawImage(transitionLayer, 0, 0, canvas.width, canvas.height);      
         }
     }
@@ -398,6 +510,9 @@ Map.prototype.createMapLayers = function(graph) {
         this.floors[f].createGraphicEdges(graph);
         
         
+        this.floors[f].createGraphicPathLayer();
+        
+        
         
         //        this.floors[f].drawBitmapRockLayer();
         //        this.floors[f].drawBitmapFloorLayer();
@@ -410,6 +525,8 @@ Map.prototype.createMapLayers = function(graph) {
     } 
     
     this.createMapTransitionLayer();
+    
+    // Define tile_size
     
     //this.createKeyTiles();
     
@@ -445,6 +562,14 @@ Map.prototype.drawGraphicRowsCols = function() {
     
 };
 
+Map.prototype.drawGraphicPath = function() {
+    
+    for (let f in this.floors) {      
+        this.floors[f].drawGraphicPath();
+    }
+    
+};
+
 
 
 
@@ -456,8 +581,8 @@ Map.prototype.drawGraphicRowsCols = function() {
 
 Map.prototype.initDivs = function() {
   
-    var sprite = this.sprite;
-    var tile_size = sprite.tile.floor.tile_size;
+    var player = this.player;
+    var tile_size = player.tile.floor.tile_size;
     var game = this.game;
   
     var playerDiv = document.createElement('div');
@@ -510,12 +635,12 @@ Map.prototype.initDivs = function() {
 
 Map.prototype.getSpriteTopLeft = function() {
         
-    var sprite = this.sprite;
-    var floor = this.sprite.tile.floor;
-    var tile_size = sprite.tile.floor.tile_size;
+    var player = this.player;
+    var floor = this.player.tile.floor;
+    var tile_size = player.tile.floor.tile_size;
     
-    var top = (sprite.current.row + floor.offset_rows) * tile_size;
-    var left = (sprite.current.col + floor.offset_cols) * tile_size;
+    var top = (player.current.row + floor.offset_rows) * tile_size;
+    var left = (player.current.col + floor.offset_cols) * tile_size;
 
     // Include distance of canvas from top of canvasWrapper
     var position = $(floor.canvas).position();
@@ -533,13 +658,13 @@ Map.prototype.getSpriteTopLeft = function() {
 
 Map.prototype.updateDivs = function() {
         
-    var sprite = this.sprite;
+    var player = this.player;
     var playerDiv = this.playerDiv;
-    var floor = this.sprite.tile.floor;
-    var tile_size = sprite.tile.floor.tile_size;
+    var floor = this.player.tile.floor;
+    var tile_size = player.tile.floor.tile_size;
     
-    var top = (sprite.current.row + floor.offset_rows) * tile_size;
-    var left = (sprite.current.col + floor.offset_cols) * tile_size;
+    var top = (player.current.row + floor.offset_rows) * tile_size;
+    var left = (player.current.col + floor.offset_cols) * tile_size;
 
     // Include distance of canvas from top of canvasWrapper
     var offset_top = $(floor.canvas).position().top;
@@ -547,7 +672,7 @@ Map.prototype.updateDivs = function() {
     
     $(playerDiv).css({'top': top, 'left': left});
     
-    //console.log(sprite);
+    //console.log(player);
     
     
     
@@ -556,13 +681,13 @@ Map.prototype.updateDivs = function() {
 
 Map.prototype.startUserMove = function(x, y, targetId) {
     
-    var sprite = this.sprite;
+    var player = this.player;
     
     if (targetId === this.playerDiv.id) {
         
-       // If sprite isn't currently moveing, initiate sprite move
-        if (sprite.MOVE_STATE === 'STILL') {     
-            sprite.MOVE_STATE = 'USER MOVE';          
+       // If player isn't currently moving, initiate player move
+        if (player.MOVE_STATE === 'STILL') {     
+            player.MOVE_STATE = 'USER MOVE';          
         }
         
     }
@@ -570,14 +695,14 @@ Map.prototype.startUserMove = function(x, y, targetId) {
     /*** Reserved in case div is removed ***/
     
 //    var pointerTile = this.getTileFromPointer(x, y, targetId);
-//    var spriteTile = this.sprite.tile;
+//    var playerTile = this.player.tile;
 //    
-//    // If user is clicking on sprite
-//    if (pointerTile && pointerTile.id === spriteTile.id) {
+//    // If user is clicking on player
+//    if (pointerTile && pointerTile.id === playerTile.id) {
 //        
-//        // If sprite isn't currently moveing, initiate sprite move
-//        if (sprite.MOVE_STATE === 'STILL') {     
-//            sprite.MOVE_STATE = 'USER MOVE';          
+//        // If player isn't currently moveing, initiate player move
+//        if (player.MOVE_STATE === 'STILL') {     
+//            player.MOVE_STATE = 'USER MOVE';          
 //        }
 //       
 //    }
@@ -587,16 +712,16 @@ Map.prototype.startUserMove = function(x, y, targetId) {
 
 Map.prototype.endUserMove = function() {
     
-    var sprite = this.sprite;
+    var player = this.player;
     
     if (this.validTile) {
         var tile = this.getTileFromId(this.validTile);
-        sprite.setTile(tile);
+        player.setTile(tile);
         console.log('set to null');
         this.validTile = null;
     }
     
-    sprite.MOVE_STATE = 'STILL';
+    player.MOVE_STATE = 'STILL';
 
 };
 
@@ -606,8 +731,8 @@ Map.prototype.getTileFromPointer  = function(top, left) {
     for (let f in this.floors) {
         var floor = this.floors[f];
         
-        floor_position = $(floor.canvas).position();
-        floor_height = floor.canvas.height;
+        var floor_position = $(floor.canvas).position();
+        var floor_height = floor.canvas.height;
         
         if (top > floor_position.top && top < (floor_position.top + floor_height)) {
             
@@ -681,6 +806,18 @@ Map.prototype.drawHighlights = function() {
 
 
 
+Map.prototype.updateVisualization = function() {
+    
+  
+  
+    
+    
+};
+
+
+
+
+
 Map.prototype.initGameboy = function() {
     
     this.gameboy = {};
@@ -700,15 +837,15 @@ Map.prototype.initGameboy = function() {
 Map.prototype.drawGameboy = function() {
     
     
-    var sprite = this.sprite;
-    var floor = this.sprite.tile.floor;
+    var player = this.player;
+    var floor = this.player.tile.floor;
     var floorlayer = floor.bitmap.floorlayer;
     
     var canvas = this.gameboy.canvas;
     var ctx = this.gameboy.ctx;
     
-    var sx = (sprite.current.col - 7) * floor.tile_size;
-    var sy = (sprite.current.row - 4.5) * floor.tile_size;
+    var sx = (player.current.col - 7) * floor.tile_size;
+    var sy = (player.current.row - 4.5) * floor.tile_size;
     
     ctx.drawImage(floor.canvas, sx, sy, floor.tile_size * 15, floor.tile_size * 10, 0, 0, canvas.width, canvas.height);
     //ctx.drawSprite()

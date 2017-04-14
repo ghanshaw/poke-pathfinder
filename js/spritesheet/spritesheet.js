@@ -6,7 +6,7 @@ var SpriteSheet = function(spritesheet_data) {
 };
 
 
-SpriteSheet.prototype.initCanvas = function() {
+SpriteSheet.prototype.initCanvas = function(type) {
     
     var spritesheet_data = this.spritesheet_data;
     
@@ -19,7 +19,8 @@ SpriteSheet.prototype.initCanvas = function() {
     ctx.msImageSmoothingEnabled = false;
     ctx.imageSmoothingEnabled = false;
     
-    var imgId = spritesheet_data.imgId();
+    // Select either color or black/white spritesheet
+    var imgId = 'spritesheet-' + type;
     var spritesheet_img = document.getElementById(imgId);
     
     canvas.width = spritesheet_img.width;
@@ -36,9 +37,7 @@ SpriteSheet.prototype.initCanvas = function() {
 
 
 SpriteSheet.prototype.getRowCol = function(spriteOptions) {
-    
-    
-            
+      
     // Sprite is a player (has a gender)
     if (spriteOptions.TYPE === 'PLAYER') {      
         var GENDER = spriteOptions.GENDER;

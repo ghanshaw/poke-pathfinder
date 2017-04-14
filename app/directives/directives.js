@@ -44,8 +44,6 @@ pokemonApp.directive('spriteDraggable', function() {
                         scope.map.sprite.MOVE_STATE = 'USER MOVE';
                     };
                     
-                    
-                    
                 },
                 drag: function(event, ui) {
                     // update hovertile to dragger
@@ -61,8 +59,7 @@ pokemonApp.directive('spriteDraggable', function() {
                         } else {
                             scope.map.hoverTile = null;
                         };
-                    }
-                    
+                    }                    
                 },
                 stop: function(event, ui) {
                     
