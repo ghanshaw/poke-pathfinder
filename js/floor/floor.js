@@ -4,23 +4,30 @@ var Floor = function(floor_data) {
     this.rows = floor_data.rows();
     this.cols = floor_data.cols();
     this.floor_data = floor_data;
+   
+    // Create canvas objects
+    this.frame = {};
+    this.bitmap = {};
+    this.graphic = {};
+    this.rowscols = {};
+    
     
     // Initialize all the tiles with a type of 'l' (land)
     this.tiles = new Array(this.rows);
     for (let row = 0; row < this.rows; row++){
-        this.tiles[row] = new Array(this.cols)
+        this.tiles[row] = new Array(this.cols);
         for (let col = 0; col < this.cols; col++) {
-            this.tiles[row][col] = new Tile(this, row, col)
+            this.tiles[row][col] = new Tile(this, row, col);
         }        
     }
     
     console.log(this.tiles);
-}
+};
 
 // Update floor to reflect map details
-Floor.prototype.updateTiles = function() {
+Floor.prototype.addFloorData = function() {
     
-    var floor_data = this.floor_data
+    var floor_data = this.floor_data;
     
     var rocks = floor_data.rocks();
     var water = floor_data.water();
@@ -49,45 +56,11 @@ Floor.prototype.updateTiles = function() {
         this.tiles[tile[0]][tile[1]].ladder = true; 
         this.tiles[tile[0]][tile[1]].ladderId = id;
     }
-}
+};
 
-
-// Check if row/col is in bounds
-Floor.prototype.inBounds = function(row, col) {
-    return row >= 0 && col >= 0 && row < this.rows && col < this.cols;        
-}
-
-
-// Get tile object corresponding to row/col
-Floor.prototype.getTile = function(row, col) {
-    if (this.inBounds(row, col)) {
-        return this.tiles[row][col];
-    }
-}
-
-// Get tile object corresponding to id
-Floor.prototype.getTileFromId = function(tileId) {
-    
-    var tile_arr = tileId.split(',');
-    
-    if (this.id === tile_arr[0]) {
-        return this.getTile(tile_arr[1], tile_arr[2]);        
-    } 
-}
-
-// Get type of tile
-Floor.prototype.getTileType = function(row, col) {
-    
-    if (!this.inBounds(row, col)) {
-        return null;
-    }
-    
-    return this.tiles[row][col].type;
-    
-}
 
 // Add data from floor to Graph
-Floor.prototype.updateGraph = function(graph) {
+Floor.prototype.addFloorToGraph = function(graph) {
 
     // Create graph with tile data
     for (let r = 0; r < this.rows; r++) {
@@ -133,7 +106,44 @@ Floor.prototype.updateGraph = function(graph) {
         graph.removeEdge(vTile.id, uTile.id); 
     }
     
-}
+};
+
+
+// Check if row/col is in bounds
+Floor.prototype.inBounds = function(row, col) {
+    return row >= 0 && col >= 0 && row < this.rows && col < this.cols;        
+};
+
+
+// Get tile object corresponding to row/col
+Floor.prototype.getTile = function(row, col) {
+    if (this.inBounds(row, col)) {
+        return this.tiles[row][col];
+    }
+};
+
+// Get tile object corresponding to id
+Floor.prototype.getTileFromId = function(tileId) {
+    
+    var tile_arr = tileId.split(',');
+    
+    if (this.id === tile_arr[0]) {
+        return this.getTile(tile_arr[1], tile_arr[2]);        
+    } 
+};
+
+// Get type of tile
+Floor.prototype.getTileType = function(row, col) {
+    
+    if (!this.inBounds(row, col)) {
+        return null;
+    }
+    
+    return this.tiles[row][col].type;
+    
+};
+
+
 
 
 
@@ -141,10 +151,10 @@ Floor.prototype.updateGraph = function(graph) {
 /**********    Canvas Methods    ***********/
 /*******************************************/
 
-Floor.prototype.initCanvas = function(rows, cols, width) {
-    
+Floor.prototype.createFrame = function(tile_size, rows, cols) {
+     
     // Get canvas Id
-    var canvasId = this.floor_data.canvasId()
+    var canvasId = this.floor_data.canvasId();
     
     // Define canvas objects
     var canvas = document.getElementById(canvasId);
@@ -154,44 +164,41 @@ Floor.prototype.initCanvas = function(rows, cols, width) {
     ctx.webkitImageSmoothingEnabled = false;
     ctx.msImageSmoothingEnabled = false;
     ctx.imageSmoothingEnabled = false;
-
-    this.canvas = canvas;
-    this.ctx = ctx;
+      
+    // Number of rows/cols in frame
+    var frame_rows = rows || 27;
+    var frame_cols = cols || 44;
     
-    // Number of tiles in canvas
-    this.canvas.rows = rows || 27;
-    this.canvas.cols = cols || 44;
-    
-    // Compute dimentions of canvas
-    var mapWrapperWidth = $('.caveWrapperBackground').width();
-    this.canvas.width = width || mapWrapperWidth;
-    //this.canvas.width = 1280;
-    
-    // Compute tile size
-    this.tile_size = Math.floor(this.canvas.width / this.canvas.cols);
-    if (this.tile_size % 2 !== 0) {
-        this.tile_size--;
-    }
-    
-    this.tile_size = 16;
-    
+    var floor_rows = this.rows;
+    var floor_cols = this.cols;
     
     // Update canvas height
-    this.canvas.width = this.tile_size * this.canvas.cols;
+    canvas.width = tile_size * frame_cols;
+    canvas.height = tile_size * frame_rows;
     
-    this.canvas.height = this.tile_size * this.canvas.rows;
-    //this.canvas.height = 736;
+    // Compute offsets of floor from frame
+    var offset_rows = Math.floor((frame_rows - floor_rows)/2);
+    var offset_cols = Math.floor((frame_cols - floor_cols)/2);
     
-    // Computer offsets of floor from canvas
-    this.offset_rows = Math.floor((this.canvas.rows - this.rows)/2);
-    this.offset_cols = Math.floor((this.canvas.cols - this.cols)/2);
-    
-    this.offset_x = this.offset_rows * this.tile_size;
-    this.offset_y = this.offset_cols * this.tile_size;
+    var offset_x = offset_cols * tile_size;
+    var offset_y = offset_rows * tile_size;
 
-    // Store layers for both bitmap view and grid view
-    this.bitmap = {};
-    this.graphic = {};
+    this.tile_size = tile_size;
+    
+    // Create frame object to hold canvas, related data;
+    var frame = {};
+    
+    frame.canvas = canvas;
+    frame.ctx = ctx;
+    frame.rows = frame_rows;
+    frame.cols = frame_cols;
+    frame.offset_rows = offset_rows;
+    frame.offset_cols = offset_cols;
+    frame.offset_x = offset_x;
+    frame.offset_y = offset_y;
+    
+    this.frame = frame;
+    
 };
 
 
@@ -207,11 +214,11 @@ Floor.prototype.createBitmapRockLayer = function() {
     ctx.msImageSmoothingEnabled = false;
     ctx.imageSmoothingEnabled = false;
     
-    canvas.width = this.canvas.width;
-    canvas.height = this.canvas.height;
+    canvas.width = this.frame.canvas.width;
+    canvas.height = this.frame.canvas.height;
     
-    var rows = this.canvas.rows;
-    var cols = this.canvas.cols;
+    var rows = this.frame.rows;
+    var cols = this.frame.cols;
     var tile_size = this.tile_size;
     
     var tile_rock = document.getElementById('tile-rock');
@@ -221,15 +228,20 @@ Floor.prototype.createBitmapRockLayer = function() {
      
             let y = r * tile_size;
             let x = c * tile_size;
-            //console.log(x, y);
+
             ctx.drawImage(tile_rock, x, y, tile_size, tile_size);
             
         }
     }
     
-    this.bitmap.rocklayer = canvas;
-    //this.ctx.drawImage(canvas, 0, 0);
-}
+    // Attach rocklayer to floor via bitmap object
+    var rocklayer = {
+        canvas: canvas,
+        ctx: ctx
+    };
+    
+    this.bitmap['rocklayer'] = rocklayer;
+};
 
 
 Floor.prototype.createBitmapFloorLayer = function() {
@@ -245,31 +257,34 @@ Floor.prototype.createBitmapFloorLayer = function() {
     canvas.width = this.cols * this.tile_size;
     canvas.height = this.rows * this.tile_size;
     
+    // Get floor map png from html img
     var imgId = this.floor_data.imgId();
-    
     var floor_img = document.getElementById(imgId);
-    
-    var offset_x = this.offset_cols * this.tile_size;
-    var offset_y = this.offset_rows * this.tile_size;
-    
-    
+
+    // Draw image to canvas
     ctx.drawImage(floor_img, 0, 0, canvas.width, canvas.height);
     
-    this.offset_x = offset_x;
-    this.offset_y = offset_y;
-    this.bitmap.floorlayer = canvas;
     
-}
+    
+    // Attach floorlayer to floor via bitmap object
+    var floorlayer = {
+        canvas: canvas,
+        ctx: ctx
+    };
+    
+    this.bitmap['floorlayer'] = floorlayer;
+    
+};
 
 // Draw Bitmap rock layer
 Floor.prototype.drawBitmapRockLayer = function() {
-    this.ctx.drawImage(this.bitmap.rocklayer, 0, 0);
-}
+    this.frame.ctx.drawImage(this.bitmap.rocklayer.canvas, 0, 0);
+};
 
 // Draw Bitmap floor layer
 Floor.prototype.drawBitmapFloorLayer = function() {
-    this.ctx.drawImage(this.bitmap.floorlayer, this.offset_x, this.offset_y);
-}
+    this.frame.ctx.drawImage(this.bitmap.floorlayer.canvas, this.frame.offset_x, this.frame.offset_y);
+};
 
 
 /*---- Grahpic Layers ----*/
@@ -279,17 +294,21 @@ Floor.prototype.createGraphicRockLayer = function() {
     var canvas = document.createElement('canvas');
     var ctx = canvas.getContext('2d');
     
-    canvas.width = this.canvas.width;
-    canvas.height = this.canvas.height;
+    canvas.width = this.frame.canvas.width;
+    canvas.height = this.frame.canvas.height;
     
     ctx.fillStyle = '#4CAF50';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     
-    this.graphic.rocklayer = canvas;
+    // Attach rocklayer to floor via graphic object
+    var rocklayer = {
+        canvas: canvas,
+        ctx: ctx
+    };
     
-    this.ctx.drawImage(canvas, 0, 0);
-    
-}
+    this.graphic['rocklayer'] = rocklayer;
+
+};
 
 // Create Floor layer of Grid view
 Floor.prototype.createGraphicFloorLayer = function() {
@@ -320,7 +339,7 @@ Floor.prototype.createGraphicFloorLayer = function() {
                ctx.fillStyle = '#337ab7';
             }
             
-            let tile_size = this.tile_size
+            let tile_size = this.tile_size;
             let y = r * tile_size;
             let x = c * tile_size;
             ctx.fillRect(x, y, tile_size, tile_size);
@@ -328,22 +347,28 @@ Floor.prototype.createGraphicFloorLayer = function() {
         }
     }
     
-    this.graphic.floorlayer = canvas;
+    // Attach rocklayer to floor via graphic object
+    var floorlayer = {
+        canvas: canvas,
+        ctx: ctx
+    };
+    
+    this.graphic['floorlayer'] = floorlayer;
 };
 
 
 // Create lines of rows/cols
-Floor.prototype.createGraphicRowsCols = function() {
+Floor.prototype.createRowsCols = function() {
     
     // Create reusable context
     var canvas = document.createElement('canvas');
     var ctx = canvas.getContext('2d');
     
-    canvas.width = this.canvas.width;
-    canvas.height = this.canvas.height;
+    canvas.width = this.frame.canvas.width;
+    canvas.height = this.frame.canvas.height;
     ctx.strokeStyle = 'purple';
     
-    for (let r = 0; r <= this.canvas.rows; r++) {
+    for (let r = 0; r <= this.frame.rows; r++) {
      
         ctx.beginPath();
         let y = (r * this.tile_size);
@@ -351,9 +376,9 @@ Floor.prototype.createGraphicRowsCols = function() {
         ctx.lineTo(canvas.width, y);
         ctx.stroke();
         
-    }
+    };
     
-    for (let c = 0; c <= this.canvas.cols; c++) {
+    for (let c = 0; c <= this.frame.cols; c++) {
      
         ctx.beginPath();
         let x = (c * this.tile_size);
@@ -361,10 +386,12 @@ Floor.prototype.createGraphicRowsCols = function() {
         ctx.lineTo(x, canvas.height);
         ctx.stroke();
         
-    }
+    };
     
-    this.graphic.rowscols = canvas;
-    //this.ctx.drawImage(canvas, 0, 0);
+    this.rowscols = {
+        canvas: canvas,
+        ctx: ctx
+    };
     
 };
 
@@ -377,28 +404,29 @@ Floor.prototype.createGraphicPathLayer = function() {
     //nodeV = graph.getNode([r,c]);
     canvas.width = this.canvas.width;
     canvas.height = this.canvas.height;
-    tile_size = this.tile_size;
+    var tile_size = this.tile_size;
     
     ctx.strokeStyle = 'turquoise';
     ctx.beginPath();
     ctx.lineWidth = 4;
     
-    this.graphic.path = canvas;
+    this.path.canvas = canvas;
+    this.path.ctx = ctx;
     
 };
 
-Floor.prototype.appendPath = function(sprite) {
+Floor.prototype.appendPath = function(player) {
     
    
-    if (sprite.tile.floor.id === this.id) {
+    if (player.tile.floor.id === this.id) {
         
-        var x = sprite.current.col * this.tile_size;
-        var y = sprite.current.row * this.tile_size;
+        var x = player.current.col * this.tile_size;
+        var y = player.current.row * this.tile_size;
         
         // Adjust path during jump on/jump off
-        if (sprite.MOVE_STATE === 'JUMP ON' || sprite.MOVE_STATE === 'JUMP OFF') {
-            if (sprite.current.row < sprite.endTile.row && sprite.playerOptions.FACING !== 'DOWN') {
-                var y = sprite.endTile.row * this.tile_size;
+        if (player.MOVE_STATE === 'JUMP ON' || player.MOVE_STATE === 'JUMP OFF') {
+            if (player.current.row < player.endTile.row && player.playerOptions.FACING !== 'DOWN') {
+                var y = player.endTile.row * this.tile_size;
             }
         }
         
@@ -427,7 +455,7 @@ Floor.prototype.appendPath = function(sprite) {
 
 
 // Create edges 
-Floor.prototype.createGraphicEdges = function(graph) {
+Floor.prototype.createEdges = function(graph) {
      
     //Draw dots to represent edges. Mostly for debugging purposes
     var canvas = document.createElement('canvas');
@@ -476,13 +504,13 @@ Floor.prototype.createGraphicEdges = function(graph) {
         }  
     }
     
-    this.graphic.edges = canvas;
+    this.edges = canvas;
 };
 
 
 
 // Create key tile indicators
-Floor.prototype.createGraphicKeyTiles = function() {
+Floor.prototype.createKeyTiles = function() {
 
     var canvas = document.createElement('canvas');
     var ctx = canvas.getContext('2d');
@@ -509,68 +537,48 @@ Floor.prototype.createGraphicKeyTiles = function() {
         //this.ctx.fillRect(this.offset_x + x, this.offset_y + y, tile_size, tile_size);
     }
     
-    this.graphic.keytiles = canvas;
+    this.keytiles.canvas = canvas;
+    this.keytiles.ctx = ctx;
 
 };
 
 
 // Draw Grid view rock layer
 Floor.prototype.drawGraphicRockLayer = function() {
-    this.ctx.drawImage(this.graphic.rocklayer, 0, 0);
+    this.frame.ctx.drawImage(this.graphic.rocklayer.canvas, 0, 0);
 };
 
 // Draw Grid view floor layer
 Floor.prototype.drawGraphicFloorLayer = function() {
-    this.ctx.drawImage(this.graphic.floorlayer, this.offset_x, this.offset_y);
+    this.frame.ctx.drawImage(this.graphic.floorlayer.canvas, this.frame.offset_x, this.frame.offset_y);
 };
 
 // Draw Grid view rows/cols
-Floor.prototype.drawGraphicRowsCols = function() {    
-    this.ctx.drawImage(this.graphic.rowscols, 0, 0);
+Floor.prototype.drawRowsCols = function() {    
+    this.frame.ctx.drawImage(this.rowscols.canvas, 0, 0);
 };
 
 // Draw Grid view key tiles
-Floor.prototype.drawGraphicKeyTiles = function() {
-    this.ctx.drawImage(this.graphic.keytiles, this.offset_x, this.offset_y);
+Floor.prototype.drawKeyTiles = function() {
+    this.frame.ctx.drawImage(this.keytiles.canvas, this.frame.offset_x, this.frame.offset_y);
 };
 
 // Draw Grid view edges
-Floor.prototype.drawGraphicEdges = function() {
-    this.ctx.drawImage(this.graphic.edges, this.offset_x, this.offset_y);
+Floor.prototype.drawEdges = function() {
+    this.frame.ctx.drawImage(this.edges.canvas, this.frame.offset_x, this.frame.offset_y);
 };
 
 // Draw Grid view edges
-Floor.prototype.drawGraphicPath = function() {
-    this.ctx.drawImage(this.graphic.path, this.offset_x, this.offset_y);
+Floor.prototype.drawPath = function() {
+    this.frame.ctx.drawImage(this.path, this.frame.offset_x, this.frame.offset_y);
 };
 
 
-// Highlight tile
-Floor.prototype.highlightTile = function(row, col) {
-    
-    var x = col * this.tile_size;
-    var y = row * this.tile_size;
-    
-    this.ctx.strokeStyle = 'yellow';
-    
-    this.ctx.strokeRect(x + this.offset_x, y + this.offset_y, this.tile_size, this.tile_size);   
+Floor.prototype.drawVisualizationLayer = function() {
+    //console.log(this.visualizationlayer);
+    this.frame.ctx.drawImage(this.visualizationlayer.canvas, this.frame.offset_x, this.frame.offset_y);
 };
 
-
-// Draw sprite on canvas (no longer needed)
-Floor.prototype.drawSprite = function(sprite) {
-
-    var row = sprite.tile.row;
-    var col = sprite.tile.col;     
-    
-    var x = col * this.tile_size + this.offset_x;
-    var y = row * this.tile_size + this.offset_y;
-    
-    this.ctx.drawImage(sprite.canvas, x, y, tile_size, tile_size);
-    
-    //this.ctx.drawImage(sprite.canvas, sx, sy, sh, sw, dx, dy, tile_size, tile_size);
-    
-};
 
 /*---- Reusable Canvas Images ---- */
 
@@ -739,11 +747,11 @@ Floor.prototype.createTileBackground = function() {
                tempCtx.fillStyle = '#ccc';
             }
 
-            if (type == 'rock') {
+            if (type === 'rock') {
                tempCtx.fillStyle = '#4CAF50';
             }
 
-            if (type == 'water') {
+            if (type === 'water') {
                tempCtx.fillStyle = '#337ab7';
             }
 
@@ -754,9 +762,9 @@ Floor.prototype.createTileBackground = function() {
         }
     }
     
-    return this.backgroundTiles = tempCanvas
+    return this.backgroundTiles = tempCanvas;
     
-}
+};
 
 
 
@@ -770,7 +778,7 @@ Floor.prototype.drawTileBackground = function() {
         this.ctx.drawImage(this.backgroundTiles, 0, 0);
     }
 
-}
+};
 
 
 Floor.prototype.drawBitmapBackground = function() {
@@ -780,16 +788,16 @@ Floor.prototype.drawBitmapBackground = function() {
         //this.ctx.drawImage(this.backgroundBitmap, 0, 0, this.canvas.width, this.canvas.height);
     }
 
-}
+};
 
 
-Floor.prototype.drawRowsCols = function() {
-    
-    if (this.linesRowsCols) {
-        this.ctx.drawImage(this.linesRowsCols, 0, 0);
-    }  
-    
-}
+//Floor.prototype.drawRowsCols = function() {
+//    
+//    if (this.linesRowsCols) {
+//        this.ctx.drawImage(this.linesRowsCols, 0, 0);
+//    }  
+//    
+//};
 
 Floor.prototype.drawEdges = function() {
     
@@ -797,7 +805,8 @@ Floor.prototype.drawEdges = function() {
         this.ctx.drawImage(this.dotsEdges, 0, 0);
     }  
     
-}
+};
+
 
 
 
@@ -809,353 +818,6 @@ Floor.prototype.getXY = function(row, col) {
     return {
         x: x,
         y: y
-    }
-}
-        
-
-
-Floor.prototype.followPath = function() {        
-    
-    var sprite = this.sprite;
-    var path = this.path;
-    
-    if (!path) {
-        return;
-    }
-    
-    if (sprite.status != 'WALKING' && path.index < path.length - 1) {
-        
-        let i = path.index;
-        path.index += 1;
-        //this.moveTile(path[i].tile, path[i+1].tile, sprite);
-        this.initMove(path[i].tile, path[i+1].tile, sprite);
-        
-    }
-       
-}
-
-Floor.prototype.initMove = function(start, end, sprite) {
-
-    sprite.start = start;
-    sprite.end = end;
-    
-    xy = this.getXY(start.row, start.col);
-    start.x = xy.x;
-    start.y = xy.y;
-    
-    xy = this.getXY(end.row, end.col);
-    end.x = xy.x;
-    end.y = xy.y;  
-    
-    sprite.time.start = new Date();
-    sprite.status = 'WALKING';
-    sprite.dir = this.getDirection(start, end);
-    
-}
-
-
-
-Floor.prototype.lerpMove = function() {
-    
-    var _speed = 10;   // tiles per second
-    var sprite = this.sprite;
-    
-    if (sprite.status !== 'WALKING') {
-        return;
-    }
-    
-    var start = sprite.start;
-    var end = sprite.end;
-    var time = sprite.time;
-    var dir = sprite.dir;
-    
-    time.current = new Date();
-    time.delta = (time.current - time.start)/Math.pow(1000, 2);
-    
-//    var new_x = start.x + (dir.x * _speed * 1000) * time.delta;
-//    var new_y = start.y + (dir.y * _speed * 1000) * time.delta;
-
-    var new_col = start.col + (dir.x * _speed * 1000) * time.delta;
-    var new_row = start.row + (dir.y * _speed * 1000) * time.delta;
-    
-    var newXY = this.getXY(new_row, new_col);
-    
-    //console.log(new_x, new_y);
-
-//    var a = Math.abs(new_x - start.x);
-//    var b = Math.abs(end.x - start.x);
-//    var c = Math.abs(new_y - start.y);
-//    var d = Math.abs(end.y - start.y);
-    
-    var a = Math.abs(newXY.x - start.x);
-    var b = Math.abs(end.x - start.x);
-    var c = Math.abs(newXY.y - start.y);
-    var d = Math.abs(end.y - start.y);
-
-    console.log(a, b, c, d);
-
-    if (a > b || c > d) {
-
-        newXY.x = end.x;
-        newXY.y = end.y;
-        
-//        new_x = end.x;
-//        new_y = end.y;
-
-        sprite.status = 'STANDING';
-        sprite.start = null;
-        sprite.end = null;
-        sprite.time = {};
-        sprite.updateXY(newXY.x, newXY.y);
-    
-    }
-
-    // Update sprite with new positions
-    //sprite.updateXY(new_x, new_y);
-    sprite.updateXY(newXY.x, newXY.y);
-    //that.drawTileBackground();
-    
-}
-
-
-
-Floor.prototype.moveTile = function(start, end, sprite) {
-    // Exit if sprite is currently walking
-    if (sprite.status == 'WALKING') {
-        return;   
-    }
-    
-    // Exit if end tile is out of bounds
-    if (!this.inBounds(end.row, end.col)) {
-        return; 
-    }   
-    
-    
-    //sprite.floor = floor.id;
-    sprite.row = end.row;
-    sprite.col = end.col;
-    
-    var xy = this.getXY(sprite.row, sprite.col);
-    sprite.x = xy.x;
-    sprite.y = xy.y;
-
-}
-
-
-Floor.prototype.moveSprite = function(sprite, start, end, delta_t) {
-    
-    // Magic number
-    var _speed = 500;
-    
-    var xy = this.getXY(start.row, start.col);
-    start.x = xy.x;
-    start.y = xy.y;
-    
-    xy = this.getXY(end.row, end.col);
-    end.x = xy.x;
-    end.y = xy.y;
-    
-    
-    // Indicate that sprite is moving
-    var that = this;
-    this.isMoving = true;
-    
-    // Define starting time
-    var time = {};
-    time.start = new Date();
-    
-    // Get direction of sprite
-    var dir = this.getDirection(start, end);
-        
-    // Interpolate movement
-    var lerp = function() {
-        
-        
-        time.current = new Date();
-        time.delta = (time.current - time.start)/Math.pow(1000, 2);
-        
-        var new_x = start.x + (dir.x * _speed * 1000) * time.delta;
-        var new_y = start.y + (dir.y * _speed * 1000) * time.delta;
-        
-        console.log(new_x, new_y);
-        
-        var a = Math.abs(new_x - start.x);
-        var b = Math.abs(end.x - start.x);
-        var c = Math.abs(new_y - start.y);
-        var d = Math.abs(end.y - start.y);
-        
-        console.log(a, b, c, d);
-        
-        if (a > b || c > d) {
-            
-            new_x = end.x;
-            new_y = end.y;
-            
-            clearInterval(move);
-            that.isMoving = false;
-            console.log('cleared');
-        
-        }
-
-        // Update sprite with new positions
-        sprite.updateXY(new_x, new_y);
-        //that.drawTileBackground();
-        //that.drawRowsCols();
-        //that.drawSprite(sprite);
-    } 
-    
-    var move = setInterval(lerp, 16);
-
-//    var new_x = end.x;
-//    var new_y = end.y;
-//    
-//    sprite.updateXY(new_x, new_y);
-//    that.drawSprite(sprite);
-
-
-};
-
-
-Floor.prototype.moveSpriteOld = function(sprite, start, end) {
-    
-    // Magic number
-    var _speed = 500;
-    
-    var xy = this.getXY(start.row, start.col);
-    start.x = xy.x;
-    start.y = xy.y;
-    
-    xy = this.getXY(end.row, end.col);
-    end.x = xy.x;
-    end.y = xy.y;
-    
-    
-    // Indicate that sprite is moving
-    var that = this;
-    this.isMoving = true;
-    
-    // Define starting time
-    var time = {};
-    time.start = new Date();
-    
-    // Get direction of sprite
-    var dir = this.getDirection(start, end);
-        
-    // Interpolate movement
-    var lerp = function() {
-        
-        
-        time.current = new Date();
-        time.delta = (time.current - time.start)/Math.pow(1000, 2);
-        
-        var new_x = start.x + (dir.x * _speed * 1000) * time.delta;
-        var new_y = start.y + (dir.y * _speed * 1000) * time.delta;
-        
-        console.log(new_x, new_y);
-        
-        var a = Math.abs(new_x - start.x);
-        var b = Math.abs(end.x - start.x);
-        var c = Math.abs(new_y - start.y);
-        var d = Math.abs(end.y - start.y);
-        
-        console.log(a, b, c, d);
-        
-        if (a > b || c > d) {
-            
-            new_x = end.x;
-            new_y = end.y;
-            
-            clearInterval(move);
-            that.isMoving = false;
-            console.log('cleared');
-        
-        }
-
-        // Update sprite with new positions
-        sprite.updateXY(new_x, new_y);
-        //that.drawTileBackground();
-        //that.drawRowsCols();
-        //that.drawSprite(sprite);
-    } 
-    
-    var move = setInterval(lerp, 16);
-
-//    var new_x = end.x;
-//    var new_y = end.y;
-//    
-//    sprite.updateXY(new_x, new_y);
-//    that.drawSprite(sprite);
-
-
-};
-
-Floor.prototype.getDirection = function(start, end) {
-
-    var dir_x = 0;
-    var dir_y = 0;
-
-    // Determine direction of movement;
-    if (end.row > start.row) {
-        // Moving down 
-        dir_y = +1;
-    } else if (end.row < start.row) {
-        // Moving up
-        dir_y = -1;
-    }
-
-    if (end.col > start.col) {
-        // Moving right
-        dir_x = +1
-    } else if (end.col < start.col) {
-        // Moving left
-        dir_x = -1
-    }
-
-    return {
-        x: dir_x,
-        y: dir_y
     };
-}
-
-
-Floor.prototype.drawPath = function(sprite, path) {
-    
-    var i = 0;
-    var that = this;
-    
-    // Simulate pressing
-    var drawing = setInterval(function() {
-    
-        if (!that.isMoving) {
-            that.moveSprite(sprite, path[i].tile, path[i+1].tile);
-            i++;
-            console.log(i);
-        }
+};
         
-        if (!(i < (path.length - 2))) {          
-            clearInterval(drawing);
-        }
-        
-        console.log(i);
-        
-    }, 30) 
-        
-//    }
-//  
-//    for (let i = 0; i < path.length - 1; i++) {
-//        
-//        this.ctx.drawImage(this.backgroundTiles, 0, 0);    
-//        
-//        
-//    }
-}
-
-//
-//for (i in water) {
-// 
-//    
-//    //water[i] = water[i].map(function(x) { return x + 1 });
-//    var new_i = i * 1 + 1
-//    console.log((new_i) + ': [' + water[i] + ']');
-//    
-//}

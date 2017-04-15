@@ -1,12 +1,17 @@
-pokemonApp.controller('caveController', function($scope, $log, pokeMap, pokeGame) { 
+pokemonApp.controller('caveController', function($scope, $log, pokeMap, pokeGame) {  
     
-    
-    var map = pokeMap.map;
     var game = pokeGame.game;
-    var sprite = pokeMap.map.sprite;
+    
+    // Attach game to scope;
+    $scope.game = game;
+    
+    // Attach player's current location to scope
+    $scope.player = {};
+    $scope.player.current = game.player.current;
+    
     
     //map.sprite.MOVE_STATE = 'ON';
-    //map.sprite.DIRECTION = 'LEFT';
+    //map.sprite.KEYPRESS = 'LEFT';
 
     /********* -- Change Game Direction -- **********/ 
     
@@ -15,7 +20,7 @@ pokemonApp.controller('caveController', function($scope, $log, pokeMap, pokeGame
         if (game.keyCode === keyCode) {
             $log.log('no longer pressing down');
             $log.log(event);        
-            game.DIRECTION = null;
+            game.KEYPRESS = null;
         }
     };
     
@@ -30,7 +35,7 @@ pokemonApp.controller('caveController', function($scope, $log, pokeMap, pokeGame
                 // Left arrow
                 $log.log('left arrow');
                 event.preventDefault();
-                game.DIRECTION = 'LEFT';
+                game.KEYPRESS = 'LEFT';
                 
                 //map.moveSprite('left');
                 break;
@@ -38,7 +43,7 @@ pokemonApp.controller('caveController', function($scope, $log, pokeMap, pokeGame
                 // Up arrow
                 $log.log('up arrow');
                 event.preventDefault();
-                game.DIRECTION = 'UP';
+                game.KEYPRESS = 'UP';
                 //map.moveSprite('up');
                 
                 break;
@@ -46,7 +51,7 @@ pokemonApp.controller('caveController', function($scope, $log, pokeMap, pokeGame
                 // Right arrow
                 $log.log('right arrow');
                 event.preventDefault();
-                game.DIRECTION = 'RIGHT';
+                game.KEYPRESS = 'RIGHT';
                 //map.moveSprite('right');
                 break;
                 
@@ -54,7 +59,7 @@ pokemonApp.controller('caveController', function($scope, $log, pokeMap, pokeGame
                 // Down arrow
                 $log.log('down arrow');
                 event.preventDefault();
-                game.DIRECTION = 'DOWN';
+                game.KEYPRESS = 'DOWN';
                 //map.moveSprite('down');
                 break;
                       }
@@ -64,49 +69,32 @@ pokemonApp.controller('caveController', function($scope, $log, pokeMap, pokeGame
 
     };
     
-    $scope.map = map;
-    $scope.sprite = pokeMap.map.sprite.current;
+    //$scope.map = map;
+    //$scope.sprite = pokeMap.map.sprite.current;
     
     // Set gender for dragger directive
-    $scope.playerOptions = sprite.playerOptions;
-    
-    $scope.getCanvasXY = function(row, col, floorId) {
-        
-        map.getTileFromId([floorId, row, col]);
-        
-    };
-    
-    $scope.$watch('sprite', function() {
-        
-        //console.log($scope.sprite);
-        //$log.info("sprite is changing");
-        
-    }, true);
-
-
-    
-    $scope.updateCanvas = function() {
-        
-        // Redraw sprite at current location
-        //map.drawSprite();
-        
-        $log.log($scope);
-    };
-    
-    $scope.startXY = {};
-   
+    //$scope.playerOptions = sprite.playerOptions;
     
     
 });
 
 
-pokemonApp.controller('userController', function($scope, $log, pokeMap) { 
+pokemonApp.controller('userController', function($scope, $log, pokeGame) { 
    
-    var map = pokeMap.map;    
-    var sprite = map.sprite;
+    var game = pokeGame.game;
+    $scope.game = game;
+    
+    
+    $scope.debugClick = function() {
+        
+        game.drawMap();
+        game.drawPlayer();
+        //game.updatePathfinder();
+        game.startPathfinder('VISUALIZE');
+        
+    };
     
     /********* -- Select Algorithm -- ************/
-    
     
     $scope.algorithms = {
         options: [
@@ -165,7 +153,7 @@ pokemonApp.controller('userController', function($scope, $log, pokeMap) {
     
     $scope.findPath = function() {
         
-        pokeGame.findPath();
+        
         
         
     };
@@ -197,10 +185,10 @@ pokemonApp.controller('userController', function($scope, $log, pokeMap) {
         var LAYER = $scope.LAYER;
         
         if (LAYER.hover) {
-            map.LAYER_STATE = LAYER.hover;
+            game.toggleMapLayers(LAYER.hover);
         }
         else {
-            map.LAYER_STATE = LAYER.click;
+            game.toggleMapLayers(LAYER.click);
         }
         
     }, true);
@@ -212,7 +200,7 @@ pokemonApp.controller('userController', function($scope, $log, pokeMap) {
     // Toggle rows/cols
     $scope.rowscols = {
         click: false,
-        hover: false,
+        hover: false
     };
     
     $scope.enterRowsCols = function() { $scope.rowscols.hover = true; };
@@ -229,14 +217,17 @@ pokemonApp.controller('userController', function($scope, $log, pokeMap) {
         var rowscols = $scope.rowscols;
         
         if (rowscols.hover) {
-            map.ROWSCOLS_STATE = 'ON';
+            game.toggleRowsCols('ON');
+            //map.ROWSCOLS_STATE = 'ON';
             //map.drawGraphicRowsCols();   
         }
         else if (rowscols.click) {
-            map.ROWSCOLS_STATE = 'ON';
+            game.toggleRowsCols('ON');
+            //map.ROWSCOLS_STATE = 'ON';
             //map.drawGraphicRowsCols();
         } else {
-            map.ROWSCOLS_STATE = 'OFF';       
+            game.toggleRowsCols('OFF');
+            //map.ROWSCOLS_STATE = 'OFF';       
         }
         
     }, true);
@@ -261,10 +252,11 @@ pokemonApp.controller('userController', function($scope, $log, pokeMap) {
         var speed = $scope.speed;
         
         if (speed.hover) {
-            sprite.factorSpeed = speed.hover;
+            game.setPlayerSpeed(speed.hover);
+            //sprite.factorSpeed = speed.hover;
         }
         else if (speed.click) {
-            sprite.factorSpeed = speed.click;
+            game.setPlayerSpeed(speed.click);
         }
         
     }, true);
@@ -288,10 +280,12 @@ pokemonApp.controller('userController', function($scope, $log, pokeMap) {
         var GENDER = $scope.GENDER;
         
         if (GENDER.hover) {
-            sprite.playerOptions.GENDER = GENDER.hover;
+            game.setPlayerGender(GENDER.hover);
+            //sprite.playerOptions.GENDER = ;
         }
         else if (GENDER.click) {
-            sprite.playerOptions.GENDER = GENDER.click;
+            game.setPlayerGender(GENDER.click);
+            //sprite.playerOptions.GENDER = GENDER.click;
         }
         
     }, true);

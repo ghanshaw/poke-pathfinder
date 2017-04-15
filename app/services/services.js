@@ -1,57 +1,5 @@
 pokemonApp.service('pokeMap', function() {
-   
-    // Create Floor object objects
-    var F1 = new Floor(F1_data);    
-    var F2 = new Floor(F2_data);
-    var BF1 = new Floor(BF1_data);
-    
-    // Apply tile data
-    F1.updateTiles();
-    F2.updateTiles();
-    BF1.updateTiles();
-    
-    // Create game map
-    this.map = new Map(map_data);
-    
-    // Add floors to map
-    this.map.addFloor(F1);
-    this.map.addFloor(F2);
-    this.map.addFloor(BF1);
-    
-    // Add ladders data to map
-    this.map.updateLadders();
-    
-    // Add map data to map
-    this.map.updateMap();
-    
-    console.log(this.map);
-    
-    // Create game graph
-    this.graph = new Graph();
-    
-    // Add map to graph
-    this.map.updateGraph(this.graph);
-    console.log(Object.keys(this.graph.adj).length);
-    
-    // Create map layers
-    this.map.createMapLayers(this.graph);
-    
-    // Create sprite
-    this.map.initSprite();
-    //this.map.drawSprite();
-    
-    // Initializae sprite div
-    //this.map.initDivs();
-    
-    // Define initial state
-    this.map.LAYER_STATE === 'BITMAP';
-    this.map.ROWSCOLS_STATE === 'OFF';
-    
-    
-    
-    // Create gameboy
-    this.map.initGameboy();
-    this.map.drawGameboy();
+
     
     
 });
@@ -62,32 +10,51 @@ pokemonApp.service('pokeGame', function($log, $interval, pokeMap) {
 
     // Initialize a new Game object
     var game = new Game();
-    game.FPS = 60;
-    game.DIRECTION = null;
+    
+    game.initGame();
+    
+    game.drawMap(); 
+    
+    game.drawPlayer();
+    
+    game.map.initGameboy();
+    
+    
+    
+    // Attach game object to pokeGame service
+    this.game = game;
+    
+    console.log(game.map);
+    
+    //game.ticks = 0;
+    //game.FPS = 60;
+    //game.DIRECTION = null;
     //game.GENDER = 'BOY';
-    game.ticks = 0;
     
-    // Attach game to different components of the game
-    var map = pokeMap.map;
-    map.game = game;
-    map.sprite.game = game;
     
-    var graph = pokeMap.graph;
-    
+//    game.map = map;
+//    game.graph = graph;
+//    
+//    // Attach game to different components of the game
+//    var map = pokeMap.map;
+//    map.game = game;
+//    map.sprite.game = game;
+//    
+//    var graph = pokeMap.graph;
+//    
     
     //var game = this;
     //$log.log('armin van buuren');
     
-    // Create Pathfinder
-    this.pathfinder = new Pathfinder(map);
-    var pathfinder = this.pathfinder;
+//    // Create Pathfinder
+//    this.pathfinder = new Pathfinder(map);
+//    var pathfinder = this.pathfinder;
     
     this.findPath = function() {
         
-        map.drawBitmapLayers();
         
-        var entrance = map.keyTiles[0].tile;
-        var mewtwo = map.keyTiles[1].tile;
+        var entrance = game.map.keyTiles[0].tile;
+        var mewtwo = game.map.keyTiles[1].tile;
         
         console.log(entrance);
         console.log(mewtwo);
@@ -95,30 +62,32 @@ pokemonApp.service('pokeGame', function($log, $interval, pokeMap) {
         var source = entrance.id;
         var target = mewtwo.id;
         
-        var path = pathfinder.bfs(graph, source, target, map);
-        console.log(path);
+        var path = game.pathfinder.bfs(source, target);
+        //console.log(path);
         
-        game.GAME_STATE = 'PATHFINDING';
-        game.PATH = path;
-        game.index = 0;
+        //game.GAME_STATE = 'PATHFINDING';
+        //game.pathfinder.index = 0;
+        //game.index = 0;
         
     };
        
-       
+    //game.pathfinder.PATH_STATE = 'VISUALIZE';
     //this.findPath();
         
     
     // Game Loop
     var gameLoop = function() {
         
-
-        
+        let start_time = performance.now();
+       
         // ----- Update game ----- //
         
         //map.pathVisualization();
         
-        map.updateSprite(game);
-        map.updatePath(game);
+        game.updatePathfinder();
+        game.updatePlayer();
+
+        //map.updatePath(game);
         // Update rocks
         // Update water
         //map.updateDivs();
@@ -126,37 +95,36 @@ pokemonApp.service('pokeGame', function($log, $interval, pokeMap) {
     
         // ----- Render game ----- //
         
-        // Draw canvas
-        if (map.LAYER_STATE === 'BITMAP') {
-            map.drawBitmapLayers();
-        } else if (map.LAYER_STATE === 'GRAPHIC') {
-            map.drawGraphicLayers();
-        }
-
-        // Draw rows/cols
-        if (map.ROWSCOLS_STATE === 'ON') {
-            map.drawGraphicRowsCols();   
-        }
+        // Draw Map
+        game.drawMap();    
         
-        // Draw highilghts
-        map.drawHighlights();
+        // Draw highlighted tile
+        game.drawHoverTile();
         
-        map.drawGraphicPath();
-
-        // Draw sprite
-        map.drawSprite();
-        map.drawMapTransitionLayer();
+        // Draw path
+        //game.drawPath();
         
+        // Draw player
+        game.drawPlayer();
         
-        map.drawGameboy();
+        // Draw overlay
+        //game.drawOverlay();
+        
+        // Draw transition
+        game.drawTransition();
+        
+        game.map.drawGameboy(game.player);
+        
+        //map.drawGameboy();
         game.ticks++;
-        
+        //console.log(game.ticks);
+        let end_time = performance.now();
+        //$log.log('Loop Time: ' +  (end_time - start_time))
         
     };
     
     $interval(gameLoop, 1000/game.FPS);
     
-    this.game = game;
     
     
     

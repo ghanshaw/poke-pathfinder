@@ -1,13 +1,11 @@
-pokemonApp.directive('spriteDraggable', function() {
+pokemonApp.directive('playerDraggie', function() {
     
-    // Directive resides in userController
+    // Directive resides in caveController
     
     var template = `
-    <img class="drag-icon" ng-class="{'show-drag-icon': showDragIco}" id="tiny-player-boy" src="images/tiny_player_boy.png" alt ng-show="playerOptions.GENDER === 'BOY'">
-    <img class="drag-icon" ng-class="{'show-drag-icon': showDragIco}" id="tiny-player-girl" src="images/tiny_player_girl.png" alt ng-show="playerOptions.GENDER === 'GIRL'">
+    <img class="player-draggie" id="player-draggie-boy" src="images/player_draggie_boy.png" alt ng-show="game.getPlayerGender() === 'BOY'">
+    <img class="player-draggie" id="player-draggie-girl" src="images/player_draggie_girl.png" alt ng-show="game.getPlayerGender() === 'GIRL'">
     `
-  
-    
     
     return {
         restrict: 'EA',
@@ -16,73 +14,79 @@ pokemonApp.directive('spriteDraggable', function() {
         //replace: false,
         link: function(scope, elem, attrs) {
             
-            console.log(elem);
-            console.log(scope.GENDER);
+            var game = scope.game;
             
+            console.log('GENDER IS ' + game.getPlayerGender());
+           
             $(elem).css('position', 'absolute');
-            $(elem).width(scope.map.sprite.tile.floor.tile_size * 2);
-            $(elem).height(scope.map.sprite.tile.floor.tile_size * 2);
+            $(elem).width(game.getTileSize() * 2);
+            $(elem).height(game.getTileSize() * 2);
             
-            
-            
-            // Update sprite draggable
-            scope.$watch('sprite', function(oldValue, newValue) {
+            // Update draggie to position of player
+            scope.$watch('player.current', function() {
                 
-                // Update dragger to sprite 
-                var topLeft = scope.map.getSpriteTopLeft();                
+                // Get player top/left offset, update draggie
+                var topLeft = game.getPlayerTopLeft();                
                 $(elem).css({'top': topLeft.top, 'left': topLeft.left});                
                 
             }, true);
             
+            // Options for jQuery UI draggable
             var options = {
                 addClasses: true,
                 cursor: 'crosshair',
                 revert: false,    
+                
+                // When dragging begins
                 start: function(event, ui) {
                     
-                    if (scope.map.sprite.MOVE_STATE === 'STILL') {
-                        scope.map.sprite.MOVE_STATE = 'USER MOVE';
+                    if (game.getGameState() === 'NORMAL' && game.getPlayerMoveState() === 'STILL') {
+                        game.setGameState('USER MOVE');
                     };
                     
                 },
+                
+                // During drag
                 drag: function(event, ui) {
                     // update hovertile to dragger
-                    console.log(scope.map.sprite.MOVE_STATE);
+                    //console.log(scope.map.sprite.MOVE_STATE);
                     
-                    if (scope.map.sprite.MOVE_STATE === 'USER MOVE') {
-                    
+                    if (game.getGameState() === 'USER MOVE') {
+                        
                         var position = ui.position;
-                        var tile = scope.map.getTileFromPointer(position.top, position.left);
-
-                        if (tile && tile.type !== 'ROCK') {
-                            scope.map.hoverTile = tile.id;
+                        var tile = game.getTileFromPointer(position.top, position.left);
+                        
+                        if (tile && tile.type !== 'ROCK') { 
+                            game.hoverTile = tile.id;
                         } else {
-                            scope.map.hoverTile = null;
+                            game.hoverTile = null;
                         };
+                        
                     }                    
                 },
+                
+                // When drag ends
                 stop: function(event, ui) {
                     
-                    // update sprite to hovertile (ie to dragger)
-                    if (scope.map.sprite.MOVE_STATE === 'USER MOVE') {
-                        if (scope.map.hoverTile) {
-                            var tile = scope.map.getTileFromId(scope.map.hoverTile);
-                            scope.map.sprite.setTile(tile);
-                            scope.map.hoverTile = null;
+                    // Update sprite to hovertile (ie to draggie)
+                    if (game.getGameState() === 'USER MOVE') {
+                        if (game.hoverTile) {
+                            var tile = game.getTileFromId(game.hoverTile);
+                            game.setPlayerTile(tile);
+                            game.hoverTile = null;
                         }
                         else {
-                            var topLeft = scope.map.getSpriteTopLeft();                        
+                            var topLeft = game.getPlayerTopLeft();                        
                             $(elem).css({'top': topLeft.top, 'left': topLeft.left});        
                         }
                         
-                        scope.map.sprite.MOVE_STATE = 'STILL';
+                        game.setGameState('NORMAL');
                     }
                     
-                    
-                },
-                
+                }
             };
             
+            // Create jQuery UI draggable
             $(elem).draggable(options);
             
         }

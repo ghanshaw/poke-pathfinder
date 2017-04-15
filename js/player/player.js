@@ -1,8 +1,5 @@
 var Player = function() {
     
-    this.active = 'BITMAP';
-    this.status = 'STANDING';
-    
     this.start = null;
     this.end = null;
     this.time = {};
@@ -10,8 +7,7 @@ var Player = function() {
     this.tile = null;
     
     
-    this.graphic = {};
-    this.bitmap = {};
+    this.shape = {};
     
     // Bitmap options
     // gender: boy/girl
@@ -23,7 +19,7 @@ var Player = function() {
         GENDER: 'BOY',
         ACTIVITY: 'WALK',
         FACING: 'DOWN',
-        ORIENTATION: 'LEFT'
+        ORIENTATION: 'STRAIGHT'
     };
     
     this.pokemonOptions = {
@@ -47,6 +43,8 @@ var Player = function() {
     this.jumpSpeed = 1;
     this.wallWalkSpeed = 1.75;
     this.turnSpeed = 17.5;
+    this.ladderSpeed = 1.5;
+    
     
     // Time measures used to account for movement
     this.time = {
@@ -73,7 +71,7 @@ var Player = function() {
 };
 
 
-Player.prototype.initGraphic = function() {
+Player.prototype.initShape = function() {
     //var img = new Image();
     
     var canvas = document.createElement('canvas');
@@ -87,14 +85,14 @@ Player.prototype.initGraphic = function() {
     ctx.fill();
     ctx.closePath();
     
-    this.graphic.canvas = canvas;
+    this.shape.canvas = canvas;
     
 };
 
 
-Player.prototype.initBitmap = function() {
+Player.prototype.initSprite = function() {
     
-    var spritesheet = new PlayerSheet(spritesheet_data);
+    var spritesheet = new SpriteSheet(spritesheet_data);
     spritesheet.initCanvas('color');
     
     this.spritesheet = spritesheet;
@@ -103,8 +101,8 @@ Player.prototype.initBitmap = function() {
 };
 
 
-Player.prototype.changeDirection = function(DIRECTION) {
-    this.playerOptions.FACING = DIRECTION;
+Player.prototype.changeDirection = function(KEYPRESS) {
+    this.playerOptions.FACING = KEYPRESS;
 };
 
 
@@ -145,25 +143,13 @@ Player.prototype.getSpeed = function() {
         
         case 'TURN':
             return this.turnSpeed * this.factorSpeed;
+        
+        case 'LADDER':
+            return this.ladderSpeed;
     
     }
         
 };
-
-
-Player.prototype.interpolateWalkSurf = function() {
-    
-    var current = this.current;
-    var start = this.start;
-    var displacement = this.displacement;
-    var time = this.time;
-    
-    
-    current.row = start.row + (displacement.row * time.percent);
-    current.col = start.col + (displacement.col * time.percent);
-    
-};
-
 
 Player.prototype.parabolicMove = function(x) {
     //-8.16\left(x-\ .35\right)^{2\ }+\ 1
@@ -183,72 +169,6 @@ Player.prototype.parabolicMove = function(x) {
     
     return y;  
 };
-
-
-Player.prototype.interpolateJump = function() {
-    
-    var current = this.current;
-    var start = this.start;
-    var displacement = this.displacement;
-    var time = this.time;
-    
-    
-    var formula_x = time.percent;   // Percentage through move
-    var formula_y = this.parabolicMove(formula_x);    // Height w.r.t. time
-    var sign = displacement.row + displacement.col;
-    
-    if (this.MOVE_STATE === 'JUMP ON') {
-       
-        var horizontal_displacement = sign * time.percent;
-        var vertical_displacement = formula_y;
-
-    }
-  
-    else if (this.MOVE_STATE === 'JUMP OFF') {
-        
-        // If you're jumping off, increase horizontal displacement to compensate shortened jump
-        // Player must spend last 30% of move standing still
-        var horizontal_displacement = sign * Math.min(time.percent/.7, 1);
-        var vertical_displacement = formula_y;
-        
-    }
-        
-    // If you're jumping across rows
-    if (displacement.row !== 0) {
-           
-        current.row = start.row + horizontal_displacement - vertical_displacement;
-        //current.row = start.row + (displacement.row * time.percent) - vertical_displacement;
-        current.col = start.col;
-            
-    } 
-    // Otherwise, if you're jumping across columns
-    else if (displacement.col !== 0) {
-            
-        current.col = start.col + horizontal_displacement;
-        current.row = start.row - vertical_displacement;
-            
-    }
-    
-};
-
-Player.prototype.interpolateLadder = function() {
-    
-    var time = this.time;
-    var transitionLayer = this.map.transitionLayer;
-    
-    var formula_x = time.percent;   // Percentage through move
-    var formula_y = this.parabolicMove(formula_x);    // Transparency of transiton layer
-    
-    transitionLayer.globalAlpha = formula_y;    
-    
-    if (time.percent > .5 && (this.tile.id !== this.endTile.id)) {
-        this.setTile(this.endTile);
-    }
-    
-};
-
-
-
 
 Player.prototype.interpolateMove = function() {
     
@@ -300,13 +220,13 @@ Player.prototype.interpolateMove = function() {
             
             //let endB = this.map.getOtherEndLadder(this.endTile);
             this.setTile(this.endTile);    
-            this.map.startMove();
+            this.game.startMove();
             return;
         }
         
         // After using ladder, reset path on floor
         if (this.MOVE_STATE === 'LADDER') {
-            this.map.resetPathPointer(this.startTile);
+            this.game.resetPathPointer(this.startTile);
         }
         
 //        // If path is still being followed
@@ -317,17 +237,96 @@ Player.prototype.interpolateMove = function() {
         this.setTile(this.endTile); 
         this.MOVE_STATE = 'STILL';
         //console.log('I stopped moving');
-        
-        
+         
         return;
     }    
     
 };
 
 
+Player.prototype.interpolateWalkSurf = function() {
+    
+    var current = this.current;
+    var start = this.start;
+    var displacement = this.displacement;
+    var time = this.time;
+    
+    
+    current.row = start.row + (displacement.row * time.percent);
+    current.col = start.col + (displacement.col * time.percent);
+    
+};
+
+
+
+Player.prototype.interpolateJump = function() {
+    
+    var current = this.current;
+    var start = this.start;
+    var displacement = this.displacement;
+    var time = this.time;
+    
+    
+    var formula_x = time.percent;   // Percentage through move
+    var formula_y = this.parabolicMove(formula_x);    // Height w.r.t. time
+    var sign = displacement.row + displacement.col;
+    
+    if (this.MOVE_STATE === 'JUMP ON') {
+       
+        var horizontal_displacement = sign * time.percent;
+        var vertical_displacement = formula_y;
+
+    }
+  
+    else if (this.MOVE_STATE === 'JUMP OFF') {
+        
+        // If you're jumping off, increase horizontal displacement to compensate shortened jump
+        // Player must spend last 30% of move standing still
+        var horizontal_displacement = sign * Math.min(time.percent/.7, 1);
+        var vertical_displacement = formula_y;
+        
+    }
+        
+    // If you're jumping across rows
+    if (displacement.row !== 0) {
+           
+        current.row = start.row + horizontal_displacement - vertical_displacement;
+        //current.row = start.row + (displacement.row * time.percent) - vertical_displacement;
+        current.col = start.col;
+            
+    } 
+    // Otherwise, if you're jumping across columns
+    else if (displacement.col !== 0) {
+            
+        current.col = start.col + horizontal_displacement;
+        current.row = start.row - vertical_displacement;
+            
+    }
+    
+};
+
+Player.prototype.interpolateLadder = function() {
+    
+    var time = this.time;
+    
+    var formula_x = time.percent;   // Percentage through move
+    
+    // Transparency of transiton layer follows parabola
+    var formula_y = this.parabolicMove(formula_x);   
+    this.game.setTransitionAlpha(formula_y);   
+    
+    if (time.percent > .5 && (this.tile.id !== this.endTile.id)) {
+        this.setTile(this.endTile);
+    }
+    
+};
+
+
+
+
 
 // Update the attributes associated with player that dictate sprite in use
-Player.prototype.updatePlayerOptions = function() {
+Player.prototype.updateSpriteOptions = function() {
     
     // Update spriteOptions of various sprites
     // Player Options: GENDER - ACTIVITY - FACING - ORIENTATION
@@ -481,31 +480,29 @@ Player.prototype.updatePlayerOptions = function() {
 };
 
 
-
-
 Player.prototype.drawPlayer = function() {
  
     var floor = this.tile.floor;
+    var frame = floor.frame;
     
     var row = this.current.row;
     var col = this.current.col;     
     
-    var tile_size = floor.tile_size;
+    var tile_size = this.game.getTileSize();
     
     if (this.MOVE_STATE === 'USER MOVE') {
         return;
     }
     
-    if (this.active === 'GRAPHIC') {
-        let x = col * tile_size + floor.offset_x - (.5 * tile_size);
-        let y = row * tile_size + floor.offset_y - (.5 * tile_size);
-        floor.canvas.ctx.drawImage(this.graphic.canvas, x, y, tile_size, tile_size);
+    if (this.game.getLayerState() === 'GRAPHIC') {
+        let x = col * tile_size + frame.offset_x - (.5 * tile_size);
+        let y = row * tile_size + frame.offset_y - (.5 * tile_size);
+        frame.ctx.drawImage(this.shape.canvas, x, y, tile_size, tile_size);
     }
     
-    else if (this.active === 'BITMAP') {
+    else if (this.game.getLayerState() === 'BITMAP') {
         
         let sprite_size = this.spritesheet.sprite_size;
-        let ctx = floor.canvas.getContext('2d');
         
         // Draw surf pokemon sprite
         if (this.pokemonOptions.SHOW) {
@@ -531,15 +528,15 @@ Player.prototype.drawPlayer = function() {
             let xy = this.spritesheet.getXY(this.pokemonOptions);
             let sx = xy.x;
             let sy = xy.y;
-            ctx.drawImage(this.spritesheet.canvas, sx, sy, sprite_size, sprite_size, x, y, tile_size * 2, tile_size * 2);
+            frame.ctx.drawImage(this.spritesheet.canvas, sx, sy, sprite_size, sprite_size, x, y, tile_size * 2, tile_size * 2);
         }
         
         // Draw player sprite
         // Draw player on interpolated location
         let row = this.current.row;
         let col = this.current.col;    
-        let x = col * tile_size + floor.offset_x - (.5 * tile_size);
-        let y = row * tile_size + floor.offset_y - (.5 * tile_size);
+        let x = col * tile_size + frame.offset_x - (.5 * tile_size);
+        let y = row * tile_size + frame.offset_y - (.5 * tile_size);
         
         let xy = this.spritesheet.getXY(this.playerOptions);
         let sx = xy.x;
@@ -548,7 +545,7 @@ Player.prototype.drawPlayer = function() {
         //        var spritesheetCanvas = this.spritesheet.canvas;
         //        var spritesheetCtx = spritesheetCanvas.getContext('2d');
         
-        ctx.drawImage(this.spritesheet.canvas, sx, sy, sprite_size, sprite_size, x, y, tile_size * 2, tile_size * 2);
+        frame.ctx.drawImage(this.spritesheet.canvas, sx, sy, sprite_size, sprite_size, x, y, tile_size * 2, tile_size * 2);
 
         // Draw dust sprite  
         if (this.dustOptions.SHOW) { 
@@ -561,8 +558,7 @@ Player.prototype.drawPlayer = function() {
             let xy = this.spritesheet.getXY(this.dustOptions);
             let sx = xy.x;
             let sy = xy.y;
-            ctx.drawImage(this.spritesheet.canvas, sx, sy, sprite_size, sprite_size, x, y, tile_size * 2, tile_size * 2);
+            frame.ctx.drawImage(this.spritesheet.canvas, sx, sy, sprite_size, sprite_size, x, y, tile_size * 2, tile_size * 2);
         }
-    }
-    
+    }  
 };
