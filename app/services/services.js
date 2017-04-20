@@ -74,6 +74,7 @@ pokemonApp.service('pokeGame', function($log, $interval, pokeMap) {
     //game.pathfinder.PATH_STATE = 'VISUALIZE';
     //this.findPath();
         
+    $log.log(game);
     
     // Game Loop
     var gameLoop = function() {
@@ -84,8 +85,14 @@ pokemonApp.service('pokeGame', function($log, $interval, pokeMap) {
         
         //map.pathVisualization();
         
-        game.updatePathfinder();
-        game.updatePlayer();
+//        var game_state = game.getGameState();
+        var pathfinder_state = game.getPathfinderState();
+        var player_state = game.getPlayerMoveState(); 
+        
+//        console.info(pathfinder_state);
+//        console.info(player_state);
+        
+        game.updateGame();
 
         //map.updatePath(game);
         // Update rocks
@@ -96,17 +103,22 @@ pokemonApp.service('pokeGame', function($log, $interval, pokeMap) {
         // ----- Render game ----- //
         
         // Draw Map
-        game.drawMap();    
+        game.drawMap();   
+        //game.renderGame();
         
         // Draw highlighted tile
-        game.drawHoverTile();
+        //game.drawHoverTile();
+        
+        game.drawFlags();
         
         // Draw path
         //game.drawPath();
         
         // Draw player
-        game.drawPlayer();
+        //game.drawPlayer();
         
+        // Draw special tiles
+        game.drawSpecial();
         // Draw overlay
         //game.drawOverlay();
         
@@ -119,7 +131,11 @@ pokemonApp.service('pokeGame', function($log, $interval, pokeMap) {
         game.ticks++;
         //console.log(game.ticks);
         let end_time = performance.now();
-        //$log.log('Loop Time: ' +  (end_time - start_time))
+        let total_time = end_time - start_time;
+        if (total_time > 6) {
+            //$log.info('Loop Time is over 6ms ' + total_time);
+        }
+        //$log.log('Loop Time: ' +  (total_time));
         
     };
     

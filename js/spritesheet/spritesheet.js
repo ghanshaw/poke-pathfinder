@@ -2,7 +2,21 @@ var SpriteSheet = function(spritesheet_data) {
     this.player = spritesheet_data.player();
     this.pokemon = spritesheet_data.pokemon();
     this.dust = spritesheet_data.dust();
+    this.head = spritesheet_data.head();
+    this.flag = spritesheet_data.flag();
+    //this.mewtwo = spritesheet_data.mewtwo();
+    this.obstacle = spritesheet_data.obstacle();
+    this.tile = spritesheet_data.tile();
     this.spritesheet_data = spritesheet_data;
+    
+    
+    // Objects to hold both spritesheet canvases
+    this.color = {};
+    this.bw = {};
+    this.sprite = {};
+    this.initCanvas('color');
+    this.initCanvas('bw');    
+    this.sprite_size = this.color.canvas.width / spritesheet_data.rows();
 };
 
 
@@ -27,14 +41,50 @@ SpriteSheet.prototype.initCanvas = function(type) {
     canvas.height = spritesheet_img.height;
     
     ctx.drawImage(spritesheet_img, 0, 0);
-    
-    var sprite_size = canvas.width / spritesheet_data.rows();
-    
-    this.sprite_size = sprite_size;
-    this.canvas = canvas;
+   
+    this[type] = {
+        canvas: canvas,
+        ctx: ctx
+    };
 
 };
 
+SpriteSheet.prototype.initSprite = function() {
+    
+    var canvas = document.createElement('canvas');
+    var ctx = canvas.getContext('2d');
+    
+    ctx.mozImageSmoothingEnabled = false;
+    ctx.webkitImageSmoothingEnabled = false;
+    ctx.msImageSmoothingEnabled = false;
+    ctx.imageSmoothingEnabled = false;
+    
+    canvas.width = this.sprite_size;
+    canvas.height = this.sprite_size;
+    
+    this.sprite = {
+       canvas: canvas,
+       ctx: ctx
+    };
+
+};
+
+SpriteSheet.prototype.getSprite = function(spriteOptions, color=true) {
+    
+    var xy = this.getXY(spriteOptions);
+    var sprite_size = this.sprite_size;
+    
+    this.sprite.ctx.clearRect(0, 0, sprite_size, sprite_size);
+    
+    // Get correct spritesheet
+    var spritesheet = this.color;
+    if (!color) {
+        spritesheet = this.bw;
+    }
+    
+    this.sprite.ctx.drawImage(spritesheet.canvas, xy.x, xy.y, sprite_size, sprite_size, 0, 0, sprite_size, sprite_size);
+    return this.sprite;
+};
 
 SpriteSheet.prototype.getRowCol = function(spriteOptions) {
       
@@ -66,6 +116,41 @@ SpriteSheet.prototype.getRowCol = function(spriteOptions) {
         return rowcol;
     }
     
+    // Sprite is head
+    if (spriteOptions.TYPE === 'HEAD') {
+        var GENDER = spriteOptions.GENDER;
+        var FACING = spriteOptions.FACING;
+        var rowcol = this.head[GENDER][FACING];
+        
+        return rowcol;
+    }
+    
+    
+    // Sprite is flag
+    if (spriteOptions.TYPE === 'FLAG') {
+        var EVENT = spriteOptions.EVENT;
+        var rowcol = this.flag[EVENT];
+        
+        return rowcol;
+    }
+    
+    // Sprite is Mewtwo
+    if (spriteOptions.TYPE === 'MEWTWO') {
+        return this.mewtwo;
+    }
+    
+    // Sprite is obstacle
+    if (spriteOptions.TYPE === 'OBSTACLE') {
+        var LABEL = spriteOptions.LABEL;
+        return this.obstacle[LABEL];
+    }
+    
+    // Sprite is surface tile (water or rock)
+    if (spriteOptions.TYPE === 'TILE') {
+        var SURFACE = spriteOptions.SURFACE;
+        var NUM = spriteOptions.NUM;
+        return this.tile[SURFACE][NUM];
+    }
         
 };
 

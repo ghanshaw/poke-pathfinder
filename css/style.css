@@ -167,6 +167,7 @@ section {
     display: block;
     width: 100%;
     text-align: center;
+    position: relative;
 }
 
 .no-padding {
@@ -177,3 +178,17 @@ section {
 .extra-padding {
     padding: 0px 35px;
 }
+
+.full-width {
+    width: 100%;
+}
+
+.disabled {
+    cursor: not-allowed;
+    opacity: .65;
+    background-color: grey;
+    opacity: .65;
+    color: #101010;
+}
+
+    

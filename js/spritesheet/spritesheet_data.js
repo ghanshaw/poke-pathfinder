@@ -153,6 +153,51 @@ var spritesheet_data = (function() {
         3: [4, 10]
     };
     
+    var obstacle = {
+        MEWTWO: [7, 0],
+        POKEBALL: [7, 1],
+        BOULDER: [7, 2]
+    };
+    
+    // Head used for pathfinding
+    var head = {
+        BOY: {
+            DOWN: [5, 0],
+            UP: [5, 1],
+            LEFT: [5, 2],
+            RIGHT: [5, 3],
+        },
+        GIRL: {
+            DOWN: [5, 4],
+            UP: [5, 5],
+            LEFT: [5, 6],
+            RIGHT: [5, 7],
+        }
+    };
+    
+    // Flags used for designating source and target of pathfinder
+    var flag = {
+        SOURCE: [6, 0],
+        TARGET: [6, 1]
+    };
+
+    var tile = {
+        WATER: {
+            0: [8, 0], 
+            1: [8, 1], 
+            2: [8, 2], 
+            3: [8, 3], 
+            4: [8, 4], 
+            5: [8, 5], 
+            6: [8, 6], 
+            7: [8, 7] 
+        },
+        ROCK: {
+            0: [8, 8]
+        }
+    };
+
+    
     return {
         imgId: function() {
             return imgId;
@@ -168,6 +213,18 @@ var spritesheet_data = (function() {
         },
         dust: function() {
             return dust;
+        },
+        obstacle: function() {
+            return obstacle;
+        },
+        head: function() {
+            return head;
+        },
+        flag: function() {
+            return flag;
+        },
+        tile: function() {
+            return tile;
         }
     };
     

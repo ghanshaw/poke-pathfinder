@@ -9,15 +9,37 @@ var Game = function() {
     this.ticks = 0;
     
     this.GAME_STATE = 'NORMAL';
+    
+    
+    this.hoverTile = {
+        type: 'NORMAL',
+        id: null
+    };
+    
+    this.weight = {
+        LAND: 1,
+        WATER: 25
+    };
+    
    
 };
 
 Game.prototype.initGame = function() {
     
+    this.initSpritesheet();
     this.initMap();
     this.initGraph();
     this.initPlayer();
     this.initPathfinder();
+    
+    
+};
+
+
+Game.prototype.initSpritesheet = function() {
+    
+    this.spritesheet = new SpriteSheet(spritesheet_data);
+    this.spritesheet.initSprite();
     
 };
 
@@ -30,8 +52,11 @@ Game.prototype.initPathfinder = function() {
     // Expose game to pathfinder
     this.pathfinder.game = this;
     
+    // Initialize pathfinder
+    this.pathfinder.init();
+    
     // Create sprite and add visualization to floors
-    this.pathfinder.initSprite();
+    //this.pathfinder.initSprite();
     this.pathfinder.createPathfinderFloorLayers();
     
     console.log(this.pathfinder);
@@ -60,6 +85,8 @@ Game.prototype.initPlayer = function() {
 
 Game.prototype.initMap = function() {
     
+    
+    
     // Create Floor object objects
     var F1 = new Floor(F1_data);    
     var F2 = new Floor(F2_data);
@@ -73,6 +100,9 @@ Game.prototype.initMap = function() {
     // Create game map
     this.map = new Map(map_data);
     
+    // Expose game to map
+    this.map.game = this;
+    
     // Add floors to map
     this.map.addFloor(F1);
     this.map.addFloor(F2);
@@ -82,16 +112,20 @@ Game.prototype.initMap = function() {
     this.map.addMapData();
     
     // Add ladders data to map
-    this.map.addLadders();
+    //this.map.addLadders();
     
     // Create map layers
     this.map.createMapLayers();
     
-    // Create gameboy
-//    this.map.initGameboy();
-//    this.map.drawGameboy();
 
+    
+    
+    
+    // Create gameboy
+    //    this.map.initGameboy();
+    //    this.map.drawGameboy();
 };
+
 
 Game.prototype.initGraph = function() {
  
@@ -105,29 +139,86 @@ Game.prototype.initGraph = function() {
 };
 
 
+Game.prototype.updateGame = function() {
+    
+    this.updatePathfinder();
+    this.updatePlayer();  
+    
+};
+
+
+Game.prototype.getSprite = function(spriteOptions, color) {
+    return this.spritesheet.getSprite(spriteOptions, color);
+};
+
+
+Game.prototype.drawSprite = function(spriteOptions, tile, layer='frame', color) {
+    
+    var sprite = this.getSprite(spriteOptions, color);
+    
+    var row = tile.row;
+    var col = tile.col;     
+    var floor = tile.floor;
+    var frame = floor.frame; 
+    var tile_size = this.getTileSize();
+    var sprite_size = this.getSpriteSize();
+    var x = col * tile_size - (.5 * tile_size);
+    var y = row * tile_size - (.5 * tile_size);
+    
+    if (layer === 'frame') {
+        frame.ctx.drawImage(sprite.canvas, 
+        0, 0, sprite_size, sprite_size, 
+        x + frame.offset_x, y + frame.offset_y, tile_size * 2, tile_size * 2);
+        return;
+    }
+    if (layer === 'visualizer') {
+        floor.visualizerlayer.ctx.drawImage(sprite.canvas, 
+        0, 0, sprite_size, sprite_size, 
+        x , y, tile_size * 2, tile_size * 2);
+    }
+    
+};
+
+
+Game.prototype.getSpriteSize = function() {
+    return this.spritesheet.sprite_size;
+};
+
+
+Game.prototype.setPointer = function(x, y, target) {
+    
+    this.pointer = {
+        x: x,
+        y: y,
+        target: target
+    };
+
+};
+
+Game.prototype.getPointer = function() {
+    return this.pointer;
+};
+
 
 /*******************************************/
 /**********    Player Methods    ***********/
 /*******************************************/
-
+Game.prototype.__________PLAYER_METHODS__________ = function() {};
 
 Game.prototype.updatePlayer = function() {
     
     var player = this.player;
     
-    if (this.GAME_STATE === 'USER MOVE') {
-        // Hide player;
+    if (this.pathfinder.PATH_STATE === 'VISUALIZER') {
         return;
     }
-    
+
     if (player.MOVE_STATE === 'STILL' ||
-        player.MOVE_STATE === 'WALL WALK') { 
+            player.MOVE_STATE === 'WALL WALK') { 
+
         
-        if (this.GAME_STATE === 'PATHFINDING') {
-            this.spoofKeyPress();
-        }
-        
-        if (this.KEYPRESS) {           
+        if (this.KEYPRESS) {
+            console.log(this.KEYPRESS);
             this.startMove();
         }
         
@@ -154,65 +245,6 @@ Game.prototype.updatePlayer = function() {
 
 Game.prototype.drawPlayer = function() {
     this.player.drawPlayer();
-};
-
-
-Game.prototype.spoofKeyPress = function() {
-    
-    var pathfinder = this.pathfinder;
-    var path = pathfinder.path;
-    var index = pathfinder.index;
-
-    if (path.length <= 0 || (index + 1) >= path.length) {
-        this.GAME_STATE = 'NORMAL';
-        this.KEYPRESS = null;
-        return;
-    }
-    
-    var KEYPRESS =  this.KEYPRESS;
-    
-    var startTile = path[index];
-    var endTile = path[index + 1];
-    
-//    console.log(game.index);
-//    if (game.index === 129) {
-//        console.log('WAIT');
-//    }
-    console.info(startTile, endTile);
-    
-    startTile = this.getTileFromId(startTile);
-    endTile = this.getTileFromId(endTile);
-    
-    if (endTile.ladder) {
-        endTile = this.map.getTileOtherEndLadder(endTile);        
-    }
-    
-    // Determine displacement from startTile to endTile
-    var displacement = {
-        row: 0,
-        col: 0
-    };
-    
-    displacement.row = endTile.row - startTile.row;
-    displacement.col = endTile.col - startTile.col;
-     
-    // Use displacement to determine direction
-    if (displacement.row === -1) {
-        KEYPRESS = 'UP';
-    }
-    else if (displacement.row === +1) {
-        KEYPRESS = 'DOWN';
-    }
-    else if (displacement.col === -1) {
-        KEYPRESS = 'LEFT';
-    }
-    else if (displacement.col === +1) {
-        KEYPRESS = 'RIGHT';
-    }
-    
-    this.KEYPRESS = KEYPRESS;
-    pathfinder.index += 1;
-    
 };
 
 
@@ -251,9 +283,10 @@ Game.prototype.startMove = function() {
     if (player.MOVE_STATE === 'LADDER') {
         
         player.startTile = startTile;
-        player.endTile = this.map.getTileOtherEndLadder(startTile);
+        player.stopTile = this.map.getTileOtherEndLadder(startTile);
         
         //this.map.resetPath()
+        this.pathfinder.index += 1;
         
         
         var speed = player.getSpeed();
@@ -266,7 +299,7 @@ Game.prototype.startMove = function() {
     // ----- 1. Turning ----- //
     // If player is still, and user direction does not match player direction
     // and game not currently following path
-    if (player.MOVE_STATE === 'STILL' && this.GAME_STATE === 'NORMAL') {
+    if (player.MOVE_STATE === 'STILL' && this.pathfinder.PATH_STATE === 'OFF') {
         
         console.info('about to turn');
         
@@ -279,7 +312,7 @@ Game.prototype.startMove = function() {
             player.surfTicks = 0;
             
             player.startTile = startTile;
-            player.endTile = startTile;
+            player.stopTile = startTile;
             
             var speed = player.getSpeed();
             player.time.total = 1/speed;
@@ -304,23 +337,23 @@ Game.prototype.startMove = function() {
     }
     
     // Determine final tile
-    var endTile = this.map.getTile(floor, row + displacement.row, col + displacement.col);
+    var stopTile = this.map.getTile(floor, row + displacement.row, col + displacement.col);
     
     // If startTile is a ladder
     
-    // If endTile is a ladder
-//    if (endTile.ladder) {
-//        // Redirect player, move to ladder instead
-//        endTile = this.getOtherEndLadder(endTile);
-//    }        
-//    
+    // If stopTile is a ladder
+    //    if (stopTile.ladder) {
+    //        // Redirect player, move to ladder instead
+    //        stopTile = this.getOtherEndLadder(stopTile);
+    //    }        
+    //    
     // If tile is reachable
-    if (endTile && (graph.hasEdge(startTile.id, endTile.id) || endTile.ladder)) {
+    if (stopTile && graph.getEdge(startTile.id, stopTile.id)) {
           
         // Movement is admissable, begin interpolation 
         player.changeDirection(KEYPRESS);
         player.startTile = startTile;
-        player.endTile = endTile;
+        player.stopTile = stopTile;
         
         
         player.start.row = row;
@@ -331,11 +364,11 @@ Game.prototype.startMove = function() {
         // Set move state, determine time allotted for move
         var speed;
         // ----- 3. Jumping onto water pokemon ----- //
-        if (startTile.type === 'LAND' && endTile.type === 'WATER') {
+        if (startTile.type === 'LAND' && stopTile.type === 'WATER') {
             player.MOVE_STATE = 'JUMP ON';    
         } 
         // ----- 4. Jumping off of water pokemon ----- //
-        else if (startTile.type === 'WATER' && endTile.type === 'LAND') {      
+        else if (startTile.type === 'WATER' && stopTile.type === 'LAND') {      
             player.MOVE_STATE = 'JUMP OFF';
         }
         // ----- 5. Walking on land ----- //
@@ -356,7 +389,7 @@ Game.prototype.startMove = function() {
     
     // ----- 2b. Walking into walls ----- //
     // Animate walking against wall
-    else if (endTile && !graph.hasEdge(startTile.id, endTile.id)) {
+    else if (stopTile && !graph.getEdge(startTile.id, stopTile.id)) {
         
         // Only animate walking into walls on land
         if(startTile.type === 'LAND') {
@@ -366,7 +399,7 @@ Game.prototype.startMove = function() {
             
             player.changeDirection(KEYPRESS);
             player.startTile = startTile;
-            player.endTile = startTile;
+            player.stopTile = startTile;
             
             var speed = player.getSpeed();
             player.time.total = 1/speed;
@@ -379,12 +412,63 @@ Game.prototype.startMove = function() {
 };
 
 
+Game.prototype.setPlayerFacing = function(direction) {
+    this.player.playerOptions.FACING = 'DOWN';
+};
+
+Game.prototype.getPlayerTopLeft = function() {
+        
+    var player = this.player;
+    return this.getTileTopLeft(player.tile);
+    
+};
+
+Game.prototype.getPlayerMoveState = function() {
+    return this.player.MOVE_STATE;
+};
+
+Game.prototype.setPlayerMoveState = function(state) {
+    this.player.MOVE_STATE = state;
+};
+
+
+Game.prototype.setPlayerTile = function(tile) {
+    this.player.setTile(tile);
+};
+
+Game.prototype.getPlayerTile = function(tile) {
+    return this.player.tile;
+};
+
+
+Game.prototype.setPlayerSpeed = function(speed) {
+    this.player.factorSpeed = speed;
+};
+
+Game.prototype.getPlayerGender = function() {
+    return this.player.playerOptions.GENDER;    
+};
+
+Game.prototype.setPlayerGender = function(GENDER) {
+    this.player.playerOptions.GENDER = GENDER;
+};
+
+
+
 Game.prototype.drawMap = function() {
     
     var map = this.map;
     
     if (map.LAYER_STATE === 'BITMAP') {
-        map.drawBitmapLayers();
+        
+        map.drawBitmapRockLayers();       
+        map.drawBitmapWaterLayers();    
+        map.drawBitmapFloorLayers();
+        this.drawPlayer();
+        if (this.player.tile.type === 'WATER') {
+            map.drawBitmapOverlayLayers();
+        }
+
     } else if (map.LAYER_STATE === 'GRAPHIC') {
         map.drawGraphicLayers();
     }
@@ -394,8 +478,16 @@ Game.prototype.drawMap = function() {
         map.drawRowsCols();   
     };
     
-    if (this.pathfinder.PATH_STATE === 'VISUALIZE' || 1) {
-        map.drawVisualizationLayer();
+    // Draw Special Tiles
+    // .ladder, .occuppied
+    //this.drawSprite();
+    
+    if (this.pathfinder.LAYER_STATE === 'VISUALIZER') {
+        map.drawVisualizerLayer();
+    }
+    
+    else if (this.pathfinder.LAYER_STATE === 'ROUTER') {
+        map.drawPathLayer();
     }
       
 };
@@ -418,8 +510,12 @@ Game.prototype.toggleMapLayers = function(layer) {
     this.map.LAYER_STATE = layer;
 };
 
-Game.prototype.getTile = function(row, col) {
-    return this.map.getTile(row, col);
+
+Game.prototype.__________TILE_METHODS__________ = function() {};
+
+
+Game.prototype.getTile = function(floor, row, col) {
+    return this.map.getTile(floor, row, col);
 };
 
 
@@ -428,16 +524,15 @@ Game.prototype.getTileSize = function() {
 };
 
 
-Game.prototype.getPlayerTopLeft = function() {
-        
-    var player = this.player;
-    return this.getTileTopLeft(player.tile);
-    
+Game.prototype.getTileTopLeft = function(tile) {
+    return this.map.getTileTopLeft(tile);    
 };
 
-Game.prototype.getPlayerMoveState = function() {
-    return this.player.MOVE_STATE;
+
+Game.prototype.getTileEuclidDistance = function(tile1, tile2) {
+    return this.map.getTileEuclidDistance(tile1, tile2);
 };
+ 
 
 Game.prototype.setGameState = function(state) {
     this.GAME_STATE = state;    
@@ -447,24 +542,8 @@ Game.prototype.getGameState = function() {
     return this.GAME_STATE;
 };
 
-Game.prototype.setPlayerTile = function(tile) {
-    this.player.setTile(tile);
-};
-
-Game.prototype.setPlayerSpeed = function(speed) {
-    this.player.factorSpeed = speed;
-};
-
-Game.prototype.getPlayerGender = function() {
-    return this.player.playerOptions.GENDER;    
-};
-
-Game.prototype.setPlayerGender = function(GENDER) {
-    this.player.playerOptions.GENDER = GENDER;
-};
-
-Game.prototype.getTileFromPointer = function(top, left) {
-    return this.map.getTileFromPointer(top, left);  
+Game.prototype.getTileFromPointer = function(pointer) {
+    return this.map.getTileFromPointer(pointer);  
 };
 
 
@@ -473,26 +552,46 @@ Game.prototype.getTileFromId = function(tileId) {
 };
 
 
+
+
+
 Game.prototype.drawHoverTile = function() {
     
     //console.log(this.validTile);
+    var pathfinder = this.pathfinder;
     
-    if (!this.hoverTile) {
-        return;
-    }
+    if (pathfinder.PATH_STATE === 'SELECT SOURCE/TARGET') {
+        
+        var tile = pathfinder.hoverTile.tile;
+        
+        if (!tile) { return; }
+        
+        pathfinder.flagOptions.EVENT = pathfinder.hoverTile.sourceTarget;
+        this.drawSprite(pathfinder.flagOptions, tile);
+        
+        var floor = tile.floor;
+        
+        var row = tile.row;
+        var col = tile.col;
+        var floor = tile.floor;
+        
+        var x = col * floor.tile_size;
+        var y = row * floor.tile_size;
+        
+        //floor.frame.ctx.strokeStyle = 'yellow';
+        //floor.frame.ctx.strokeRect(x + floor.frame.offset_x, y + floor.frame.offset_y, floor.tile_size, floor.tile_size);   
+        
+    };
     
-    var tile = this.getTileFromId(this.hoverTile);
-    var floor = tile.floor;
     
-    var row = tile.row;
-    var col = tile.col;
-    var floor = tile.floor;
     
-    var x = col * floor.tile_size;
-    var y = row * floor.tile_size;
+    //    if (this.hoverTile.type === 'SOURCE' || this.hoverTile.type === 'TARGET') {
+    //        this.spritesheet.getSprite(flagOptions);
+    //        floor.frame.ctx.drawImage(this.spritesheet.sprite.canvas, x + floor.frame.offset_x, y + floor.frame.offset_y, floor.tile_size, floor.tile_size)
+    //    }
     
-    floor.frame.ctx.strokeStyle = 'yellow';
-    floor.frame.ctx.strokeRect(x + floor.frame.offset_x, y + floor.frame.offset_y, floor.tile_size, floor.tile_size);   
+    
+
     
 };
 
@@ -503,27 +602,40 @@ Game.prototype.setTransitionAlpha = function(alpha) {
     
 };
 
-Game.prototype.getTileEuclidDistance = function(tile1, tile2) {
-    return this.map.getTileEuclidDistance(tile1, tile2);
-};
-
 
 // Reset the pointer of the context on the path layer for this tile's floor
 Game.prototype.resetPathPointer = function(tile) {
     
-//    var ctx = tile.floor.graphic.path.getContext('2d');
-//    ctx.beginPath();
+    //tile.floor.pathlayer.ctx.beginPath();
     
 };
 
 
-Game.prototype.getTileTopLeft = function(tile) {
-    return this.map.getTileTopLeft(tile);    
+
+
+
+
+
+
+
+
+Game.prototype.getTileOtherEndLadder = function(endA) {
+    return this.map.getTileOtherEndLadder(endA);
 };
 
 
-Game.prototype.startPathfinder = function(state) {
-    this.pathfinder.startPathfinder(state);
+Game.prototype.__________PATHFINDER_METHODS__________ = function() {};
+
+Game.prototype.setPathfinderSourceTarget = function(tile) {
+    this.pathfinder.setSourceTarget(tile)
+};
+
+Game.prototype.startPathfinder = function(state, sourceTarget) {
+    this.pathfinder.startPathfinder(state, sourceTarget);
+};
+
+Game.prototype.clearPathfinder = function() {
+    this.pathfinder.clearPathfinder();
 };
 
 Game.prototype.updatePathfinder = function() {
@@ -531,6 +643,234 @@ Game.prototype.updatePathfinder = function() {
     var pathfinder = this.pathfinder;
     pathfinder.updatePathfinder();
     
-    //console.log(pathfinder.PATH_STATE);
+};
+
+Game.prototype.appendPath = function(color) {
+    this.map.appendPath(color, this.player);
+};
+ 
+Game.prototype.createPathfinderFloorLayers = function() {
+    this.map.createPathfinderFloorLayers();     
+};
+ 
+Game.prototype.getPathfinderState = function() {
+    return this.pathfinder.getState();
+};
+
+Game.prototype.setPathfinderState = function(state) {
+    this.pathfinder.setState(state);
+};
+
+Game.prototype.setPathfinderHoverTile = function(tileId, type) {
+    this.pathfinder.setHoverTile(null);
+};
+
+Game.prototype.getPathfinderSourceFlag = function() {
+    return this.pathfinder.flagSource;
+};
+
+Game.prototype.getPathfinderTargetFlag = function() {
+    return this.pathfinder.flagTarget;
+};
+
+Game.prototype.drawFlags = function() {
     
+    this.pathfinder.drawFlags();
+ 
+};
+
+Game.prototype.getRandomTile = function() {
+    
+    var tileIds = Object.keys(this.graph.adj);
+    var length = tileIds.length;
+    
+    var index = 0;
+    var tile = this.getTileFromId(tileIds[index]);
+    
+    while (tile.type === 'ROCK') {
+    
+        index = Math.floor(length * Math.random());
+        tile = this.getTileFromId(tileIds[index]);
+        
+    }
+    
+    // Make sure tile isn't Mewtwo
+    // Make sure tile isn't ladder
+    
+    return tile;
+    
+};
+
+
+Game.prototype.setPathfinderConsoleTile = function(consoleTile, sourceTarget) {
+    this.pathfinder.setConsoleTile(consoleTile, sourceTarget);
+};
+
+Game.prototype.getKeyTile = function(id) {
+    return this.map.keyTiles[id].tile;
+};
+
+Game.prototype.removeEdgesToNeighbors = function(tile) {
+    
+    var graph = this.graph;
+    var r = tile.row;
+    var c = tile.col;
+    var neighbors = [];
+    neighbors.push([r-1, c]);
+    neighbors.push([r+1, c]);
+    neighbors.push([r, c-1]);
+    neighbors.push([r, c+1]);
+    
+    for (let neigh of neighbors) {
+        let row = neigh[0];
+        let col = neigh[1];
+        
+        let nTile = this.getTile(tile.floor, row, col);
+        //let type_neigh = this.getTileType(row, col);
+        
+        if (nTile) {
+            graph.removeEdge(tile.id, nTile.id);
+            graph.removeEdge(nTile.id, tile.id);
+        }
+        //if (this.inBounds(row, col) && nTile.type !== "ROCK") {
+        
+        //}
+    }     
+    
+};
+
+Game.prototype.addEdgesToNeighbors = function(tile) {
+    
+    var graph = this.graph;
+    
+    var r = tile.row;
+    var c = tile.col;
+    var neighbors = [];
+    neighbors.push([r-1, c]);
+    neighbors.push([r+1, c]);
+    neighbors.push([r, c-1]);
+    neighbors.push([r, c+1]);
+    
+    for (let neigh of neighbors) {
+        let row = neigh[0];
+        let col = neigh[1];
+        
+        let nTile = this.getTile(tile.floor, row, col);
+        //let type_neigh = this.getTileType(row, col);
+        
+        if (nTile && nTile.type !== "ROCK") {
+            graph.addEdge(tile.id, nTile.id);
+            graph.addEdge(nTile.id, tile.id);
+        }
+    } 
+    
+    
+};
+
+Game.prototype.drawSpecial = function() {
+    
+    //return;
+    
+    var map = this.map;
+    
+    if (0) {
+        for (let k in map.keyTiles) {
+            let keyTile = map.keyTiles[k];
+            let tile = keyTile.tile;
+            let floor = tile.floor;
+            let frame = floor.frame;
+            var tile_size = tile.floor.tile_size;
+            var xy = this.getTileFrameXY(tile);
+        
+            frame.ctx.fillStyle = 'blue';
+            frame.ctx.fillRect(xy.x, xy.y, tile_size, tile_size);
+        };
+    
+    
+        for (let l in map.ladders) {
+            let ladder = map.ladders[l];
+        
+            for (let tile of ladder.tile) {
+                let floor = tile.floor;
+                let frame = floor.frame;
+                var tile_size = tile.floor.tile_size;
+                var xy = this.getTileFrameXY(tile);
+
+                frame.ctx.fillStyle = 'pink';
+                frame.ctx.fillRect(xy.x, xy.y, tile_size, tile_size);
+            }
+        };
+    
+    
+        for (let g in map.gaps) {
+            let gap = map.gaps[g];
+            let tile = gap.tile;
+            let floor = tile.floor;
+            let frame = floor.frame;
+            var tile_size = tile.floor.tile_size;
+            var xy = this.getTileFrameXY(tile);
+        
+            frame.ctx.fillStyle = 'white';
+            frame.ctx.fillRect(xy.x, xy.y, tile_size, tile_size);
+        };
+        
+    }
+    
+    var spriteOptions = {
+        TYPE: 'OBSTACLE',
+        LABEL: 'MEWTWO'
+    };
+    
+    for (let o in map.obstacles) {
+        let obstacle = map.obstacles[o];
+        let tile = obstacle.tile;
+        let floor = tile.floor;
+        let frame = floor.frame;
+        var tile_size = tile.floor.tile_size;
+        var xy = this.getTileFrameXY(tile); 
+        
+        if (obstacle.label === 'MEWTWO') {
+        
+            spriteOptions.LABEL = obstacle.label;
+            var sprite = this.drawSprite(spriteOptions, tile);
+
+            frame.ctx.fillStyle = 'red';
+            //frame.ctx.fillRect(xy.x, xy.y, tile_size, tile_size);
+            //frame.ctx.drawImage(sprite.canvas, xy.x, xy.y, tile_size, tile_size);
+        }
+    };
+    
+    
+    
+    
+};
+
+Game.prototype.getTileFrameXY = function(tile) {
+    
+    var floor = tile.floor;
+    var frame = floor.frame;
+    var tile_size = tile.floor.tile_size;
+    
+    var y = (tile.row + frame.offset_rows) * tile_size;
+    var x = (tile.col + frame.offset_cols) * tile_size;
+        
+    return {
+        x: x,
+        y:y
+    };
+    
+};
+
+
+// 
+Game.prototype.drawTriangle = function(color, opacity) {
+    
+};
+
+Game.prototype.drawCircle = function() {
+    
+};
+
+Game.prototype.getWeight = function(TYPE) {
+    return this.weight[TYPE];
 };

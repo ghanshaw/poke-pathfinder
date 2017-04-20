@@ -72,9 +72,12 @@
             <img id="spritesheet-color" src="images/spritesheet_color.png" alt>
             <img id="spritesheet-bw" src="images/spritesheet_bw.png" alt>
             <img id="tile-rock" src="images/map/tile_rock.png" alt>
+            <img id="tile-water" src="images/map/tile_water.png" alt>
             <img id="F1-floor" src="images/map/F1.png" alt>
             <img id="F2-floor" src="images/map/F2.png" alt>
             <img id="BF1-floor" src="images/map/BF1.png" alt>
+            <img id="F1-overlay" src="images/map/F1-overlay.png" alt>
+            <img id="BF1-overlay" src="images/map/BF1-overlay.png" alt>
             <img id="player-draggie-boy" src="images/player_draggie_boy.png" alt>
             <img id="player-draggie-girl" src="images/player_draggie_girl.png" alt>
             <img id="path-sprite" src="images/path_sprite.png" alt>
@@ -91,19 +94,25 @@
                                 <div class="mapWrapper"
                                      tabindex="0"
                                      ng-keyup="cancelDirection($event)"
-                                     ng-keydown="changeDirection($event)">
+                                     ng-keydown="changeDirection($event)"
+                                     ng-mousemove="movePointer($event)"
+                                     ng-click="clickPointer($event)">
                                     <canvas id="F1-canvas"></canvas>
                                 </div>
                                 <div class="mapWrapper"
                                      tabindex="0"
                                      ng-keyup="cancelDirection($event)"
-                                     ng-keydown="changeDirection($event)">
+                                     ng-keydown="changeDirection($event)"
+                                     ng-mousemove="movePointer($event)"
+                                     ng-click="clickPointer($event)">
                                     <canvas id="F2-canvas"></canvas>
                                 </div>
                                 <div class="mapWrapper"
                                      tabindex="0"
                                      ng-keyup="cancelDirection($event)"
-                                     ng-keydown="changeDirection($event)">
+                                     ng-keydown="changeDirection($event)"
+                                     ng-mousemove="movePointer($event)"
+                                     ng-click="clickPointer($event)">
                                     <canvas id="BF1-canvas"></canvas>
                                 </div>
                             </div>
@@ -116,13 +125,17 @@
                                 <div class="col-sm-12"> 
                                     
                                     <button class="button-3D" ng-click="debugClick()">Debug Button</button>
+                                    <button class="button-3D" ng-click="debugClick2()">Debug Button 2</button>
                                     
                                     <section>
                                         <h4 class="section-heading">Step 1: Choose Algorithm</h4>
                                         <div class="row">
                                             <div class="col-xs-7">
                                                     
-                                                <select class="button-3D" ng-options="option.label for option in algorithms.options track by option.id" ng-model="algorithms.selected"></select>
+                                                <select 
+                                                    class="button-3D" 
+                                                    ng-options="option.label for option in algorithms.options track by option.id" 
+                                                    ng-model="algorithms.selected"></select>
                                                              
                                             </div>    
                                         </div>
@@ -134,14 +147,20 @@
                                         <div class="row">
                                             <div class="col-xs-5">         
                                                         
-                                                <select class="button-3D" ng-model="tiles.startTile" ng-options="tile.label for tile in tiles.options track by tile.id"></select>
+                                                <select 
+                                                    class="button-3D" 
+                                                    ng-model="tiles.sourceTile" 
+                                                    ng-options="tile.label for tile in tiles.options track by tile.id"></select>
                                                                 
                                             </div>
                                                         
                                             <div class="col-xs-2"><span>-or-</span></div>
                                                     
                                             <div class="col-xs-5">                   
-                                                <button class="button-3D">Click Start Tile</button>
+                                                <button 
+                                                    class="button-3D"
+                                                    ng-click="clickSourceTarget('SOURCE')"
+                                                    ng-class="cssScopeTarget('SOURCE')">Click Source Tile</button>
                                             </div>
                                         </div>
                                     </section>
@@ -152,14 +171,20 @@
                                         <div class="row">
                                             <div class="col-xs-5">         
                                                 <div class="dropdow">
-                                                    <select class="button-3D" ng-model="tiles.endTile" ng-options="tile.label for tile in tiles.options track by tile.id"></select>
+                                                    <select 
+                                                        class="button-3D" 
+                                                        ng-model="tiles.targetTile" 
+                                                        ng-options="tile.label for tile in tiles.options track by tile.id"></select>
                                                 </div>
                                             </div>
                                         
                                             <div class="col-xs-2"><span>-or-</span></div>
                                         
                                             <div class="col-xs-5">                   
-                                                <button class="button-3D">Click End Tile</button>
+                                                <button
+                                                    class="button-3D"
+                                                    ng-click="clickSourceTarget('TARGET')"
+                                                    ng-class="cssScopeTarget('TARGET')">Click Target Tile</button>
                                             </div>
                                         </div> 
                                     </section>
@@ -167,12 +192,29 @@
                                 
 
                                 <section>
+                                    <h4 class="section-heading">Step 4: Choose Behavior</h4>
                                     <div class="row">
-                                        <div class="col-xs-6">
-                                            <button class="button-3D">Find Route</button>
-                                        </div>
-                                        <div class="col-xs-6">
-                                            <button class="button-3D">Clear Route</button>
+                                        <div class="col-xs-5">         
+                                                <div class="dropdow">
+                                                    <button 
+                                                        class="button-3D full-width" 
+                                                        ng-click="startPathfinder('ROUTER')"
+                                                        ng-class="cssVisualizerRouter()">Follow Route</button>
+                                                </div>
+                                            </div>
+                                        
+                                            <div class="col-xs-2"><span>-or-</span></div>
+                                        
+                                            <div class="col-xs-5">                   
+                                                <button 
+                                                    class="button-3D"
+                                                    ng-click="startPathfinder('VISUALIZER')"
+                                                    ng-class="cssVisualizerRouter()">Visualize</button>
+                                            </div>
+                                        <div class="col-xs-4">
+                                            <button 
+                                                class="button-3D full-width"
+                                                ng-click="clearPathfinder()">Cancel</button>
                                         </div>
                                     </div>
                                 </section>
@@ -205,13 +247,13 @@
                                          ng-click=""
                                          ng-class="" 
                                          ng-mouseenter="" 
-                                            ng-mouseleave="">Edges</button>
+                                            ng-mouseleave="">Path</button>
 
                                     <button class="button-3D" 
                                          ng-click=""
                                          ng-class="" 
                                          ng-mouseenter="" 
-                                         ng-mouseleave="">Highlight Ladders</button>
+                                         ng-mouseleave="">Visualization</button>
                                     
                                 </section>
                                 <hr>

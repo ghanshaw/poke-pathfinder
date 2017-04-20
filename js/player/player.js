@@ -78,7 +78,7 @@ Player.prototype.initShape = function() {
     var ctx = canvas.getContext('2d');
     
     var size = canvas.width = canvas.height = 100;
-    
+//    
     ctx.fillStyle = 'pink';
     ctx.beginPath();
     ctx.arc(size/2, size/2, size/3, 0, Math.PI * 2);
@@ -91,11 +91,11 @@ Player.prototype.initShape = function() {
 
 
 Player.prototype.initSprite = function() {
+//    
+//    var spritesheet = new SpriteSheet(spritesheet_data);
+//    spritesheet.initCanvas('color');
     
-    var spritesheet = new SpriteSheet(spritesheet_data);
-    spritesheet.initCanvas('color');
-    
-    this.spritesheet = spritesheet;
+    //this.spritesheet = spritesheet;
     //this.bitmap.canvas = spritesheet.canvas;
     
 };
@@ -120,6 +120,13 @@ Player.prototype.setTile = function(tile) {
     
 };
 
+Player.prototype.getCurrentTile = function() {
+    return {
+        row: this.current.row,
+        col: this.current.col,
+        floor: this.tile.floor
+    };
+};
 
 Player.prototype.getSpeed = function() {
     
@@ -213,13 +220,13 @@ Player.prototype.interpolateMove = function() {
         
 
         
-        if (this.endTile.ladder && !this.startTile.ladder) {
+        if (this.stopTile.ladder && !this.startTile.ladder) {
             
             this.MOVE_STATE = 'LADDER';
             
             
-            //let endB = this.map.getOtherEndLadder(this.endTile);
-            this.setTile(this.endTile);    
+            //let endB = this.map.getOtherEndLadder(this.stopTile);
+            this.setTile(this.stopTile);    
             this.game.startMove();
             return;
         }
@@ -234,7 +241,7 @@ Player.prototype.interpolateMove = function() {
 //            this.map.spoofDirection();
 //        }
  
-        this.setTile(this.endTile); 
+        this.setTile(this.stopTile); 
         this.MOVE_STATE = 'STILL';
         //console.log('I stopped moving');
          
@@ -315,8 +322,8 @@ Player.prototype.interpolateLadder = function() {
     var formula_y = this.parabolicMove(formula_x);   
     this.game.setTransitionAlpha(formula_y);   
     
-    if (time.percent > .5 && (this.tile.id !== this.endTile.id)) {
-        this.setTile(this.endTile);
+    if (time.percent > .5 && (this.tile.id !== this.stopTile.id)) {
+        this.setTile(this.stopTile);
     }
     
 };
@@ -482,6 +489,8 @@ Player.prototype.updateSpriteOptions = function() {
 
 Player.prototype.drawPlayer = function() {
  
+    var game = this.game;
+ 
     var floor = this.tile.floor;
     var frame = floor.frame;
     
@@ -502,7 +511,7 @@ Player.prototype.drawPlayer = function() {
     
     else if (this.game.getLayerState() === 'BITMAP') {
         
-        let sprite_size = this.spritesheet.sprite_size;
+        //let sprite_size = this.spritesheet.sprite_size;
         
         // Draw surf pokemon sprite
         if (this.pokemonOptions.SHOW) {
@@ -512,53 +521,27 @@ Player.prototype.drawPlayer = function() {
             
             // If he's jumping on, pokemon appear on end tile
             if (this.MOVE_STATE === 'JUMP ON') {
-                row = this.endTile.row;
-                col = this.endTile.col;
+                game.drawSprite(this.pokemonOptions, this.stopTile);
             }    
             
             // If he's jumping off, pokemon appears on start tile
             else if (this.MOVE_STATE === 'JUMP OFF') {
-                row = this.startTile.row;
-                col = this.startTile.col;   
+                game.drawSprite(this.pokemonOptions, this.startTile);  
             }
               
-            let x = col * tile_size + floor.offset_x - (.5 * tile_size);
-            let y = row * tile_size + floor.offset_y - (.5 * tile_size);
-            
-            let xy = this.spritesheet.getXY(this.pokemonOptions);
-            let sx = xy.x;
-            let sy = xy.y;
-            frame.ctx.drawImage(this.spritesheet.canvas, sx, sy, sprite_size, sprite_size, x, y, tile_size * 2, tile_size * 2);
         }
         
         // Draw player sprite
         // Draw player on interpolated location
-        let row = this.current.row;
-        let col = this.current.col;    
-        let x = col * tile_size + frame.offset_x - (.5 * tile_size);
-        let y = row * tile_size + frame.offset_y - (.5 * tile_size);
-        
-        let xy = this.spritesheet.getXY(this.playerOptions);
-        let sx = xy.x;
-        let sy = xy.y;
-        
-        //        var spritesheetCanvas = this.spritesheet.canvas;
-        //        var spritesheetCtx = spritesheetCanvas.getContext('2d');
-        
-        frame.ctx.drawImage(this.spritesheet.canvas, sx, sy, sprite_size, sprite_size, x, y, tile_size * 2, tile_size * 2);
+        let currentTile = this.getCurrentTile();
+        game.drawSprite(this.playerOptions, currentTile);
+                
 
         // Draw dust sprite  
         if (this.dustOptions.SHOW) { 
             // Draw dust on tile player is jumping to
-            let row = this.endTile.row;
-            let col = this.endTile.col;    
-            let x = col * tile_size + floor.offset_x - (.5 * tile_size);
-            let y = row * tile_size + floor.offset_y - (.5 * tile_size);
+            game.drawSprite(this.dustOptions, this.stopTile);
             
-            let xy = this.spritesheet.getXY(this.dustOptions);
-            let sx = xy.x;
-            let sy = xy.y;
-            frame.ctx.drawImage(this.spritesheet.canvas, sx, sy, sprite_size, sprite_size, x, y, tile_size * 2, tile_size * 2);
         }
     }  
 };

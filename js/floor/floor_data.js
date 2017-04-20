@@ -9,6 +9,9 @@ var F1_data = (function() {
     // Define img id (id for img tag)
     var imgId = 'F1-floor';
     
+    // Define img id for overlay component (id of img tag)
+    var imgOverlayId = 'F1-overlay';
+    
     //Define size of floor
     var rows = 23;
     var cols = 40;
@@ -27,7 +30,7 @@ var F1_data = (function() {
         7:  [0, 3, 8, 9, 13, 17, 28, 39],
         8:  [0, 3, 8, 9, 13, 17, 35, 39],
         9:  [0, 1, 2, 3, 8, 9, 11, 12, 13, 17, 21, 22, 23, 24, 25, 26, 30, 35, 39],
-        10: [0, 1, 3, 8, 12, 13, 17, 21, 22, 23, 24, 25, 26, 27, 35, 39],
+        10: [0, 1, 3, 8, 12, 13, 17, 21, 22, 24, 25, 26, 27, 35, 39],
         11: [0, 1, 8, 12, 13, 17, 18, 20, 21, 22, 26, 27, 35, 39],
         12: [0, 1, 8, 17, 22, 26, 27, 31, 32, 33, 34, 35, 39],
         13: [0, 1, 8, 17, 20, 22, 23, 25, 26, 27, 31, 32, 33, 39],
@@ -60,9 +63,10 @@ var F1_data = (function() {
         13: [9, 10, 11, 12, 13, 14, 15, 16],
         14: [9, 10, 11, 12, 13, 14, 15, 16],
         15: [9, 10, 11],
-    }
+    };
+   
     
-    water[20] = [30, 31, 32]
+    //water[20] = [30, 31, 32]
     
     // Remove edges
     var noEdges = [
@@ -125,8 +129,8 @@ var F1_data = (function() {
         {
             id: 6,
             tile: [10, 30]
-        },
-    ]
+        }
+    ];
     
     return {  
         rocks: function() {
@@ -155,6 +159,9 @@ var F1_data = (function() {
         },
         imgId: function() {
             return imgId;
+        },
+        imgOverlayId: function() {
+            return imgOverlayId;
         }
     }
     
@@ -171,6 +178,9 @@ var F2_data = (function() {
     
     // Define img id (id for img tag)
     var imgId = 'F2-floor';
+    
+    // Define img id for overlay component (id of img tag)
+    var imgOverlayId = '';
     
     //Define size of floor
     var rows = 22;
@@ -206,10 +216,15 @@ var F2_data = (function() {
     }
     
     // Define water tiles
-    var water = {}
+    var water = {};
+    
+    // Define gaps
+    var gaps = [
+        [2, 19]
+    ];
     
     // Remove edges
-    var noEdges = []
+    var noEdges = [];
     
     // Define ladders
     var ladders = [
@@ -266,6 +281,9 @@ var F2_data = (function() {
         },   
         imgId: function() {
             return imgId;
+        },
+        imgOverlayId: function() {
+            return imgOverlayId;
         }
     }
     
@@ -282,6 +300,9 @@ var BF1_data = (function() {
     
     // Define img id (id for img tag)
     var imgId = 'BF1-floor';
+    
+    // Define img id for overlay component (id of img tag)
+    var imgOverlayId = 'BF1-overlay';
     
     //Define size of floor
     var rows = 23;
@@ -315,7 +336,7 @@ var BF1_data = (function() {
         21: [0, 1, 2, 3, 4, 5, 18, 19, 25, 26, 27, 28,  36, 37, 38, 39],
         22: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39],
                
-    }
+    };
     
     // Define water tiles
     var water = {
@@ -333,9 +354,9 @@ var BF1_data = (function() {
         18: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14],
         19: [6, 7, 8, 9, 10, 11, 12, 13, 14],
         20: [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17],
-        21: [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17],
+        21: [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17]
              
-    }
+    };
     
     // Remove edges
     var noEdges = [
@@ -351,17 +372,17 @@ var BF1_data = (function() {
         [ [14, 18], [15, 18] ],
         [ [14, 19], [15, 19] ],
         [ [14, 20], [15, 20] ],
-        [ [14, 21], [15, 21] ],
+        [ [14, 21], [15, 21] ]
     
-    ]
+    ];
     
     // Define ladders
     var ladders = [
         {
             id: 3,
             tile: [7, 5]
-        },
-    ]
+        }
+    ];
     
     return {  
         rocks: function() {
@@ -390,6 +411,9 @@ var BF1_data = (function() {
         },  
         imgId: function() {
             return imgId;
+        },
+        imgOverlayId: function() {
+            return imgOverlayId;
         }
     }
     

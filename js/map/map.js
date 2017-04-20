@@ -21,6 +21,59 @@ Map.prototype.addMapData = function() {
         keyT.tile = this.getTileFromId(tileId);   
     }
     
+    // Extract ladders
+    this.ladders = map_data.ladders();
+    
+    // Turn ladders in tile objects
+    for (let ladder of this.ladders) {
+        var tileA = ladder.tile[0].toString();
+        var tileB = ladder.tile[1].toString();
+        
+        tileA = this.getTileFromId(tileA);  
+        tileB = this.getTileFromId(tileB); 
+        
+        // Turn tile into ladder
+        tileA.ladder = true;
+        tileB.ladder = true;
+        
+        tileA.ladderId = ladder.id;
+        tileB.ladderId = ladder.id;
+
+        
+        ladder.tile[0] = tileA;
+        ladder.tile[1] = tileB;
+    }
+    
+    // Extract gap tile data
+    this.gaps = map_data.gaps();
+    
+    // Turn tiles in tile objects
+    for (let gap of this.gaps) {
+        var tileId = gap.tile.toString();
+        gap.tile = this.getTileFromId(tileId);   
+        
+        // Turn tile into gap
+        gap.tile.gap = true;
+        gap.tile.gapId = gap.id;
+    }
+    
+    // Extract obstacle data
+    this.obstacles = map_data.obstacles();
+    
+    // Turn tiles in tile objects
+    for (let ob of this.obstacles) {
+        var tileId = ob.tile.toString();
+        ob.tile = this.getTileFromId(tileId);   
+        
+        // Turn tile into gap
+        ob.tile.obstacle = ob.type;
+        ob.tile.obstacleId = ob.id;
+        
+    }
+    
+    
+    
+    
     this.map_data = map_data;
     
 };
@@ -32,6 +85,25 @@ Map.prototype.addMapToGraph = function(graph) {
     }
     
     
+    // Remove edges to obstacles
+    for (let ob of this.obstacles) {
+        if (ob.LABEL === 'MEWTWO') {
+            this.game.removeEdgesToNeighbors(ob.tile);   
+        }
+    }
+    
+    // Add edges between ladders 
+    for (let l in this.ladders) {
+        let ladder = this.ladders[l];
+        let endA = ladder.tile[0];
+        let endB = ladder.tile[1];
+        
+        graph.addEdge(endA.id, endB.id); 
+        graph.addEdge(endB.id, endA.id);
+    }
+    
+    console.log(graph);
+    
     /*
      * If a tile is adjacent to a ladder, add an edge from a tile to 
      * the other end of the ladder. There is no edge between tiles and (physically) 
@@ -42,24 +114,24 @@ Map.prototype.addMapToGraph = function(graph) {
     // Add edges from ladder's neighbors to ladder's other end
     // Remove edges from ladder's neighbor to ladder
     // Preserve edges from ladder to ladder's neighbors
-    // Thus creating directed path from endA's neighbors --> endB --> endB's neighbors --> endA --> endA's neighbors
-    for (let l in this.ladders) {
-        let ladder = this.ladders[l];
-        let endA = ladder[0];
-        let endB = ladder[1];
-            
-        let vAdj = graph.getAdj(endA);
-        for (let v of vAdj) {
-            graph.addEdge(v, endB); 
-            graph.removeEdge(v, endA);
-        }
-        
-        vAdj = graph.getAdj(endB);
-        for (let v of vAdj) {
-            graph.addEdge(v, endA); 
-            graph.removeEdge(v, endB);
-        }
-    }
+//    // Thus creating directed path from endA's neighbors --> endB --> endB's neighbors --> endA --> endA's neighbors
+//    for (let l in this.ladders) {
+//        let ladder = this.ladders[l];
+//        let endA = ladder[0];
+//        let endB = ladder[1];
+//            
+//        let vAdj = graph.getAdj(endA);
+//        for (let v of vAdj) {
+//            graph.addEdge(v, endB); 
+//            graph.removeEdge(v, endA);
+//        }
+//        
+//        vAdj = graph.getAdj(endB);
+//        for (let v of vAdj) {
+//            graph.addEdge(v, endA); 
+//            graph.removeEdge(v, endB);
+//        }
+//    }
     
     console.log(graph);
     
@@ -68,7 +140,12 @@ Map.prototype.addMapToGraph = function(graph) {
 
 Map.prototype.addFloor = function(floor) {
     if (!this.floors.hasOwnProperty(floor.id)) {
+        
+        // Add floor to map
         this.floors[floor.id] = floor;
+        
+        // Expose game to floor
+        floor.game = this.game;
     }
     
 };
@@ -125,6 +202,9 @@ Map.prototype.getTile = function(floor, row, col) {
 
 Map.prototype.getTileFromId = function(tileId) {
     
+    // Return if tileId is invalid (null or undefined)
+    if (!tileId) { return; }
+    
     var tile_arr = tileId.split(',');
     var floorId = tile_arr[0];
     
@@ -153,10 +233,27 @@ Map.prototype.getTileTopLeft = function(tile) {
 };
 
 
-Map.prototype.getTileFromPointer  = function(top, left) {
+Map.prototype.getTileFromPointer  = function(pointer) {
     
+    if (!pointer) {
+        return;
+    }
+    
+    var top = pointer.y;
+    var left = pointer.x;
+    var relativeTo = pointer.target;
+    
+    if (relativeTo !== 'caveWrapperBackground') {
+        //var target_offset = $(target).offset();
+        var wrapperOffset = $('.caveWrapperBackground').offset();
+        
+        top -= wrapperOffset.top;
+        left -= wrapperOffset.left;
+    }
+
     // Find corresponing floor
     for (let f in this.floors) {
+        
         var floor = this.floors[f];
         var frame = floor.frame;
         
@@ -238,9 +335,7 @@ Map.prototype.getTileOtherEndLadder = function(endA) {
     var ladder = this.ladders[ladderId];
     
     // Select tile on other end of ladder
-    var endB = ladder[0] === endA.id ? ladder[1] : ladder[0];
-    var endB = endB.toString();
-    var endB = this.getTileFromId(endB);
+    var endB = ladder.tile[0].id === endA.id ? ladder.tile[1] : ladder.tile[0];
     
     return endB;
     
@@ -276,7 +371,9 @@ Map.prototype.createMapLayers = function(graph) {
         
         this.floors[f].createFrame(this.tile_size);
         this.floors[f].createBitmapRockLayer();
+        this.floors[f].createBitmapWaterLayer();
         this.floors[f].createBitmapFloorLayer();
+        this.floors[f].createBitmapOverlayLayer();
         
         
         this.floors[f].createGraphicRockLayer();
@@ -362,9 +459,42 @@ Map.prototype.drawBitmapLayers = function() {
     
     for (let f in this.floors) {      
         this.floors[f].drawBitmapRockLayer();
+        this.floors[f].drawBitmapWaterLayer();
         this.floors[f].drawBitmapFloorLayer();
     }
 };
+
+
+Map.prototype.drawBitmapRockLayers = function() {
+    
+    for (let f in this.floors) {      
+        this.floors[f].drawBitmapRockLayer();
+    }
+};
+
+Map.prototype.drawBitmapWaterLayers = function() {
+    
+    for (let f in this.floors) {      
+        this.floors[f].drawBitmapWaterLayer();
+    }
+};
+
+Map.prototype.drawBitmapFloorLayers = function() {
+    
+    for (let f in this.floors) {      
+        this.floors[f].drawBitmapFloorLayer();
+    }
+};
+
+Map.prototype.drawBitmapOverlayLayers = function() {
+    
+    for (let f in this.floors) {      
+        this.floors[f].drawBitmapOverlayLayer();
+    }
+};
+
+
+
 
 
 Map.prototype.drawRowsCols = function() {
@@ -375,20 +505,27 @@ Map.prototype.drawRowsCols = function() {
     
 };
 
-Map.prototype.drawPath = function() {
+Map.prototype.drawPathLayer = function() {
     
     for (let f in this.floors) {      
-        this.floors[f].drawPath();
+        this.floors[f].drawPathLayer();
     }
     
 };
 
-Map.prototype.drawVisualizationLayer = function() {
+Map.prototype.drawVisualizerLayer = function() {
     
     for (let f in this.floors) {   
-        this.floors[f].drawVisualizationLayer();
+        this.floors[f].drawVisualizerLayer();
     }
     
+};
+
+Map.prototype.createPathfinderFloorLayers = function() {
+    
+    for (let f in this.floors) {
+        this.floors[f].createPathfinderFloorLayers();
+    }
 };
 
 
@@ -455,28 +592,21 @@ Map.prototype.drawVisualizationLayer = function() {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-Map.prototype.updatePath = function(game) {
+Map.prototype.appendPath = function(color, player) {
     
-  if (1) {
-      
-        for (let f in this.floors) {
-            this.floors[f].appendPath(this.player);
-        }
-        
-  }  
+    var floor = player.tile.floor;
+    floor.appendPath(color, player)
     
 };
+
+
+
+
+
+
+
+
+
 
 
 Map.prototype.movePathPointerToSprite = function(game) {
@@ -492,16 +622,6 @@ Map.prototype.movePathPointerToSprite = function(game) {
 };
 
 
-Map.prototype.updateVisualization = function() {
-    
-  
-  
-    
-    
-};
-
-
-
 
 
 Map.prototype.initGameboy = function() {
@@ -511,7 +631,15 @@ Map.prototype.initGameboy = function() {
     var canvas = document.getElementById('gameboy');
     var ctx = canvas.getContext('2d');
     
-    var tile_size = canvas.width / 15;
+    ctx.mozImageSmoothingEnabled = false;
+    ctx.webkitImageSmoothingEnabled = false;
+    ctx.msImageSmoothingEnabled = false;
+    ctx.imageSmoothingEnabled = false;
+    
+    
+    //var tile_size = canvas.width / 15;
+    var tile_size = 16;
+    canvas.width = tile_size * 15;
     
     canvas.height = tile_size * 10;
     
@@ -520,7 +648,10 @@ Map.prototype.initGameboy = function() {
         ctx: ctx
     };
     
+    console.log(this.gameboy);
+    
 };
+
 
 Map.prototype.drawGameboy = function(player) {
     
@@ -532,4 +663,27 @@ Map.prototype.drawGameboy = function(player) {
     
     this.gameboy.ctx.drawImage(floor.frame.canvas, sx, sy, floor.tile_size * 15, floor.tile_size * 10, 0, 0, this.gameboy.canvas.width, this.gameboy.canvas.height);
     //ctx.drawSprite()
+};
+
+Map.prototype.addRemoveGaps = function(add=true) {
+    
+  var game = this.game;
+  
+  for (let g in this.gaps) {
+      
+      let tile = this.gaps[g].tile;
+      
+      // Add gaps, turn tiles into LAND
+      if (add) {
+          tile.type = 'LAND';
+          game.addEdgesToNeighbors(tile);      
+      }
+      // Remove gaps, turn tiles in to ROCK
+      else  {
+          tile.type = 'ROCK';
+          game.removeEdgesToNeighbors(tile);
+      }
+      
+  }
+      
 };

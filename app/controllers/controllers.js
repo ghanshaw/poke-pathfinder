@@ -4,7 +4,7 @@ pokemonApp.controller('caveController', function($scope, $log, pokeMap, pokeGame
     
     // Attach game to scope;
     $scope.game = game;
-    
+
     // Attach player's current location to scope
     $scope.player = {};
     $scope.player.current = game.player.current;
@@ -69,12 +69,30 @@ pokemonApp.controller('caveController', function($scope, $log, pokeMap, pokeGame
 
     };
     
-    //$scope.map = map;
-    //$scope.sprite = pokeMap.map.sprite.current;
+    $scope.movePointer = function(event) {
+        
+        $log.log(event);
+        var pageX = event.pageX;
+        var pageY = event.pageY;
+        game.setPointer(pageX, pageY, event.target);
+        
+        console.log('hovering');
+        
+//        if (game.getPathfinderState() === 'SELECT SOURCE' ||
+//            game.getPathfinderState() === 'SELECT TARGET')
+//        {
+//        
+//            $log.log(event);
+//            var pageX = event.pageX;
+//            var pageY = event.pageY;
+//            game.setPointer(pageX, pageY, event.target);
+//           
+//
+//        }
+        
+    };
     
-    // Set gender for dragger directive
-    //$scope.playerOptions = sprite.playerOptions;
-    
+    $scope.clickPointer = function() { game.CLICKED = true; };    
     
 });
 
@@ -87,10 +105,14 @@ pokemonApp.controller('userController', function($scope, $log, pokeGame) {
     
     $scope.debugClick = function() {
         
-        game.drawMap();
-        game.drawPlayer();
-        //game.updatePathfinder();
-        game.startPathfinder('VISUALIZE');
+        game.map.addRemoveGaps(true);
+        game.map.createMapLayers(game.graph);
+        
+    };
+    
+    $scope.debugClick2 = function() {
+        
+        game.map.addRemoveGaps(false);
         
     };
     
@@ -125,15 +147,17 @@ pokemonApp.controller('userController', function($scope, $log, pokeGame) {
         options: [
             {
                 id: 0,
-                label: 'Current Tile'
+                label: 'Current Player Tile'
             },
             {
                 id: 1,
-                label: 'Entrance'
+                label: 'Entrance',
+                keyTile: 0
             },
             {   
                 id: 2,
-                label: 'Mewtwo'
+                label: 'Mewtwo',
+                keyTile: 1
             },
             {
                 id: 3,
@@ -141,26 +165,141 @@ pokemonApp.controller('userController', function($scope, $log, pokeGame) {
             },
             {
                 id: 4,
-                label: 'User-selected Tile'
+                label: 'Current Flag'
             }
             
         ],
-        startTile: { id: 0, label: 'Current Tile' },
-        endTile: { id: 2, label: 'Mewtwo' }
+        sourceTile: { id: 0, label: 'Current Tile'},
+        targetTile: { id: 2, label: 'Mewtwo', keyTile: 1 }
     };
+    
+    
+    $scope.$watch('tiles.sourceTile', function() {
+        
+        game.setPathfinderConsoleTile($scope.tiles.sourceTile, 'SOURCE');
+        //var pathfinderTile = {};
+        
+    });
+    
+    
+    $scope.$watch('tiles.targetTile', function() {
+        
+        game.setPathfinderConsoleTile($scope.tiles.targetTile, 'TARGET');
+        
+    });
+    
+//    $scope.dropdownSourceTarget = function() {
+//        
+//        alert($scope.soureTile);
+//        alert($scope.targetTile);
+//        
+//    };
+    
+    
+    
+    
+    
+    $scope.pathfinder = {};
+    $scope.player = {};
+    
+    //.$scope.pathfinder.hoverTile = game.pathfinder.hoverTile;
+    //$scope.player.hoverTile = game.player.hoverTile;
+    
+    //$scope.$watch
+    
+    $scope.pressedSourceTarget = null;
+    
+    $scope.sourceTarget = 
+    
+    
+    $scope.cssScopeTarget = function(sourceTarget) {
+        
+        var css = {
+            active: false,
+            disabled: false
+        };
+        
+        if (sourceTarget === 'SOURCE') {
+            css.active = game.getPathfinderState() === 'SELECT SOURCE';
+        }
+        else if (sourceTarget === 'TARGET') {
+            css.active = game.getPathfinderState() === 'SELECT TARGET';
+        }
+        
+        if (game.getPathfinderState() === 'VISUALIZER' ||
+                game.getPathfinderState() === 'ROUTER') {
+            css.disabled = true;
+        }
+        else {
+            css.disabled = false;
+        }
+        
+        return css;
+      
+    };
+    
+    
+    $scope.cssVisualizerRouter = function() {
+        
+        var css = {
+            disabled: false
+        };
+        
+        if (game.getPathfinderState() === 'SELECT SOURCE' ||
+                game.getPathfinderState() === 'SELECT TARGET') {
+            css.disabled = true;
+        }
+        else {
+            css.disabled = false;
+        }
+        
+        return css;
+        
+    };
+    
+    //$scope.sourceTarget = game.hoverTile.type;
+    
+//    $scope.$watch(function(){
+//        
+//        var sourceTarget;
+//        var state = game.getPathfinderState();
+//        if (state === 'SELECT SOURCE') {
+//            sourceTarget = 'SOURCE';
+//        }
+//        else if (state === 'SELECT TARGET') {
+//            sourceTarget = 'TARGET';
+//        }
+//        return $scope.sourceTarget;
+//        
+//    }, function() {
+//        $log.info('elephant is');
+//        $log.log($scope.elephant);
+//        
+//    });
+    
+    
+    $scope.clickSourceTarget = function(sourceTarget) {
+        
+        state = 'SELECT ' + sourceTarget;
+        game.startPathfinder(state);
+        
+    }; 
+
         
     /********* -- Start/Cancel Pathfindind -- ************/
     
-    $scope.findPath = function() {
+    $scope.startPathfinder = function(state) {
         
-        
-        
+        game.startPathfinder(state);
         
     };
     
+    $scope.clearPathfinder = function() {
+      
+        game.clearPathfinder();
         
-        
-        
+    };
+    
         
     
     /********* -- Turn Layers on and off -- ************/

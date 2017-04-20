@@ -41,7 +41,8 @@ pokemonApp.directive('playerDraggie', function() {
                 start: function(event, ui) {
                     
                     if (game.getGameState() === 'NORMAL' && game.getPlayerMoveState() === 'STILL') {
-                        game.setGameState('USER MOVE');
+                        game.setGameState('PLAYER DRAG');
+                        game.hoverTile.type = 'PLAYER';
                     };
                     
                 },
@@ -51,15 +52,15 @@ pokemonApp.directive('playerDraggie', function() {
                     // update hovertile to dragger
                     //console.log(scope.map.sprite.MOVE_STATE);
                     
-                    if (game.getGameState() === 'USER MOVE') {
+                    if (game.getGameState() === 'PLAYER DRAG') {
                         
                         var position = ui.position;
-                        var tile = game.getTileFromPointer(position.top, position.left);
+                        var tile = game.getTileFromPointer(position.top, position.left, 'caveWrapperBackground');
                         
                         if (tile && tile.type !== 'ROCK') { 
-                            game.hoverTile = tile.id;
+                            game.hoverTile.id = tile.id;
                         } else {
-                            game.hoverTile = null;
+                            game.hoverTile.id = null;
                         };
                         
                     }                    
@@ -69,11 +70,11 @@ pokemonApp.directive('playerDraggie', function() {
                 stop: function(event, ui) {
                     
                     // Update sprite to hovertile (ie to draggie)
-                    if (game.getGameState() === 'USER MOVE') {
-                        if (game.hoverTile) {
-                            var tile = game.getTileFromId(game.hoverTile);
+                    if (game.getGameState() === 'PLAYER DRAG') {
+                        if (game.hoverTile.id) {
+                            var tile = game.getTileFromId(game.hoverTile.id);
                             game.setPlayerTile(tile);
-                            game.hoverTile = null;
+                            game.hoverTile.id = null;
                         }
                         else {
                             var topLeft = game.getPlayerTopLeft();                        
@@ -91,4 +92,12 @@ pokemonApp.directive('playerDraggie', function() {
             
         }
     };
+});
+
+pokemon.directive('userConsole', function() {
+    
+    
+    
+    
+    
 });

@@ -5,8 +5,9 @@ var map_data = (function() {
             id: 0,
             name: 'Entrance',
             floor: 'F1',
-            tile: ['F1', 2, 33],
-            //tile: ['F1', 21, 33]
+            //tile: ['F1', 13, 24],
+            //tile: ['F1', 2, 33]
+            tile: ['F1', 21, 33]
         },
         { 
             id: 1,
@@ -28,13 +29,126 @@ var map_data = (function() {
             floor: 'F2',
             tile: ['F2', 9, 19]
             
+        }
+    ];
+    
+    
+    // Define ladders
+    var ladders = [
+        {
+            id: 0,
+            tile: [ ['F1', 2, 10], ['F2', 3, 11] ]
         },
-    ]
+        {
+            id: 1,
+            tile: [ ['F1', 2, 34], ['F2', 3, 31] ]
+        },
+        {
+            id: 2,
+            tile: [ ['F1', 4, 2], ['F2', 5, 3] ]
+        },
+        {
+            id: 3,
+            tile: [ ['F1', 7, 1], ['BF1', 7, 5] ]
+        },
+        {
+            id: 4,
+            tile: [ ['F1', 15, 5], ['F2', 13, 5] ]
+        },
+        {
+            id: 5,
+            tile: [ ['F1', 11, 24], ['F2', 9, 21] ]
+        },
+        {
+            id: 6,
+            tile: [ ['F1', 10, 30], ['F2', 8, 24] ]
+        }
+    ];
+    
+    
+    var gaps = [
+        {
+            id: 0,
+            tile: ['F2', 2, 19]
+        },
+        {
+            id: 1,
+            tile: ['F2', 12, 31]
+        },
+        {
+            id: 2,
+            tile: ['F2', 6, 2]
+        },
+//        {
+//            id: 3,
+//            tile: ['F1', 20, 31]
+//        }
+        
+    ];
+    
+    
+    var obstacles = [
+        { 
+            id: 0,
+            label: 'MEWTWO',
+            tile: ['BF1', 12, 7]
+        },
+        { 
+            id: 1,
+            label: 'POKEBALL',
+            tile: ['F1', 5, 25]
+        },
+        { 
+            id: 2,
+            label: 'POKEBALL',
+            tile: ['F1', 16, 11]
+        },
+        { 
+            id: 3,
+            label: 'BOULDER',
+            tile: ['F1', 18, 9]
+        },
+        { 
+            id: 4,
+            label: 'BOULDER',
+            tile: ['F1', 20, 5]
+        },
+        { 
+            id: 5,
+            label: 'BOULDER',
+            tile: ['F1', 21, 6]
+        },
+        { 
+            id: 7,
+            label: 'BOULDER',
+            tile: ['F1', 21, 11]
+        },
+        { 
+            id: 5,
+            label: 'BOULDER',
+            tile: ['F1', 21, 13]
+        },
+        { 
+            id: 5,
+            label: 'BOULDER',
+            tile: ['F1', 20, 14]
+        }
+    ];
+     
     
     return {
         keyTiles: function() {
             return keyTiles;
-        }
-    }
+        },
+        ladders: function() {
+            return ladders;
+        },
+        gaps: function() {
+            return gaps;
+        },
+        obstacles: function() {
+            return obstacles;
+        }   
+    };
     
 })();
