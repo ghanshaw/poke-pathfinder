@@ -1,0 +1,441 @@
+/* Adjust this to change the size of the whole pen */
+$everything: 2vw;
+
+$cobalt: #708090;
+$darkgrey: #333;
+$lightgrey: #777788;
+
+html {
+    font-size: $everything;
+}
+
+body {
+/*    margin: 0;
+    padding: 0;
+    background: #ffffff;
+    background: -moz-linear-gradient(top, #ffffff 0%, #C9C9C9 100%);
+    background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#ffffff), color-stop(100%,#e5e5e5));
+    background: -webkit-linear-gradient(top, #ffffff 0%,#C9C9C9 100%); 
+    background: -o-linear-gradient(top, #ffffff 0%,#C9C9C9 100%);
+    background: -ms-linear-gradient(top, #ffffff 0%,#C9C9C9 100%);
+    background: linear-gradient(to bottom, #ffffff 0%,#C9C9C9 100%);
+    height: 100vh;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;*/
+    
+    .system-container#gbasp {
+        width: 40.0rem;
+        height: 73.0rem;
+        margin: 2.0rem auto;
+        
+        .screen-body {
+            background-color: $cobalt;
+            width: 40.0rem;
+            height: 34.0rem;
+            border-radius: 2.4rem;
+            position: relative;
+            padding: 2.0rem;
+            box-sizing: border-box;
+            border: .3rem solid darken($cobalt, 15%);
+            border-right-color: lighten($cobalt, 20%);
+            border-top-color: lighten($cobalt, 10%);
+            &:before {
+                content: '';
+                width: 18.0rem;
+                height: .8rem;
+                background-color: $cobalt;
+                position: absolute;
+                bottom: -.8rem;
+                z-index: -1;
+                left: 2.0rem;
+                border-right: .2rem solid lighten($cobalt, 20%);	
+                -webkit-box-shadow: inset .0rem .6rem .5rem .0rem rgba(0,0,0,0.75);
+                -moz-box-shadow: inset .0rem .6rem .5rem .0rem rgba(0,0,0,0.75);
+                box-shadow: inset .0rem .6rem .5rem .0rem rgba(0,0,0,0.75);
+            }
+            &:after {
+                content: '';
+                width: 3.2rem;
+                height: .8rem;
+                background-color: $cobalt;
+                position: absolute;
+                bottom: -.8rem;
+                z-index: -1;
+                left: 32.0rem;
+                border-right: .2rem solid lighten($cobalt, 20%);
+                -webkit-box-shadow: inset .0rem .6rem .5rem .0rem rgba(0,0,0,0.75);
+                -moz-box-shadow: inset .0rem .6rem .5rem .0rem rgba(0,0,0,0.75);
+                box-shadow: inset .0rem .6rem .5rem .0rem rgba(0,0,0,0.75);
+            }
+        }
+        .screen-border {
+            background-color: $darkgrey;
+            width: 100%;
+            margin: 1.6rem auto;
+            height: 26.8rem;
+            box-sizing: border-box;
+            border: .4rem solid lighten($cobalt, 30%);
+            border-radius: .8rem;
+            border-top-color: darken($cobalt, 25%);
+            border-right-color: darken($cobalt, 15%);
+            border-bottom-color: lighten($cobalt, 20%);
+            img {
+                position: absolute;
+                left: 11.2rem;
+                bottom: 3.6rem;
+                opacity: .8;
+                width: 17.5rem;
+            }
+        }
+        .screen {
+            background-color: $lightgrey;
+            margin: 2.0rem auto;
+            width: 90%;
+            height: 21.0rem;
+            iframe {
+                width: 100%;
+                height: 21.0rem;
+            }
+        }
+        
+        .screen-bumper {
+            border-radius: 100%;
+            width: 2.2rem;
+            height: 2.2rem;
+            position: absolute;
+            background: radial-gradient(circle at top left, lighten($cobalt, 10%), darken($cobalt, 20%));
+            border: .2rem solid darken($cobalt, 20%);
+        }
+        
+        #bumper-ul {
+            left: 1.0rem;
+            top: .6rem;
+        }
+        
+        #bumper-ur {
+            right: 1.0rem;
+            top: .6rem;
+        }
+        
+        #bumper-ll {
+            left: 1.2rem;
+            bottom: .4rem
+        }
+        
+        #bumper-lr {
+            right: 1.2rem;
+            bottom: .4rem
+        }
+        
+        #bumper-tm {
+            left: calc(50% - 1.0rem);
+            top: .8rem;
+        }
+        
+        .small-bumper {
+            width: 1.6rem;
+            height: 1.6rem;
+            background: radial-gradient(circle at bottom left, $cobalt, darken($cobalt, 20%));
+            border-width: .1rem;
+            border-left-color: lighten($cobalt, 5%);
+            border-bottom-color: lighten($cobalt, 5%);
+        }
+        
+        .swivel {
+            width: 100%;
+            border-radius: 1.6rem;
+            height: 4.8rem;
+            background-color: $cobalt;
+            position: relative;
+            top: .4rem;
+            -webkit-box-shadow: inset .0rem -2.0rem .8rem .0rem rgba(0,0,0,.4);
+            -moz-box-shadow: inset .0rem -2.0rem .8rem .0rem rgba(0,0,0,.4);
+            box-shadow: inset .0rem -2.0rem .8rem .0rem rgba(0,0,0,.4);
+            border-top: .2rem solid lighten($cobalt, 5%);
+            &:before {
+                content: '';
+                width: 18.0rem;
+                height: 4.5rem;
+                position: absolute;
+                bottom: -2.0rem;
+                z-index: 1;
+                left: 2.2rem;
+                top: .0rem;
+                border-right: .2rem solid lighten($cobalt, 20%);	
+                border-left: .2rem solid darken($cobalt, 25%);
+                border-bottom: .3rem solid darken($cobalt, 50%);
+                -webkit-box-shadow: inset .0rem 1.0rem .5rem .0rem rgba(255,255,255,.2);
+                -moz-box-shadow: inset .0rem 1.0rem .5rem .0rem rgba(255,255,255,.2);
+                box-shadow: inset .0rem 1.0rem .5rem .0rem rgba(255,255,255,.2);
+            }
+            &:after {
+                content: '';
+                width: 3.2rem;
+                height: 4.5rem;
+                position: absolute;
+                bottom: -2.0rem;
+                z-index: 1;
+                left: 32.2rem;
+                top: .0rem;
+                border-right: .2rem solid lighten($cobalt, 20%);
+                border-left: .2rem solid darken($cobalt, 20%);
+                border-bottom: .3rem solid darken($cobalt, 50%);
+                -webkit-box-shadow: inset .0rem 1.0rem .5rem .0rem rgba(255,255,255,.2);
+                -moz-box-shadow: inset .0rem 1.0rem .5rem .0rem rgba(255,255,255,.2);
+                box-shadow: inset .0rem 1.0rem .5rem .0rem rgba(255,255,255,.2);
+            }
+        }
+        
+        .gamepad-body {
+            background-color: $cobalt;
+            width: 40.0rem;
+            height: 36.0rem;
+            border-radius: 2.4rem;
+            position: relative;
+            padding: 2.0rem;
+            box-sizing: border-box;
+            border: .3rem solid darken($cobalt, 15%);
+            border-right-color: lighten($cobalt, 20%);
+            border-top-color: lighten($cobalt, 10%);
+            z-index: -1;
+            top: -2.8rem;
+        }
+        
+        .pad-container {
+            width: 11.0rem;
+            height: 11.0rem;
+            border: .8rem solid darken($cobalt, 20%);
+            border-radius: 100%;
+            position: absolute;
+            left: 2.0rem;
+            top: 10.0rem;
+            border-top-color: darken($cobalt, 30%);
+            border-left-color: lighten($cobalt, 10%);
+            border-bottom-color: lighten($cobalt, 5%);
+            box-sizing: content-box;
+        }
+        
+        .d-pad {
+            width: 2.8rem;
+            height: 8.4rem;
+            background-color: $darkgrey;
+            position: relative;
+            margin: 1.2rem auto;
+            box-sizing: border-box;
+            border: .2rem solid darken($darkgrey, 20%);
+            border-top: .2rem solid lighten($darkgrey, 20%);
+            border-right: .2rem solid lighten($darkgrey, 20%);
+            &:before {
+                width: 3.0rem;
+                height: 2.8rem;
+                position: absolute;
+                content: '';
+                background-color: $darkgrey;
+                left: -3.0rem;
+                top: 2.6rem;
+                border-bottom: .2rem solid darken($darkgrey, 20%);
+                border-left: .2rem solid darken($darkgrey, 20%);
+                border-top: .2rem solid lighten($darkgrey, 20%);
+                box-sizing: border-box;
+                
+                
+            }
+            &:after {
+                width: 3.0rem;
+                height: 2.8rem;
+                position: absolute;
+                content: '';
+                background-color: $darkgrey;
+                left: 2.4rem;
+                top: 2.6rem;
+                border-top: .2rem solid lighten($darkgrey, 20%);
+                border-right: .2rem solid lighten($darkgrey, 20%);
+                border-bottom: .2rem solid darken($darkgrey, 20%);
+                box-sizing: border-box;
+            }
+        }
+        
+        .buttons-container {
+            width: 12.4rem;
+            height: 5.1rem;
+            border: .8rem solid darken($cobalt, 20%);
+            border-radius: 11.0rem;
+            position: relative;
+            left: 20.8rem;
+            top: 10.4rem;
+            border-top-color: darken($cobalt, 30%);
+            border-left-color: lighten($cobalt, 10%);
+            border-bottom-color: lighten($cobalt, 5%);
+            transform: rotate(-12deg);
+        }
+        
+        .b-button, .a-button {
+            font-family: Arial, Helvetica, sans-serif;
+            font-weight: 700;
+            line-height: 4.0rem;
+            font-size: 2.2rem;
+            color: lighten($darkgrey, 5%);
+            transform: rotate(12deg);
+            text-align: center;
+            width: 4.0rem;
+            height: 4.0rem;
+            background-color: $darkgrey;
+            border-radius: 100%;
+            position: absolute;
+            left: .8rem;
+            top: .5rem;
+            box-sizing: border-box;
+            border: .2rem solid;
+            border-color: lighten($darkgrey, 10%);
+            border-left-color: darken($darkgrey, 5%);
+            border-bottom-color: darken($darkgrey, 5%);
+        }
+        
+        .a-button {
+            left: 7.6rem;
+        }
+        
+        .power-container {
+            width: 2.0rem;
+            height: 2.0rem;
+            position: absolute;
+            left: 18.0rem;
+            top: 5.2rem;
+            border-width: .5rem;
+        }
+        
+        .power-button {
+            width: 2.0rem;
+            height: 2.0rem;
+            position: absolute;
+            left: 0;
+            top: 0;
+            color: #fff;
+        }
+        
+        .speaker-holder {
+            width: 8.0rem;
+            height: 8.0rem;
+            position: absolute;
+            top: 20.0rem;
+            left: 15.0rem;
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        
+        .dot {
+            width: .3rem;
+            height: .3rem;
+            background-color: #000;
+            margin: .8rem;
+            border-radius: 100%;
+        }
+        
+        .large-dot {
+            width: .5rem;
+            height: .5rem;
+            border-radius: .5rem;
+        }
+        
+        .select-container, .start-container {
+            width: 2.2rem;
+            height: 2.2rem;
+            position: absolute;
+            left: 14.6rem;
+            top: 30.0rem;
+        }
+        
+        .start-container {
+            left: 19.8rem;
+        }
+        
+        .select-button, .start-button {
+            position: absolute;
+            height: 1.8rem;
+            width: 1.8rem;
+            left: .3rem;
+            top: .1rem;
+        }
+        
+        .a-button:active {
+            background-color: lighten($darkgrey, 40%);
+        }
+        
+        .select-label, .start-label {
+            position: absolute;
+            font-family: Impact, Charcoal, sans-serif;
+            font-size: 1.2rem;
+            left: 14.8rem;
+            bottom: 5.6rem;
+            color: darken($cobalt, 15%);
+            z-index: 2;
+        }
+        
+        .start-label {
+            left: 20.2rem;
+        }
+        
+        .start-label + .start-label {
+            left: 20.1rem;
+            bottom: 5.7rem;
+            color: lighten($cobalt, 10%);
+            z-index: 1;
+            
+        }
+        
+        .select-label + .select-label{
+            color: lighten($cobalt, 10%);
+            left: 14.7rem;
+            bottom: 5.7rem;
+            z-index: 1;
+        }
+        
+        .power-light {
+            position: absolute;
+            width: 1.4rem;
+            height: 1.2rem;
+            background-color: $darkgrey;
+            right: -.4rem;
+            top: 5.0rem;
+        }
+        
+        .power-light + .power-light {
+            top: 8.0rem;
+        }
+    }
+    
+}
+
+@media (min-width: 480px){
+    html {
+        font-size: 1.5vw;
+    }
+}
+
+@media (min-width: 600px){
+    html {
+        font-size: 1.2vw;
+    }
+}
+
+@media (min-width: 720px){
+    html {
+        font-size: .8vw;
+    }
+}
+
+@media (min-width: 1080px){
+    html {
+        font-size: 1.2vw;
+    }
+}
+
+@media (min-width: 1600px){
+    html {
+        font-size: .35vw;
+    }
+}

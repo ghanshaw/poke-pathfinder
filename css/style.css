@@ -75,7 +75,8 @@ img, canvas {
 }
 
 #gameboy {
-    border: 10px solid purple;   
+    border: 10px solid #8dd9e2; 
+    width: 100%;
 }
 
 
@@ -157,17 +158,45 @@ section {
 }
 
 .caveWrapper {
-    box-shadow: 20px 20px 20px rgba(84, 92, 101, 0.99);
+    /*box-shadow: 20px 20px 20px rgba(84, 92, 101, 0.99);*/
     display: inline-block;
-    margin: 50px 0px;
+    /*margin: 50px 0px;*/
+    
+    /* box-shadow: 20px 20px 20px rgba(84, 92, 101, 0.99); */
+    display: inline-block;
+    /* margin: 50px 0px; */
+    background-color: #333;
+    /* width: 100%; */
+    /* margin: 1.6rem auto; */
+    /* height: 26.8rem; */
+    box-sizing: border-box;
+    border: 0.4rem solid #c6ccd3;
+    /* border-radius: .8rem; */
+    border-top-color: #384048;
+    border-right-color: #4e5a65;
+    border-bottom-color: #a9b3bd;
 }
 
 .caveWrapperBackground {
     background-color: slategrey;
     display: block;
-    width: 100%;
-    text-align: center;
+    /* width: 100%; */
+    /* text-align: center; */
     position: relative;
+    background-color: #708090;
+    /* width: 40.0rem; */
+    /* height: 34.0rem; */
+    /* border-radius: 2.4rem; */
+    position: relative;
+    /* padding: 2.0rem; */
+    /* box-sizing: border-box; */
+    border: 0.3rem solid #4e5a65;
+    border-right-color: #a9b3bd;
+    border-top-color: #8d9aa6;
+    /* width: auto; */
+    display: inline-block;
+    padding: 40px;
+    box-shadow: 40px 40px 40px rgba(162, 162, 162, 1);
 }
 
 .no-padding {

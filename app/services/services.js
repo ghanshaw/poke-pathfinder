@@ -17,7 +17,7 @@ pokemonApp.service('pokeGame', function($log, $interval, pokeMap) {
     
     game.drawPlayer();
     
-    game.map.initGameboy();
+    //game.map.initGameboy();
     
     
     
@@ -125,7 +125,7 @@ pokemonApp.service('pokeGame', function($log, $interval, pokeMap) {
         // Draw transition
         game.drawTransition();
         
-        game.map.drawGameboy(game.player);
+        //game.map.drawGameboy(game.player);
         
         //map.drawGameboy();
         game.ticks++;

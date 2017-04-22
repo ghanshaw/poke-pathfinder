@@ -94,10 +94,11 @@ pokemonApp.directive('playerDraggie', function() {
     };
 });
 
-pokemon.directive('userConsole', function() {
+pokemonApp.directive('userConsole', function() {
     
-    
-    
-    
-    
+    return {
+      restrict: 'EA',  
+      templateUrl: 'app/directives/user-console.html'
+    };
+
 });
