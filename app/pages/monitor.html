@@ -1,38 +1,13 @@
 <div ng-controller='monitorController'>
-    <div class="col-sm-6 col-md-8 extra-padding text-center">
-        <div class="caveWrapperBackground">
-            <div player-draggie></div>
-            <div class="caveWrapper">
-                <div class="mapWrapper"
-                     tabindex="0"
-                     ng-keyup="cancelDirection($event)"
-                     ng-keydown="changeDirection($event)"
-                     ng-mousemove="movePointer($event)"
-                     ng-click="clickPointer($event)">
-                    <canvas id="F1-canvas"></canvas>
-                </div>
-                <div class="mapWrapper"
-                     tabindex="0"
-                     ng-keyup="cancelDirection($event)"
-                     ng-keydown="changeDirection($event)"
-                     ng-mousemove="movePointer($event)"
-                     ng-click="clickPointer($event)">
-                    <canvas id="F2-canvas"></canvas>
-                </div>
-                <div class="mapWrapper"
-                     tabindex="0"
-                     ng-keyup="cancelDirection($event)"
-                     ng-keydown="changeDirection($event)"
-                     ng-mousemove="movePointer($event)"
-                     ng-click="clickPointer($event)">
-                    <canvas id="BF1-canvas"></canvas>
-                </div>
+    <div class="row is-flex">
+        <div class="col-sm-6 col-md-3 no-padding" set-class-when-at-top="fix-to-top" >
+            <div user-console></div>
+        </div>
+        <div class="col-sm-6 col-md-9 extra-padding text-center"  set-class-when-at-top="col-md-offset-3">
+            <div class="monitor-frame">
+                <div class="monitor-screen"><canvas id="monitor"></canvas></div>
             </div>
         </div>
+            
     </div>
-    
-    <div class="col-sm-6 col-md-4">
-        <div user-console></div>
-    </div>
-    
 </div>

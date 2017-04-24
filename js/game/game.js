@@ -28,10 +28,28 @@ Game.prototype.initGame = function() {
     
     this.initSpritesheet();
     this.initMap();
+    
+    // ------ Init graph ------
     this.initGraph();
+    
+    
+     // ------ Init player ------
     this.initPlayer();
+    
+    
+    // ------ Init pathfinder ------
     this.initPathfinder();
     
+    
+    // ------ Init monitor ------
+    var monitor = new Monitor(this);
+    this.monitor = monitor;
+       
+    
+    // ------ Init gameboy ------
+    var gameboy = new Gameboy(this);
+    this.gameboy = gameboy;
+
     
 };
 
@@ -47,10 +65,7 @@ Game.prototype.initSpritesheet = function() {
 Game.prototype.initPathfinder = function() {
   
     // Create new pathfinder
-    this.pathfinder = new Pathfinder(this.graph);
-    
-    // Expose game to pathfinder
-    this.pathfinder.game = this;
+    this.pathfinder = new Pathfinder(this, this.graph);
     
     // Initialize pathfinder
     this.pathfinder.init();
@@ -118,12 +133,6 @@ Game.prototype.initMap = function() {
     this.map.createMapLayers();
     
 
-    
-    
-    
-    // Create gameboy
-    //    this.map.initGameboy();
-    //    this.map.drawGameboy();
 };
 
 
@@ -144,7 +153,136 @@ Game.prototype.updateGame = function() {
     this.updatePathfinder();
     this.updatePlayer();  
     
+    
+    
 };
+
+Game.prototype.getPlayerDOF = function() {
+    return this.player.tile.dof;
+};
+
+Game.prototype.updateMap = function() {
+  
+    var floors = this.map.floors;
+    var map = this.map;
+    var pTile = this.getPlayerTile();
+    
+    //map.LAYER_STATE = 'GRAPHIC';
+  
+    if (map.LAYER_STATE === 'BITMAP') {
+  
+        for (let f in floors) {
+            var floor = this.map.floors[f];
+            floor.drawWaterLayer();
+            this.map.floors[f].drawBackground();
+            
+            //this.drawPlayer();
+
+            if (pTile.floor.id === floor.id && pTile.dof === 'BACKGROUND') {
+                this.drawPlayer();
+            };
+
+            this.map.floors[f].drawForeground();
+
+            if (pTile.floor.id === floor.id && pTile.dof === 'FOREGROUND') {
+                this.drawPlayer();
+            };
+        }
+    } else  {
+        
+        for (let f in floors) {
+            this.map.floors[f].drawFloorLayer();
+            
+        }
+        this.drawPlayer();
+        
+    }
+    
+    
+    
+    // Draw rows/cols
+    
+    // draw on monitor
+    if (map.ROWSCOLS_STATE === 'ON') {
+        map.drawRowsCols();   
+    };
+    
+    // Draw Special Tiles
+    // .ladder, .occuppied
+    //this.drawSprite();
+    
+    if (this.pathfinder.LAYER_STATE === 'VISUALIZER') {
+        map.drawVisualizerLayer();
+    }
+    
+    
+    else if (this.pathfinder.LAYER_STATE === 'ROUTER') {
+        map.drawPathLayer();
+    }
+    
+};
+
+
+Game.prototype.renderGame = function(path) {
+    
+    if (path === "/") {
+        this.monitor.drawMonitor();
+    } else if (path === '/gameboy/') {
+        this.gameboy.drawGameboy();
+    }
+
+};
+
+Game.prototype.drawShape = function(shape, degree, tile) {
+    
+    var row = tile.row;
+    var col = tile.col;  
+    var floor = tile.floor;
+    var frame = floor.frame;
+    var tile_size = floor.tile_size;
+    var x = (col + .5) * tile_size;
+    var y = (row + .5) * tile_size;
+    
+    if (shape.toUpperCase() === 'CIRCLE') {
+        frame.ctx.fillStyle = '#FF5722';
+        frame.ctx.beginPath();
+        frame.ctx.arc(x, y, tile_size/3, 0, Math.PI * 2);
+        frame.ctx.fill();
+        frame.ctx.closePath();
+    }
+    
+    if (shape.toUpperCase() === 'TRIANGLE') {
+        
+        var top = {
+            x: tile_size / 2,
+            y: tile_size / 4
+        };
+        
+        var left = {
+            x: tile_size / 4,
+            y: (3/4) * tile_size
+        };
+        
+        var right = {
+            x: (3/4) * tile_size,
+            y: (3/4) * tile_size
+        };
+        
+        var one_fourth = tile_size/4;
+        var one_half = tile_size/2;
+        
+        floor.visualizerlayer.ctx.fillStyle = '#E91E63';
+        
+        floor.visualizerlayer.ctx.beginPath();
+        //floor.visualizerlayer.ctx.arc(x, y, tile_size/3, 0, Math.PI * 2);
+        floor.visualizerlayer.ctx.moveTo(x, y - one_fourth);
+        floor.visualizerlayer.ctx.lineTo(x - one_fourth, y + one_fourth);
+        floor.visualizerlayer.ctx.lineTo(x + one_fourth, y + one_fourth);
+        floor.visualizerlayer.ctx.fill();
+    }
+
+};
+
 
 
 Game.prototype.getSprite = function(spriteOptions, color) {
@@ -160,23 +298,21 @@ Game.prototype.drawSprite = function(spriteOptions, tile, layer='frame', color) 
     var col = tile.col;     
     var floor = tile.floor;
     var frame = floor.frame; 
-    var tile_size = this.getTileSize();
+    var tile_size = floor.tile_size;
     var sprite_size = this.getSpriteSize();
     var x = col * tile_size - (.5 * tile_size);
-    var y = row * tile_size - (.5 * tile_size);
+    var y = row * tile_size - (.5 * tile_size);    
     
     if (layer === 'frame') {
-        frame.ctx.drawImage(sprite.canvas, 
-        0, 0, sprite_size, sprite_size, 
-        x + frame.offset_x, y + frame.offset_y, tile_size * 2, tile_size * 2);
+        frame.ctx.drawImage(sprite.canvas, 0, 0, sprite_size, sprite_size, x, y, tile_size * 2, tile_size * 2);
         return;
     }
+    
     if (layer === 'visualizer') {
         floor.visualizerlayer.ctx.drawImage(sprite.canvas, 
         0, 0, sprite_size, sprite_size, 
         x , y, tile_size * 2, tile_size * 2);
     }
-    
 };
 
 
@@ -205,6 +341,7 @@ Game.prototype.getPointer = function() {
 /*******************************************/
 Game.prototype.__________PLAYER_METHODS__________ = function() {};
 
+
 Game.prototype.updatePlayer = function() {
     
     var player = this.player;
@@ -218,7 +355,7 @@ Game.prototype.updatePlayer = function() {
 
         
         if (this.KEYPRESS) {
-            console.log(this.KEYPRESS);
+            // console.log(this.KEYPRESS);
             this.startMove();
         }
         
@@ -247,6 +384,10 @@ Game.prototype.drawPlayer = function() {
     this.player.drawPlayer();
 };
 
+
+Game.prototype.getPlayerSprites = function() {
+    return this.player.getPlayerSprites();
+};
 
 Game.prototype.startMove = function() {
     
@@ -301,7 +442,7 @@ Game.prototype.startMove = function() {
     // and game not currently following path
     if (player.MOVE_STATE === 'STILL' && this.pathfinder.PATH_STATE === 'OFF') {
         
-        console.info('about to turn');
+        //console.info('about to turn');
         
         if (KEYPRESS !== player.playerOptions.FACING) {
             console.info('turn');
@@ -436,8 +577,12 @@ Game.prototype.setPlayerTile = function(tile) {
     this.player.setTile(tile);
 };
 
-Game.prototype.getPlayerTile = function(tile) {
+Game.prototype.getPlayerTile = function() {
     return this.player.tile;
+};
+
+Game.prototype.getPlayerCurrentTile = function() {
+    return this.player.current;
 };
 
 
@@ -630,6 +775,8 @@ Game.prototype.setPathfinderSourceTarget = function(tile) {
     this.pathfinder.setSourceTarget(tile)
 };
 
+
+
 Game.prototype.startPathfinder = function(state, sourceTarget) {
     this.pathfinder.startPathfinder(state, sourceTarget);
 };
@@ -704,6 +851,10 @@ Game.prototype.getRandomTile = function() {
 
 Game.prototype.setPathfinderConsoleTile = function(consoleTile, sourceTarget) {
     this.pathfinder.setConsoleTile(consoleTile, sourceTarget);
+};
+
+Game.prototype.setPathfinderConsoleAlgorithm = function(algorithm) {
+    this.pathfinder.setConsoleAlgorithm(algorithm);
 };
 
 Game.prototype.getKeyTile = function(id) {
@@ -873,4 +1024,9 @@ Game.prototype.drawCircle = function() {
 
 Game.prototype.getWeight = function(TYPE) {
     return this.weight[TYPE];
+};
+
+
+Game.prototype.getFloors = function() {
+    return this.map.getFloors();
 };

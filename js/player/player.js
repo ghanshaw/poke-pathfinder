@@ -63,7 +63,8 @@ var Player = function() {
     
     this.current = {
         row: null,
-        col: null
+        col: null,
+        floor: null
     };
     
     this.MOVE_STATE = 'STILL';
@@ -112,6 +113,7 @@ Player.prototype.setTile = function(tile) {
     this.tile = tile;
     this.current.row = tile.row;
     this.current.col = tile.col;
+    this.current.floor = tile.floor;
     
     // If he's entering water, reset surf counter
     if (prevTile && prevTile.type === 'LAND' && tile.type === 'WATER') { 
@@ -135,12 +137,15 @@ Player.prototype.getSpeed = function() {
             
         case 'WALK':
             return this.walkSpeed * this.factorSpeed;
+            //return this.walkSpeed;
             
         case 'JUMP ON':
             return this.jumpSpeed * this.factorSpeed;
+            //return this.jumpSpeed;
         
         case 'JUMP OFF':
             return this.jumpSpeed * this.factorSpeed;
+            //return this.jumpSpeed;
             
         case 'SURF':
             return this.surfSpeed * this.factorSpeed;
@@ -504,9 +509,11 @@ Player.prototype.drawPlayer = function() {
     }
     
     if (this.game.getLayerState() === 'GRAPHIC') {
-        let x = col * tile_size + frame.offset_x - (.5 * tile_size);
-        let y = row * tile_size + frame.offset_y - (.5 * tile_size);
-        frame.ctx.drawImage(this.shape.canvas, x, y, tile_size, tile_size);
+        game.drawShape('circle', 0, this.current);
+//        
+//        let x = col * tile_size + frame.offset_x - (.5 * tile_size);
+//        let y = row * tile_size + frame.offset_y - (.5 * tile_size);
+//        frame.ctx.drawImage(this.shape.canvas, x, y, tile_size, tile_size);
     }
     
     else if (this.game.getLayerState() === 'BITMAP') {
@@ -543,5 +550,74 @@ Player.prototype.drawPlayer = function() {
             game.drawSprite(this.dustOptions, this.stopTile);
             
         }
+    }  
+};
+
+
+
+Player.prototype.getPlayerSprites = function() {
+ 
+    var game = this.game;
+ 
+    var floor = this.tile.floor;
+    var frame = floor.frame;
+    
+    var row = this.current.row;
+    var col = this.current.col;     
+    
+    var tile_size = this.game.getTileSize();
+    
+    if (this.MOVE_STATE === 'USER MOVE') {
+        return;
+    }
+    
+    if (this.game.getLayerState() === 'GRAPHIC') {
+        let x = col * tile_size + frame.offset_x - (.5 * tile_size);
+        let y = row * tile_size + frame.offset_y - (.5 * tile_size);
+        frame.ctx.drawImage(this.shape.canvas, x, y, tile_size, tile_size);
+    }
+    
+    else if (this.game.getLayerState() === 'BITMAP') {
+        
+        //let sprite_size = this.spritesheet.sprite_size;
+        var spriteArray = [];
+        
+        // Draw surf pokemon sprite
+        if (this.pokemonOptions.SHOW) {
+            
+            let row;
+            let col;
+            
+            // If he's jumping on, pokemon appear on stop tile
+            if (this.MOVE_STATE === 'JUMP ON') {
+                let sprite = game.getSprite(this.pokemonOptions);
+                spriteArray.push([sprite, this.stopTile]);
+            }    
+            
+            // If he's jumping off, pokemon appears on start tile
+            else if (this.MOVE_STATE === 'JUMP OFF') {
+                let sprite = game.getSprite(this.pokemonOptions);
+                spriteArray.push([sprite, this.startTile]); 
+            }
+              
+        }
+        
+        // Draw player sprite
+        // Draw player on interpolated location
+        let currentTile = this.getCurrentTile();
+        let sprite = game.getSprite(this.playerOptions);
+        spriteArray.push([sprite, currentTile]);
+        
+                
+
+        // Draw dust sprite  
+        if (this.dustOptions.SHOW) { 
+            // Draw dust on tile player is jumping to
+            let sprite = game.getSprite(this.dustOptions);
+            spriteArray.push([this.dustOptions, this.stopTile]);
+            
+        }
+        
+        return spriteArray;
     }  
 };

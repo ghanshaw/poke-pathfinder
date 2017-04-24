@@ -9,7 +9,12 @@
         <!-- Latest compiled and minified CSS -->
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
             
-            
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>  
+    <script
+            src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"
+            integrity="sha256-VazP97ZCwtekAsvgPBSUwPFKdrwD3unUfSGVYrahUqU="
+        crossorigin="anonymous"></script>
+        
         <!-- AngularJS --> 
         <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.3/angular.min.js"></script> 
         <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.3/angular-messages.min.js" ></script>
@@ -17,12 +22,9 @@
         <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.3/angular-resource.min.js"></script> 
             
             
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>        
+              
         <!-- <script src="js/jquery-ui/jquery-ui.min.js" type="text/javascript"></script> -->
-        <script
-            src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"
-            integrity="sha256-VazP97ZCwtekAsvgPBSUwPFKdrwD3unUfSGVYrahUqU="
-        crossorigin="anonymous"></script>
+        
             
             
         <script src="js/graph/graph.js"></script>
@@ -48,6 +50,7 @@
         <script src="app/services/services.js"></script> 
         <script src="app/controllers/controllers.js"></script> 
         <script src="app/directives/directives.js"></script> 
+        <script src="app/directives/user_console.js"></script>
             
         <link rel="stylesheet" href="css/style.css">
         <link rel="stylesheet" href="css/gameboy.css">
@@ -67,9 +70,10 @@
                             
                     </div>
                     <ul class="nav navbar-nav navbar-right">
-                        <li><a class="link" href="/">Screen</a></li>
+                        <li><a class="link" href="#">Monitor</a></li>
                         <li><a class="link" href="#/gameboy/">Gameboy</a></li>
                         <li><a class="link" href="#/about/">About</a></li>
+                        <li><a class="link" href="#/cave/">Cave</a></li>
                     </ul>
                 </div><!-- /.container-fluid -->`
             </nav>
@@ -78,30 +82,38 @@
         <div class="map-files" style="display: none">
             <img id="spritesheet-color" src="images/spritesheet_color.png" alt>
             <img id="spritesheet-bw" src="images/spritesheet_bw.png" alt>
-            <img id="tile-rock" src="images/map/tile_rock.png" alt>
-            <img id="tile-water" src="images/map/tile_water.png" alt>
-            <img id="F1-floor" src="images/map/F1.png" alt>
-            <img id="F2-floor" src="images/map/F2.png" alt>
-            <img id="BF1-floor" src="images/map/BF1.png" alt>
-            <img id="F1-overlay" src="images/map/F1-overlay.png" alt>
-            <img id="BF1-overlay" src="images/map/BF1-overlay.png" alt>
+            <img id="F1-background" src="images/map/F1.png" alt>
+            <img id="F2-background" src="images/map/F2.png" alt>
+            <img id="BF1-background" src="images/map/BF1.png" alt>
+            <img id="F1-foreground" src="images/map/F1-foreground.png" alt>
+            <img id="BF1-foreground" src="images/map/BF1-foreground.png" alt>
             <img id="player-draggie-boy" src="images/player_draggie_boy.png" alt>
             <img id="player-draggie-girl" src="images/player_draggie_girl.png" alt>
             <img id="path-sprite" src="images/path_sprite.png" alt>
         </div>
             
-        <div>
+        <div class="content">
             <div class="container-fluid">
-                <div class="row">
-                    <div ng-view></div>
-                </div>
+                <div ng-view></div>
+            
             </div>  
+            
+            <footer>
+            <div class="container">
+                <div class="row is-flex">
+                    <div class="col-md-6 text-center justify-content-center">
+                <p class="">Poke-Pathfinder. © Copyright 2017 </p>
+                        </div>
+                    <div class="col-md-6 text-center justify-content-center">
+                        <p class="">greerhanshaw.com</p>
+                    </div>
+                    </div>
+              </div>
+            
+        </footer>
         </div>
             
-        <div>
-            
-            
-        </div>
+        
             
     </body>    
 </html>

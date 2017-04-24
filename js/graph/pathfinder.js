@@ -1,4 +1,7 @@
-var Pathfinder = function(graph) {
+var Pathfinder = function(game, graph) {
+    
+    this.game = game;
+    this.graph = graph;
     
     this.headOptions = {
         TYPE: 'HEAD',
@@ -11,7 +14,7 @@ var Pathfinder = function(graph) {
         EVENT: 'SOURCE'
     };
     
-    this.graph = graph;
+    
     this.floors = {};
 
     
@@ -47,12 +50,41 @@ var Pathfinder = function(graph) {
         },
         TARGET: {
             tile: null
+        },
+        algorithm: {
+            
         }
     };
     
     this.PATH_STATE = 'OFF';
     
     this.inaccessible = new Set();
+    
+
+    this.algorithms = [
+        {
+            id: 0,
+            label: 'Breadth-first search',
+            method: 'bfs'
+        },
+        {
+            id: 1,
+            label: 'Depth-first search',
+            method: 'dfs'
+        },
+        {   
+            id: 2,
+            label: 'Dijkstra\'s',
+            method: 'dijkstras'
+        },
+        {
+            id: 3,
+            label: 'A*',
+            method: 'astar'
+            
+        }
+    ];
+    
     
     
 };
@@ -131,23 +163,21 @@ Pathfinder.prototype.setHoverTile = function(tileId, type) {
 Pathfinder.prototype.createPathfinderFloorLayers = function() {
     
     var floors = {};
- 
     var map = this.game.map;
     
     // Create a canvas object for each floor in the map
     for (let f in map.floors) {
         
         var floor = map.floors[f];
-        var floorlayer = floor.bitmap.floorlayer;
+        var frame = floor.frame;
 
 
         // Create sprite layer
         var canvas = document.createElement('canvas');
         var ctx = canvas.getContext('2d');
         
-        
-        canvas.width = floorlayer.canvas.width;
-        canvas.height = floorlayer.canvas.height;
+        canvas.width = frame.canvas.width;
+        canvas.height = frame.canvas.height;
         
         
         var visualizerlayer = {};
@@ -156,21 +186,21 @@ Pathfinder.prototype.createPathfinderFloorLayers = function() {
         floor.visualizerlayer = visualizerlayer;
 
         
-        //        // Create arrow layer
-        //        canvas = document.createElement('canvas');  
-        //        canvas.width = floorCanvas.width;
-        //        canvas.height = floorCanvas.height;
-        //        floors[f].arrowlayer = canvas;
-        //     
-                  
-        
+                // Create arrow layer
+//                canvas = document.createElement('canvas');  
+//                canvas.width = floorCanvas.width;
+//                canvas.height = floorCanvas.height;
+//             //   floors[f].arrowlayer = canvas;
+//             
+//                  
+//        
         // Create sprite layer
         canvas = document.createElement('canvas');
         ctx = canvas.getContext('2d');
         
-        canvas.width = floorlayer.canvas.width;
-        canvas.height = floorlayer.canvas.height;
-        
+        canvas.width = frame.canvas.width;
+        canvas.height = frame.canvas.height;
+       
         // Create path layer
         var pathlayer = {};
         pathlayer.canvas = canvas;
@@ -370,6 +400,38 @@ Pathfinder.prototype.startPathfinder = function(state) {
 };
 
 
+
+Pathfinder.prototype.setConsoleAlgorithm = function(algorithm) {
+    
+    this.console.algorithm = algorithm;
+    
+};
+
+
+
+Pathfinder.prototype.runAlgorithm = function() {
+     
+     var algorithm = this.console.algorithm;
+     
+     // Run BFS
+     if (algorithm.id === 0) {
+        this.bfs();
+     }
+     // Run DFS
+     else if (algorithm.id === 1) {
+        this.dfs();
+     }  
+     // Run Dijkstra's
+     else if (algorithm.id === 2) {
+        this.dijkstras();
+     }
+     // Run A*
+     else if (algorithm.id === 3) {
+        this.astar();   
+     }
+        
+};
+
  
  Pathfinder.prototype.startVisualizerRouter = function(state) {
      
@@ -377,34 +439,31 @@ Pathfinder.prototype.startPathfinder = function(state) {
     if (this.PATH_STATE === 'SELECT SOURCE' ||
             this.PATH_STATE === 'SELECT TARGET') { return; }
    
+   
     var game = this.game;
-    var pathfinder = this.pathfinder;
     
-    
+    // Get source and target from console
     this.source = this.getConsoleTile('SOURCE');
     this.target = this.getConsoleTile('TARGET');
     
+    // Update flag locations with source and target    
     this.flagSource.tile = this.source;
     this.flagTarget.tile = this.target;
     
-
+    // Declare data structures
     this.parent = {};
     this.stepbystep = [];
     this.path = [];
     this.step = 0;
-    
-    // Generate path and timeline
-    //this.dijkstra();
-    //this.bfs(this.source.id, this.target.id, this.parent, this.path, this.stepbystep);
-    //this.dfs();
-    this.astar();
-    
+      
+    // Run algorithm
+    this.runAlgorithm();   
+
     // Turn off pathfinder, if in progress
     this.clearPathfinder();
     
     // Move player to source tile
     game.setPlayerMoveState('STILL');
-    //var sourceTile = game.getTileFromId(this.source);
     game.setPlayerTile(this.source);
     
     // Reset timeline timer
@@ -420,14 +479,9 @@ Pathfinder.prototype.startPathfinder = function(state) {
     // Make player face down
     game.setPlayerFacing('DOWN');
     
-    // Turn on path state
+    // Turn on pathfinder state
     this.LAYER_STATE = state;
     this.PATH_STATE = state;
-    //console.log(path);
-    
-    //game.GAME_STATE = 'PATHFINDING';
-    //game.pathfinder.index = 0;
-    //game.index = 0;
     
 };
 
@@ -596,8 +650,8 @@ Pathfinder.prototype.drawSpriteToVisualizerLayer = function(tileId, interpolate)
     
     var game = this.game;
     var tile = game.getTileFromId(tileId);
-    var tile_size = game.getTileSize();
     var floor = tile.floor;
+    var tile_size = floor.tile_size;
     var visualizerlayer = floor.visualizerlayer;
     
     // Get tile xy
@@ -645,7 +699,10 @@ Pathfinder.prototype.drawSpriteToVisualizerLayer = function(tileId, interpolate)
 
     
     // Set composite operation to normal and copy sprite from spritesheet to visualization layer
-    visualizerlayer.ctx.globalCompositeOperation = 'source-over';
+    //visualizerlayer.ctx.globalCompositeOperation = 'source-over';
+    
+    game.drawShape('triangle', 0, tile);
+    return;
     
     this.headOptions.GENDER = game.getPlayerGender();
     game.drawSprite(this.headOptions, tile, 'visualizer', false);
@@ -654,6 +711,7 @@ Pathfinder.prototype.drawSpriteToVisualizerLayer = function(tileId, interpolate)
     // Get the shade based on (normalized) euclidean distance from source
     //let sourceTile = game.getTileFromId(this.source);
     let percent = game.getTileEuclidDistance(this.source, tile);
+    percent = .5;
     
     //console.log(source.id, tile.id, percent);
     if (interpolate) {
@@ -793,7 +851,7 @@ Pathfinder.prototype.makePath = function(node, parent, path) {
 
 
 // Run Breadth-First Search
-Pathfinder.prototype.bfs = function(source, target, parent, path, stepbystep) {
+Pathfinder.prototype.bfs = function() {
     
     var q = [];
     //var parent = {};
@@ -809,6 +867,7 @@ Pathfinder.prototype.bfs = function(source, target, parent, path, stepbystep) {
     parent[source] = null;
     visited.add(source);
     q.push(source); 
+    var stepbystep = this.stepbystep;
     stepbystep.push([]);
     var step = 0;
     stepbystep[step].push(source);
@@ -1089,49 +1148,3 @@ Pathfinder.prototype.ladderCheck = function(vNode, uNode) {
     return true;
     
 };
-
-
-//
-////
-//Pathfinder.prototype.appendPartialPath = function() {};
-//
-//Pathfinder.prototype.createFullPath = function() {};
-//
-//
-////    // Run Breadth-First Search
-////    function bfs(graph, source, target) {
-////
-////        var q = [];
-////        var parent = {};
-////        var visited = new Set();
-////        
-////        //sNode = graph.getNode(source);
-////        //sNode.parent = null;
-////        
-////        parent[source] = null;
-////        visited.add(source);
-////        q.push(source); 
-////
-////        while (q.length > 0) {
-////
-////            vNode = q.shift();
-////            
-////            if (vNode === target) {
-////                console.log("FOUND!");
-////                var path = makePath(vNode, parent);
-////                return path;
-////            }
-////
-////            for (let uNode of graph.getAdj(vNode)) {
-////
-////                if (!visited.has(uNode)) {
-////                    visited.add(uNode);
-////                    parent[uNode] = vNode;
-////                    q.push(uNode);  
-////                }
-////            }
-////        }    
-////    }
-//
-//
-

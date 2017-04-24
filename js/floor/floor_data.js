@@ -7,10 +7,10 @@ var F1_data = (function() {
     var canvasId = 'F1-canvas';
     
     // Define img id (id for img tag)
-    var imgId = 'F1-floor';
+    var imgBackground = 'F1-background';
     
     // Define img id for overlay component (id of img tag)
-    var imgOverlayId = 'F1-overlay';
+    var imgForeground = 'F1-foreground';
     
     //Define size of floor
     var rows = 23;
@@ -62,9 +62,42 @@ var F1_data = (function() {
         12: [9, 10, 11, 12, 13, 14, 15, 16, 36, 37, 38],
         13: [9, 10, 11, 12, 13, 14, 15, 16],
         14: [9, 10, 11, 12, 13, 14, 15, 16],
-        15: [9, 10, 11],
+        15: [9, 10, 11]
     };
    
+    var foreground = {
+        1:  [6, 7, 8, 9, 10, 11, 12, 13, 31, 32, 33, 34, 35, 36, 37, 38],
+        2:  [6, 7, 8, 9, 10, 11, 12, 13, 31, 32, 33, 34, 35, 36, 37, 38],
+        3:  [6, 7, 8, 9, 10, 11, 12, 13, 31, 32, 33, 34, 35, 36, 37, 38],
+        4:  [6, 7, 8, 9, 10, 11, 12, 13, 24, 25, 26, 27, 28],
+        5:  [3, 4, 5, 6, 7,8, 9, 10, 11, 12, 13, 24, 25, 26, 27, 28],
+        6:  [3, 4, 5, 6, 7,8, 9, 10, 11, 12, 13, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28],
+        7:  [3, 4, 5, 6, 7,8, 9, 10, 11, 12, 13, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28],
+        8:  [3, 4, 5, 6, 7,8, 9, 10, 11, 12, 13, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35],
+        9:  [3, 4, 5, 6, 7,8, 9, 10, 11, 12, 13, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35],
+        10: [1, 2, 3, 4, 5, 6, 7, 8, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35],
+        11: [1, 2, 3, 4, 5, 6, 7, 8, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35],
+        12: [1, 2, 3, 4, 5, 6, 7, 8, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35],
+        13: [1, 2, 3, 4, 5, 6, 7, 8, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31],
+        14: [1, 2, 3, 4, 5, 6, 7, 8, 27, 28, 29, 30, 31],
+        15: [1, 2, 3, 4, 5, 6, 7, 8, 12, 13, 14, 15, 16, 17, 27, 28, 29, 30, 31],
+        16: [1, 2, 3, 4, 5, 6, 7, 8, 12, 13, 14, 15, 16, 17, 27, 28, 29, 30, 31],
+        17: [1, 2, 3, 4, 5, 6, 7, 8, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31],
+        18: [1, 2, 3, 4, 5, 6, 7, 8, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31],
+        19: [15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31],
+        20: [15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31],
+        21: [15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31]  
+    };
+   
+    var stairs = [
+        [4, 33],
+        [9, 10],
+        [18, 5],
+        [18, 14],
+        [11, 19],
+        [13, 24]
+    ];
+       
     
     //water[20] = [30, 31, 32]
     
@@ -139,6 +172,12 @@ var F1_data = (function() {
         water: function() {
             return water;
         },   
+        foreground: function() {
+            return foreground;
+        }, 
+        stairs: function() {
+            return stairs;
+        }, 
         noEdges: function() {
             return noEdges;
         },
@@ -157,11 +196,11 @@ var F1_data = (function() {
         canvasId: function() {
             return canvasId;
         },
-        imgId: function() {
-            return imgId;
+        imgBackground: function() {
+            return imgBackground;
         },
-        imgOverlayId: function() {
-            return imgOverlayId;
+        imgForeground: function() {
+            return imgForeground;
         }
     }
     
@@ -177,10 +216,10 @@ var F2_data = (function() {
     var canvasId = 'F2-canvas';
     
     // Define img id (id for img tag)
-    var imgId = 'F2-floor';
+    var imgBackground = 'F2-background';
     
     // Define img id for overlay component (id of img tag)
-    var imgOverlayId = '';
+    var imgForeground = '';
     
     //Define size of floor
     var rows = 22;
@@ -217,6 +256,12 @@ var F2_data = (function() {
     
     // Define water tiles
     var water = {};
+    
+    // Define foreground
+    var foreground = {};
+    
+    // Define stairs
+    var stairs = [];
     
     // Define gaps
     var gaps = [
@@ -260,7 +305,13 @@ var F2_data = (function() {
         },  
         water: function() {
             return water;
-        },   
+        },  
+                foreground: function() {
+            return foreground;
+        }, 
+        stairs: function() {
+            return stairs;
+        }, 
         noEdges: function() {
             return noEdges;
         },
@@ -279,11 +330,11 @@ var F2_data = (function() {
         canvasId: function() {
             return canvasId;
         },   
-        imgId: function() {
-            return imgId;
+        imgBackground: function() {
+            return imgBackground;
         },
-        imgOverlayId: function() {
-            return imgOverlayId;
+        imgForeground: function() {
+            return imgForeground;
         }
     }
     
@@ -299,10 +350,10 @@ var BF1_data = (function() {
     var canvasId = 'BF1-canvas';
     
     // Define img id (id for img tag)
-    var imgId = 'BF1-floor';
+    var imgBackground = 'BF1-background';
     
     // Define img id for overlay component (id of img tag)
-    var imgOverlayId = 'BF1-overlay';
+    var imgForeground = 'BF1-foreground';
     
     //Define size of floor
     var rows = 23;
@@ -358,6 +409,42 @@ var BF1_data = (function() {
              
     };
     
+    var foreground = {
+        
+        1:  [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16],
+        2:  [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16],
+        3:  [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16],
+        4:  [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16],
+        5:  [1, 2, 3, 4, 5, 6, 7, 8],
+        6:  [1, 2, 3, 4, 5, 6, 7, 8],
+        7:  [1, 2, 3, 4, 5, 6, 7, 8],
+        8:  [1, 2, 3, 4, 5, 6, 7, 8, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32],
+        9:  [1, 2, 3, 4, 5, 6, 7, 8, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32],
+        10: [15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32],
+        11: [15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32],
+        12: [4, 5, 6, 7, 8, 9, 10, 26, 27, 28, 29, 30, 31, 32],
+        13: [4, 5, 6, 7, 8, 9, 10, 26, 27, 28, 29, 30, 31, 32],
+        14: [4, 5, 6, 7, 8, 9, 10, 26, 27, 28, 29, 30, 31, 32],
+        15: [15, 16, 17, 18, 19, 20, 21, 22, 4, 5, 6, 7, 8, 9, 10, 26, 27, 28, 29, 30, 31, 32],
+        16: [15, 16, 17, 18, 19, 20, 21, 22, 26, 27, 28, 29, 30, 31, 32],
+        17: [15, 16, 17, 18, 19, 20, 21, 22, 26, 27, 28, 29, 30, 31, 32],
+        18: [15, 16, 17, 18, 19, 20, 21, 22, 26, 27, 28, 29, 30, 31, 32],
+        19: [0, 1, 2, 3, 4, 5, 15, 16, 17, 18, 19, 20, 21, 22, 26, 27, 28, 29, 30, 31, 32],
+        20: [0, 1, 2, 3, 4, 5],
+        21: [0, 1, 2, 3, 4, 5],
+        22: [0, 1, 2, 3, 4, 5]
+        
+    };
+    
+    var stairs = [
+        [4, 13],
+        [11, 18],
+        [15, 7],
+        [19, 17],
+        [19, 20],
+        [19, 29]
+    ];
+    
     // Remove edges
     var noEdges = [
         
@@ -391,6 +478,12 @@ var BF1_data = (function() {
         water: function() {
             return water;
         },   
+                foreground: function() {
+            return foreground;
+        }, 
+        stairs: function() {
+            return stairs;
+        }, 
         noEdges: function() {
             return noEdges;
         },
@@ -409,12 +502,12 @@ var BF1_data = (function() {
         canvasId: function() {
             return canvasId;   
         },  
-        imgId: function() {
-            return imgId;
+        imgBackground: function() {
+            return imgBackground;
         },
-        imgOverlayId: function() {
-            return imgOverlayId;
+        imgForeground: function() {
+            return imgForeground;
         }
-    }
+    };
     
 })();

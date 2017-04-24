@@ -16,6 +16,11 @@ pokemonApp.config(function ($routeProvider, $locationProvider) {
         controller: 'gameboyController'
     })
     
+    .when('/cave/', {
+        templateUrl: 'app/pages/cave.html',
+        controller: 'caveController'
+    })
+    
     .when('/about/', {
         templateUrl: 'app/pages/about.html',
         controller: 'aboutController'

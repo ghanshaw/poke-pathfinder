@@ -15,6 +15,8 @@ var Tile = function(floor, row, col) {
     this.obstacleId = null;
     
     this.type = 'LAND';
+    this.dof = 'BACKGROUND';
+    this.stairs = false;
     this.orientation = null;
 };
 

@@ -71,7 +71,9 @@ SpriteSheet.prototype.initSprite = function() {
 
 SpriteSheet.prototype.getSprite = function(spriteOptions, color=true) {
     
-    var xy = this.getXY(spriteOptions);
+    
+    
+   ;
     var sprite_size = this.sprite_size;
     
     this.sprite.ctx.clearRect(0, 0, sprite_size, sprite_size);
@@ -82,7 +84,15 @@ SpriteSheet.prototype.getSprite = function(spriteOptions, color=true) {
         spritesheet = this.bw;
     }
     
-    this.sprite.ctx.drawImage(spritesheet.canvas, xy.x, xy.y, sprite_size, sprite_size, 0, 0, sprite_size, sprite_size);
+    if (!Array.isArray(spriteOptions)) {
+        spriteOptions = [spriteOptions];
+    }
+    
+    for (let options of spriteOptions) {
+        var xy = this.getXY(options);
+        this.sprite.ctx.drawImage(spritesheet.canvas, xy.x, xy.y, sprite_size, sprite_size, 0, 0, sprite_size, sprite_size);     
+    }
+    
     return this.sprite;
 };
 

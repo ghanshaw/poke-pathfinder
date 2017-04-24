@@ -1,129 +1,119 @@
-pokemonApp.service('pokeMap', function() {
-
-    
-    
-});
-
-
 // Game Service (game state, game logic and game loop)
-pokemonApp.service('pokeGame', function($log, $interval, pokeMap) {
+pokemonApp.service('pokeGame', function($log, $document, $location, $interval) {
+    
+    this.cancelDirection = function(event) {
+        var keyCode = event.keyCode;
+        if (game.keyCode === keyCode) {
+            $log.log('no longer pressing down');
+            $log.log(event);        
+            game.KEYPRESS = null;
+        }
+    };
+    
+    this.changeDirection = function(event) {
+        $log.log(event);      
+        var keyCode = event.keyCode;
+        game.keyCode = keyCode;
+        
+        switch(keyCode) {
+            case 37:
+                // Left arrow
+                $log.log('left arrow');
+                event.preventDefault();
+                game.KEYPRESS = 'LEFT';
+                
+                //map.moveSprite('left');
+                break;
+            case 38:
+                // Up arrow
+                $log.log('up arrow');
+                event.preventDefault();
+                game.KEYPRESS = 'UP';
+                //map.moveSprite('up');
+                
+                break;
+            case 39:
+                // Right arrow
+                $log.log('right arrow');
+                event.preventDefault();
+                game.KEYPRESS = 'RIGHT';
+                //map.moveSprite('right');
+                break;
+            
+            case 40:
+                // Down arrow
+                $log.log('down arrow');
+                event.preventDefault();
+                game.KEYPRESS = 'DOWN';
+                //map.moveSprite('down');
+                break;
+        }
+        
+        //$scope.spriteTile = map.sprite.tile;
+        
+        
+    };
+    
+    $(document).keydown(this.changeDirection);
+    $(document).keyup(this.cancelDirection);
+
+
 
     // Initialize a new Game object
     var game = new Game();
-    
     game.initGame();
-    
-    game.drawMap(); 
-    
-    game.drawPlayer();
-    
-    //game.map.initGameboy();
-    
-    
-    
+
     // Attach game object to pokeGame service
     this.game = game;
     
     console.log(game.map);
     
-    //game.ticks = 0;
-    //game.FPS = 60;
-    //game.DIRECTION = null;
-    //game.GENDER = 'BOY';
+   
     
-    
-//    game.map = map;
-//    game.graph = graph;
-//    
-//    // Attach game to different components of the game
-//    var map = pokeMap.map;
-//    map.game = game;
-//    map.sprite.game = game;
-//    
-//    var graph = pokeMap.graph;
-//    
-    
-    //var game = this;
-    //$log.log('armin van buuren');
-    
-//    // Create Pathfinder
-//    this.pathfinder = new Pathfinder(map);
-//    var pathfinder = this.pathfinder;
-    
-    this.findPath = function() {
-        
-        
-        var entrance = game.map.keyTiles[0].tile;
-        var mewtwo = game.map.keyTiles[1].tile;
-        
-        console.log(entrance);
-        console.log(mewtwo);
-        
-        var source = entrance.id;
-        var target = mewtwo.id;
-        
-        var path = game.pathfinder.bfs(source, target);
-        //console.log(path);
-        
-        //game.GAME_STATE = 'PATHFINDING';
-        //game.pathfinder.index = 0;
-        //game.index = 0;
-        
-    };
-       
-    //game.pathfinder.PATH_STATE = 'VISUALIZE';
-    //this.findPath();
-        
-    $log.log(game);
-    
-    // Game Loop
+    // Run game loop
     var gameLoop = function() {
         
         let start_time = performance.now();
+        
+        
+        
+        //$log.log($location.path());
        
-        // ----- Update game ----- //
-        
-        //map.pathVisualization();
-        
-//        var game_state = game.getGameState();
-        var pathfinder_state = game.getPathfinderState();
-        var player_state = game.getPlayerMoveState(); 
-        
-//        console.info(pathfinder_state);
-//        console.info(player_state);
+        // ----- Update game ----- // 
         
         game.updateGame();
+        game.updateMap();
 
-        //map.updatePath(game);
-        // Update rocks
-        // Update water
-        //map.updateDivs();
-    
-    
         // ----- Render game ----- //
-        
-        // Draw Map
-        game.drawMap();   
-        //game.renderGame();
-        
-        // Draw highlighted tile
-        //game.drawHoverTile();
-        
-        game.drawFlags();
-        
-        // Draw path
-        //game.drawPath();
-        
-        // Draw player
-        //game.drawPlayer();
-        
-        // Draw special tiles
-        game.drawSpecial();
-        // Draw overlay
-        //game.drawOverlay();
-        
-        // Draw transition
-        game.drawTransition();
+         
+         
+         var currentPath = $location.path();
+         game.renderGame(currentPath);
+         
+         
+//        
+//        // Draw Map
+//        game.drawMap();   
+//        //game.renderGame();
+//        
+//        // Draw highlighted tile
+//        //game.drawHoverTile();
+//        
+//        game.drawFlags();
+//        
+//        // Draw path
+//        //game.drawPath();
+//        
+//        // Draw player
+//        //game.drawPlayer();
+//        
+//        // Draw special tiles
+//        game.drawSpecial();
+//        // Draw overlay
+//        //game.drawOverlay();
+//        
+//        // Draw transition
+//        game.drawTransition();
         
         //game.map.drawGameboy(game.player);
         
@@ -139,97 +129,7 @@ pokemonApp.service('pokeGame', function($log, $interval, pokeMap) {
         
     };
     
-    $interval(gameLoop, 1000/game.FPS);
-    
-    
-    
-    
-//    $log.log('hello world');
-//    
-
-//
-//    // Aquire map variable
-//    var map = pokeMap.map;
-//    
-//    // Initialize game
-//    var sprite = new Sprite();
-//    sprite.init(map.tile_size);
-//    //sprite.dropTile(map, 21, 33);
-//    
-//    map.createRowsCols();
-//    //map.createEdges();
-//    map.createTileBackground();
-//    //map.createTileRockBackground();
-//    map.createBitmapBackground();
-//    
-//    map.sprite = sprite;
-//    
-//    map.drawBitmapBackground();
-//    //map.drawTileBackground();
-////    map.drawRowsCols();
-////    map.followPath();
-////    map.drawSprite(sprite);     
-////    
-//    var time = {}
-//    var ticks = 0
-//    
-//    var that = this;
-//    
-//    // Define game loop
-//    var gameLoop = function() {
-//        ticks += 1
-//        
-//        $log.info('Game is running');
-//                
-//        
-//        var current_time = new Date();
-//                  
-//        map.drawTileBackground();
-//        //map.drawBitmapBackground();
-//        map.drawRowsCols();
-//        
-//        if (ticks % 1 == 0) {
-//            map.followPath();
-//        }
-//        
-//        map.lerpMove();
-//        //map.drawEdges();
-//        
-//        // Update sprite's location if it's currently moving
-//        
-//        
-//        
-//        
-//        
-////        // 1. Auto move sprite if path isn't empty
-////        map.autoMove(sprite);
-////        
-////        // 2. Lerp sprite if sprite is currently moving
-////        map.lerpSprite(sprite);
-////        
-////        // 3. Draw sprite
-//          map.drawSprite(); 
-//        //console.log(this);  
-//        that.updateGameboy();
-//        
-//    }
-//    
-//    // Initiate game loop
-//    //$interval(gameLoop, 1000/FPS);
-//    
-//    
-//    
-//    
-//    this.drawPath = function(path) {
-//        map.path = path;
-//        map.path.index = 0;
-//        
-//        //map.drawPath(sprite, path);
-//    }
-//    
-
-    
-    
+    $interval(gameLoop, 1000/game.FPS);   
     
     
 });

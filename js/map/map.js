@@ -42,7 +42,7 @@ Map.prototype.addMapData = function() {
         
         ladder.tile[0] = tileA;
         ladder.tile[1] = tileB;
-    }
+    };
     
     // Extract gap tile data
     this.gaps = map_data.gaps();
@@ -351,54 +351,22 @@ Map.prototype.getTileOtherEndLadder = function(endA) {
 
 Map.prototype.createMapLayers = function(graph) {
     
-    // Compute dimentions of entire canvas
-    var mapWrapperWidth = $('.caveWrapperBackground').width();
-    
-   
-    // Define dimentions of game
-    this.width = mapWrapperWidth;
-    this.cols = 44;
-    
-    // Compute tile size (based on canvas size, or fixed)
-    this.tile_size = Math.floor(this.width / this.cols);
-    if (this.tile_size % 2 !== 0) {
-        this.tile_size--;
-    }
-    
-    this.tile_size = 16;
+
     
     for (let f in this.floors) {
+        // Bitmap Layers
+        this.floors[f].createBackgroundandForeground(); 
+        this.floors[f].createFrame();
+        this.floors[f].createWaterLayer();
         
-        this.floors[f].createFrame(this.tile_size);
-        this.floors[f].createBitmapRockLayer();
-        this.floors[f].createBitmapWaterLayer();
-        this.floors[f].createBitmapFloorLayer();
-        this.floors[f].createBitmapOverlayLayer();
-        
-        
-        this.floors[f].createGraphicRockLayer();
-        this.floors[f].createGraphicFloorLayer();
-        
-        this.floors[f].createRowsCols();
-        //this.floors[f].createKeyTiles();
-        //this.floors[f].createEdges();
+        // Graphic Layers
+        this.floors[f].createFloorLayer();
         
         
-        //this.floors[f].createPathLayer();
-        
-        
-//        
-//        this.floors[f].drawBitmapRockLayer();
-//        this.floors[f].drawBitmapFloorLayer();
-//        //        this.floors[f].drawGraphicRockLayer();
-//        //        this.floors[f].drawGraphicFloorLayer();
-//        this.floors[f].drawGraphicRowsCols();
-//        this.floors[f].drawGraphicKeyTiles();
-//        //        this.floors[f].drawGraphicEdges();
-//        
+
     } 
     
-    this.createMapTransitionLayer();
+//    this.createMapTransitionLayer();
     
 };
 
@@ -686,4 +654,10 @@ Map.prototype.addRemoveGaps = function(add=true) {
       
   }
       
+};
+
+Map.prototype.getFloors = function() {
+    
+  return this.floors;  
+    
 };
