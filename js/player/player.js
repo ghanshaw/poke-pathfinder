@@ -492,31 +492,37 @@ Player.prototype.updateSpriteOptions = function() {
 };
 
 
-Player.prototype.drawPlayer = function() {
+Player.prototype.drawPlayer = function(floor, dof) {
  
     var game = this.game;
  
-    var floor = this.tile.floor;
-    var frame = floor.frame;
     
-    var row = this.current.row;
-    var col = this.current.col;     
-    
-    var tile_size = this.game.getTileSize();
-    
+
     if (this.MOVE_STATE === 'USER MOVE') {
         return;
     }
-    
+
     if (this.game.getLayerState() === 'GRAPHIC') {
         game.drawShape('circle', 0, this.current);
-//        
-//        let x = col * tile_size + frame.offset_x - (.5 * tile_size);
-//        let y = row * tile_size + frame.offset_y - (.5 * tile_size);
-//        frame.ctx.drawImage(this.shape.canvas, x, y, tile_size, tile_size);
+        return
     }
-    
+
     else if (this.game.getLayerState() === 'BITMAP') {
+
+        var tile = this.tile;
+        var frame = floor.frame;
+
+        if (tile.floor.id !== floor.id || tile.dof !== dof) {
+            return;
+        }
+        
+        
+        var row = this.current.row;
+        var col = this.current.col;     
+        
+        var tile_size = this.game.getTileSize();
+ 
+    
         
         //let sprite_size = this.spritesheet.sprite_size;
         

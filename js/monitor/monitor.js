@@ -8,14 +8,12 @@ var Monitor = function(game) {
         cols: 2
     };
     
-    this.floors = {
-        'F1': {
-            border: '1px'
-        },
-        'F2' : {
-            border: '1px'
-        }
-    };
+    this.floorDimensions = {
+        'F1': {},
+        'F2': {},
+        'F3': {}
+    }
+    
     
     // Define the order in which floors appear
     this.relativeOrder = [ 'F2', 'F1', 'BF1' ];
@@ -92,6 +90,11 @@ Monitor.prototype.drawMonitor = function() {
     
     // Draw floors
     this.drawFloors();
+
+    // Draw grid
+    this.drawGrid();
+
+    //Draw transition layer
 };
 
 Monitor.prototype.drawFloors = function() {
@@ -113,6 +116,7 @@ Monitor.prototype.drawFloors = function() {
     //this.bitmap['overlaylayer'] = null;
     
     var floors = game.getFloors();
+    var floorOffsets = this.floorOffsets;
     var prev_height = 0;
     
     for (let f of this.relativeOrder) {
@@ -128,6 +132,15 @@ Monitor.prototype.drawFloors = function() {
         var offset_left = (max_floor_cols - floor.cols)/2 + this.floorborder.cols;
         offset_left *= this.tile_size;
         
+
+        // Update dimensions of floor on monitor
+        this.floorDimensions[f] = {
+            top: offset_top,
+            left: offset_left,
+            height: height,
+            width: width
+        }
+
         this.ctx.drawImage(floor.frame.canvas, offset_left, offset_top, width, height);
         prev_height += height + (this.floorborder.rows * this.tile_size);
         
@@ -188,7 +201,104 @@ Monitor.prototype.createMonitorBackground = function() {
 };
 
 
+Monitor.prototype.createGrid = function() {
 
+    // Create reusable context
+    var canvas = document.createElement('canvas');
+    var ctx = canvas.getContext('2d');
+    
+    canvas.width = this.canvas.width;
+    canvas.height = this.canvas.height;
+    ctx.strokeStyle = 'purple';
+
+    
+    for (let r = 0; r <= this.rows; r++) {
+     
+        ctx.beginPath();
+        let y = (r * this.tile_size);
+        ctx.moveTo(0, y);
+        ctx.lineTo(canvas.width, y);
+        ctx.stroke();
+        
+    };
+    
+    for (let c = 0; c <= this.cols; c++) {
+     
+        ctx.beginPath();
+        let x = (c * this.tile_size);
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, canvas.height);
+        ctx.stroke();
+        
+    };
+
+    this.fillStyle = 'blue';
+    this.ctx.fillRect(0, 0, 700, 1000);
+
+    canvas.id = 'gridCanvas';
+    ctx.id = 'gridCanvas';
+    
+    this.grid = {
+        canvas: canvas,
+        ctx: ctx
+    };
+
+}
+
+
+Monitor.prototype.drawGrid = function() {
+
+    var activeLayers = this.game.getMapLayers();
+
+    if (activeLayers.GRID) {
+        this.ctx.drawImage(this.grid.canvas, 0, 0);
+    }
+
+}
+
+
+
+Monitor.prototype.getTileFromPointer  = function(pointer) {
+    
+    if (!pointer || pointer.target.id !== 'monitor') {
+        return;
+    }
+    
+    var top = pointer.y;
+    var left = pointer.x;
+    var floorDimensions =  this.floorDimensions;
+
+    for (var f in floorDimensions) {
+        let dimensions = floorDimensions[f];
+
+
+        
+        if (top > dimensions.top && 
+            top < (dimensions.top + dimensions.height) &&
+            left > dimensions.left &&
+            left < (dimensions.left + dimensions.width)) {
+
+            top -= dimensions.top;
+            left -= dimensions.left;
+            break;
+        }
+
+        return null;
+
+    }
+
+    var tile_size = this.tile_size;
+
+    var col = Math.floor(left / tile_size);
+    var row = Math.floor(top / tile_size);
+    
+    // Get tile
+    var tileId = [f, row, col].toString();
+    var tile = this.game.getTileFromId(tileId);
+    
+    return tile;
+    
+};
 
 
 

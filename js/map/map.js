@@ -6,6 +6,15 @@ var Map = function(map_data) {
     // Define initial state
     this.LAYER_STATE = 'BITMAP';
     this.ROWSCOLS_STATE = 'OFF';
+
+    this.relativeOrder = [ 'F2', 'F1', 'BF1' ];
+
+    this.layers = {
+        GRID: false,
+        PATH: false,
+        FRONTIER: false,
+        TRANSITION: false,
+    }
     
 };
 
@@ -287,7 +296,77 @@ Map.prototype.getTileFromPointer  = function(pointer) {
 };
 
 
-Map.prototype.getTileEuclidDistance = function(tile1, tile2) {
+
+
+
+Map.prototype.getMapEuclidDistance = function(tile1, tile2) {
+
+    if (typeof tile1 === 'string') {
+        tile1 = this.getTileFromId(tile1);
+    }
+
+    if (typeof tile2 === 'string') {
+        tile2 = this.getTileFromId(tile2);
+    }
+
+    var map1 = this.getMapRowCol(tile1);
+    var map2 = this.getMapRowCol(tile2);
+
+    var deltaX = map1.col - map2.col;
+        deltaX = Math.pow(deltaX, 2);
+
+    var deltaY = map1.row - map2.row;
+        deltaY = Math.pow(deltaY, 2);
+
+    var distance = deltaX + deltaY;
+        distance = Math.pow(distance, 0.5);
+
+    return distance;
+
+};
+
+
+Map.prototype.getMapRowCol = function(tile) {
+
+    
+    var relativeOrder = this.relativeOrder;
+    var tileFloor = tile.floor;
+
+    var map = {
+        row: tile.row,
+        col: tile.col
+    }
+
+    for (let f of relativeOrder) {
+        let floor = this.floors[f];
+        if (floor.id === tileFloor.id) { break; }
+        map.row += floor.rows
+    }
+
+    return map;
+
+}
+
+Map.prototype.getMapMaxDistance = function() {
+
+    var relativeOrder = this.relativeOrder
+
+    var topFloor = relativeOrder[0];
+        topFloor = this.floors[topFloor];
+
+    var bottomFloor = relativeOrder[relativeOrder.length - 1];
+        bottomFloor = this.floors[bottomFloor];
+
+    // Get uppper right tile and lower left tile of cave
+    var tile1 = topFloor.getTile(0, topFloor.cols - 1);
+    var tile2 = bottomFloor.getTile(bottomFloor.rows - 1, 0);
+
+    return this.getMapEuclidDistance(tile1, tile2);
+}
+
+
+
+Map.prototype.getTileEuclidDistanceOld = function(tile1, tile2) {
     
 //    var tile1 = this.getTileFromId(tile1_id);
 //    var tile2 = this.getTileFromId(tile2_id);

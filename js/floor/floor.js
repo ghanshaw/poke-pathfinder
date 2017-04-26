@@ -293,7 +293,7 @@ Floor.prototype.createWaterLayer = function() {
 // Draw animated water layer
 Floor.prototype.drawWaterLayer = function() {
     var  i = Math.floor(((this.game.ticks)/16) % 8);    
-    this.frame.ctx.drawImage(this.waterlayer[i].canvas, 0, 0);
+    this.frame.ctx.drawImage(this.waterlayer[i].canvas, 0, 0, this.frame.canvas.width, this.frame.canvas.height);
 };
 
 // Draw background
@@ -490,7 +490,22 @@ Floor.prototype.createBitmapRockLayer = function() {
 
 
 
+Floor.prototype.drawImageToFrame = function(img, tile, span=1) {
+    
+    var row = tile.row;
+    var col = tile.col;  
+    var floor = tile.floor;
+    var frame = floor.frame;
+    var tile_size = floor.tile_size;
 
+    var offset = (1 - span)/2
+
+    var x = (col + offset) * tile_size;
+    var y = (row + offset) * tile_size;
+
+    floor.frame.ctx.drawImage(img, x, y, tile_size * span, tile_size * span);
+
+}
 
 
 
@@ -587,39 +602,9 @@ Floor.prototype.createGraphicFloorLayer = function() {
 // Create lines of rows/cols
 Floor.prototype.createRowsCols = function() {
     
-    // Create reusable context
-    var canvas = document.createElement('canvas');
-    var ctx = canvas.getContext('2d');
     
-    canvas.width = this.frame.canvas.width;
-    canvas.height = this.frame.canvas.height;
-    ctx.strokeStyle = 'purple';
     
-    for (let r = 0; r <= this.frame.rows; r++) {
-     
-        ctx.beginPath();
-        let y = (r * this.tile_size);
-        ctx.moveTo(0, y);
-        ctx.lineTo(canvas.width, y);
-        ctx.stroke();
-        
-    };
-    
-    for (let c = 0; c <= this.frame.cols; c++) {
-     
-        ctx.beginPath();
-        let x = (c * this.tile_size);
-        ctx.moveTo(x, 0);
-        ctx.lineTo(x, canvas.height);
-        ctx.stroke();
-        
-    };
-    
-    this.rowscols = {
-        canvas: canvas,
-        ctx: ctx
-    };
-    
+
 };
 
 //Floor.prototype.createGraphicPathLayer = function() {

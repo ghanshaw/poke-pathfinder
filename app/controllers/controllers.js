@@ -69,30 +69,7 @@ pokemonApp.controller('caveController', function($scope, $log, pokeMap, pokeGame
 
     };
     
-    $scope.movePointer = function(event) {
-        
-        $log.log(event);
-        var pageX = event.pageX;
-        var pageY = event.pageY;
-        game.setPointer(pageX, pageY, event.target);
-        
-        console.log('hovering');
-        
-//        if (game.getPathfinderState() === 'SELECT SOURCE' ||
-//            game.getPathfinderState() === 'SELECT TARGET')
-//        {
-//        
-//            $log.log(event);
-//            var pageX = event.pageX;
-//            var pageY = event.pageY;
-//            game.setPointer(pageX, pageY, event.target);
-//           
-//
-//        }
-        
-    };
     
-    $scope.clickPointer = function() { game.CLICKED = true; };    
     
 });
 
@@ -105,19 +82,23 @@ pokemonApp.controller('monitorController', function($scope, $log, pokeGame) {
     //game.initMonitor();
     game.monitor.initCanvas();
     game.monitor.createMonitorBackground();
+    game.monitor.createGrid();
     game.monitor.drawMonitor
-    
-//    //var scrollbarElement = angular.element(scrollbar);
-//    $scope.fixed = $(window).on('scroll', distanceFromTop);
-//
-//    var distanceFromTop = function() {        
-//        
-//        var distance = $(window).scrollTop();
-//        console.log(distance);
-//        return distance >= $('.navbar').height();
-//        
-//    }
+
+
+    $scope.movePointer = function(event) {
         
+        $log.log(event);
+        var offsetX = event.offsetX;
+        var offsetY = event.offsetY;
+        game.setPointer(offsetX, offsetY, event.target);
+        
+        console.log('hovering');        
+    };
+    
+    $scope.clickPointer = function() { 
+        console.log('clicked');
+        game.CLICKED = true; };     
     
 });
 
@@ -130,6 +111,7 @@ pokemonApp.controller('gameboyController', function($scope, $log, pokeGame) {
     // Controller (re-)initializes the canvas  
     gameboy.initCanvas();
     gameboy.createGameboyBackground();
+    gameboy.createGrid();
 
 });
 

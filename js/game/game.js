@@ -165,6 +165,8 @@ Game.prototype.updateMap = function() {
   
     var floors = this.map.floors;
     var map = this.map;
+    var pathfinder = this.pathfinder;
+    var player = this.player;
     var pTile = this.getPlayerTile();
     
     //map.LAYER_STATE = 'GRAPHIC';
@@ -172,21 +174,44 @@ Game.prototype.updateMap = function() {
     if (map.LAYER_STATE === 'BITMAP') {
   
         for (let f in floors) {
-            var floor = this.map.floors[f];
+            let floor = floors[f];
+            let frame = floor. frame;
+            let pathfinderFloor = this.pathfinder.floors[f];
+
+
+
+            // ---- Draw Background ---- //
+
+            // Draw floor layers
+            console.time('drawWater');
             floor.drawWaterLayer();
-            this.map.floors[f].drawBackground();
+            console.timeEnd('drawWater');
+            floor.drawBackground();
+
+            // Draw path markers (if on foreground);
+            pathfinder.drawMarkers(floor, 'BACKGROUND');
+            pathfinder.drawFrontier(floor, 'BACKGROUND');
+            pathfinder.drawPath(floor, 'BACKGROUND');
+            //pathfinder.drawObstacles(floor, 'BACKGROUND');
+
+            // Draw player
+            player.drawPlayer(floor, 'BACKGROUND');
+
+
+            // ---- Draw Foreground ---- //
+
+            // Draw floor layer
+            floor.drawForeground();
+
+            // Draw path markers (if on foreground);
+            pathfinder.drawMarkers(floor, 'FOREGROUND');
+            pathfinder.drawFrontier(floor, 'FOREGROUND');
+            pathfinder.drawPath(floor, 'FOREGROUND');
+            //pathfinder.drawObstacles(floor, 'FOREGROUND');
+
+            // Draw player
+            player.drawPlayer(floor, 'FOREGROUND');
             
-            //this.drawPlayer();
-
-            if (pTile.floor.id === floor.id && pTile.dof === 'BACKGROUND') {
-                this.drawPlayer();
-            };
-
-            this.map.floors[f].drawForeground();
-
-            if (pTile.floor.id === floor.id && pTile.dof === 'FOREGROUND') {
-                this.drawPlayer();
-            };
         }
     } else  {
         
@@ -203,21 +228,21 @@ Game.prototype.updateMap = function() {
     // Draw rows/cols
     
     // draw on monitor
-    if (map.ROWSCOLS_STATE === 'ON') {
-        map.drawRowsCols();   
-    };
+    // if (map.ROWSCOLS_STATE === 'ON') {
+    //     map.drawRowsCols();   
+    // };
     
     // Draw Special Tiles
     // .ladder, .occuppied
     //this.drawSprite();
     
     if (this.pathfinder.LAYER_STATE === 'VISUALIZER') {
-        map.drawVisualizerLayer();
+        //map.drawVisualizerLayer();
     }
     
     
     else if (this.pathfinder.LAYER_STATE === 'ROUTER') {
-        map.drawPathLayer();
+        //map.drawPathLayer();
     }
     
 };
@@ -647,8 +672,8 @@ Game.prototype.getLayerState = function() {
     return this.map.LAYER_STATE;  
 };
 
-Game.prototype.toggleRowsCols = function(state) {
-    this.map.ROWSCOLS_STATE = state;
+Game.prototype.toggleGrid = function(state) {
+    this.map.layers.GRID = state;
 };
 
 Game.prototype.toggleMapLayers = function(layer) {
@@ -674,10 +699,13 @@ Game.prototype.getTileTopLeft = function(tile) {
 };
 
 
-Game.prototype.getTileEuclidDistance = function(tile1, tile2) {
-    return this.map.getTileEuclidDistance(tile1, tile2);
+Game.prototype.getMapEuclidDistance = function(tile1, tile2) {
+    return this.map.getMapEuclidDistance(tile1, tile2);
 };
  
+Game.prototype.getMapMaxDistance = function() {
+    return this.map.getMapMaxDistance();
+}
 
 Game.prototype.setGameState = function(state) {
     this.GAME_STATE = state;    
@@ -688,7 +716,7 @@ Game.prototype.getGameState = function() {
 };
 
 Game.prototype.getTileFromPointer = function(pointer) {
-    return this.map.getTileFromPointer(pointer);  
+    return this.monitor.getTileFromPointer(pointer);  
 };
 
 
@@ -697,7 +725,9 @@ Game.prototype.getTileFromId = function(tileId) {
 };
 
 
-
+Game.prototype.getMapLayers = function() {
+    return this.map.layers;
+}
 
 
 Game.prototype.drawHoverTile = function() {

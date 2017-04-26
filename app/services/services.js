@@ -58,17 +58,22 @@ pokemonApp.service('pokeGame', function($log, $document, $location, $interval) {
     $(document).keyup(this.cancelDirection);
 
 
+    // $window.onload(function() {
 
-    // Initialize a new Game object
-    var game = new Game();
-    game.initGame();
+        
 
-    // Attach game object to pokeGame service
-    this.game = game;
-    
-    console.log(game.map);
-    
+    // })
    
+    
+    // Initialize a new Game object
+        var game = new Game();
+        game.initGame();
+
+        // Attach game object to pokeGame service
+        this.game = game;
+        
+        console.log(game.map);
+        
     
     // Run game loop
     var gameLoop = function() {
@@ -80,15 +85,23 @@ pokemonApp.service('pokeGame', function($log, $document, $location, $interval) {
         //$log.log($location.path());
        
         // ----- Update game ----- // 
-        
+          
         game.updateGame();
+
+        let post_update_game = performance.now();
+
+        console.time('updateMap');  
         game.updateMap();
+        console.timeEnd('updateMap');
+        let post_update_map = performance.now();
 
         // ----- Render game ----- //
          
          
          var currentPath = $location.path();
-         game.renderGame(currentPath);
+        game.renderGame(currentPath);
+
+        let post_render_game = performance.now();
          
          
 //        
@@ -121,15 +134,25 @@ pokemonApp.service('pokeGame', function($log, $document, $location, $interval) {
         game.ticks++;
         //console.log(game.ticks);
         let end_time = performance.now();
+
+        var time = {
+            post_update_game: post_update_game - start_time,
+            post_update_map: post_update_map - post_update_game,
+            post_render_game: post_render_game - post_update_game,
+            total_time: end_time - start_time
+        }
+
+
         let total_time = end_time - start_time;
         if (total_time > 6) {
             //$log.info('Loop Time is over 6ms ' + total_time);
         }
-        //$log.log('Loop Time: ' +  (total_time));
+        $log.log(time);
+        $log.log('Loop Time: ' +  time.total_time);
         
     };
     
-    $interval(gameLoop, 1000/game.FPS);   
+     $interval(gameLoop, 1000/game.FPS);  
     
     
 });

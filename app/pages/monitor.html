@@ -5,9 +5,14 @@
         </div>
         <div class="col-sm-6 col-md-9 extra-padding text-center"  set-class-when-at-top="col-md-offset-3">
             <div class="monitor-frame">
-                <div class="monitor-screen"><canvas id="monitor"></canvas></div>
+                <div class="monitor-screen"><canvas id="monitor" ng-mousemove="movePointer($event)" ng-mousedown="clickPointer()"></canvas></div>
             </div>
         </div>
             
     </div>
+    <canvas id="test1"></canvas>
+    <canvas id="test2"></canvas>
+    <canvas id="test3"></canvas>
+    <canvas id="test4"></canvas>
 </div>
+

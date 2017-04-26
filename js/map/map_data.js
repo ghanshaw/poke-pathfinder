@@ -20,7 +20,8 @@ var map_data = (function() {
             id: 2,
             name: 'Floor 1 Spot',
             floor: 'F1',
-            tile: ['F1', 9, 6]
+            //tile: ['F1', 9, 6]
+            tile: ['F1', 2, 33]
             
         },
         { 

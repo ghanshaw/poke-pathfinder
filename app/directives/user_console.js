@@ -96,13 +96,13 @@ pokemonApp.directive('userConsole', function(pokeGame) {
             };
             
             if (sourceTarget === 'SOURCE') {
-                css.active = game.getPathfinderState() === 'SELECT SOURCE';
+                css.active = game.getPathfinderState() === 'MARK SOURCE';
             }
             else if (sourceTarget === 'TARGET') {
-                css.active = game.getPathfinderState() === 'SELECT TARGET';
+                css.active = game.getPathfinderState() === 'MARK TARGET';
             }
             
-            if (game.getPathfinderState() === 'VISUALIZER' ||
+            if (game.getPathfinderState() === 'FRONTIER' ||
                     game.getPathfinderState() === 'ROUTER') {
                 css.disabled = true;
             }
@@ -115,7 +115,7 @@ pokemonApp.directive('userConsole', function(pokeGame) {
         };
         
         
-        $scope.cssVisualizerRouter = function() {
+        $scope.cssFrontierRouter = function() {
             
             var css = {
                 disabled: false
@@ -156,7 +156,7 @@ pokemonApp.directive('userConsole', function(pokeGame) {
         
         $scope.clickSourceTarget = function(sourceTarget) {
             
-            state = 'SELECT ' + sourceTarget;
+            state = 'MARK ' + sourceTarget;
             game.startPathfinder(state);
             
         }; 
@@ -213,35 +213,35 @@ pokemonApp.directive('userConsole', function(pokeGame) {
         
         
         // Toggle rows/cols
-        $scope.rowscols = {
+        $scope.grid = {
             click: false,
             hover: false
         };
         
-        $scope.enterRowsCols = function() { $scope.rowscols.hover = true; };
+        $scope.enterGrid = function() { $scope.grid.hover = true; };
         
-        $scope.leaveRowsCols = function() { $scope.rowscols.hover = false; };
+        $scope.leaveGrid = function() { $scope.grid.hover = false; };
         
-        $scope.clickRowsCols = function() { $scope.rowscols.click = !$scope.rowscols.click; };
+        $scope.clickGrid = function() { $scope.grid.click = !$scope.grid.click; };
         
         
         // Update active view as necessary
-        $scope.$watch('rowscols', function(newValue, oldValue) {
+        $scope.$watch('grid', function(newValue, oldValue) {
             
             // Turn rows/cols on/off
-            var rowscols = $scope.rowscols;
+            var grid = $scope.grid;
             
-            if (rowscols.hover) {
-                game.toggleRowsCols('ON');
+            if (grid.hover) {
+                game.toggleGrid(true);
                 //map.ROWSCOLS_STATE = 'ON';
                 //map.drawGraphicRowsCols();   
             }
-            else if (rowscols.click) {
-                game.toggleRowsCols('ON');
+            else if (grid.click) {
+                game.toggleGrid(true);
                 //map.ROWSCOLS_STATE = 'ON';
                 //map.drawGraphicRowsCols();
             } else {
-                game.toggleRowsCols('OFF');
+                game.toggleGrid(false);
                 //map.ROWSCOLS_STATE = 'OFF';       
             }
             
