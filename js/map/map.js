@@ -4,8 +4,7 @@ var Map = function(map_data) {
     this.floors = {};
     
     // Define initial state
-    this.LAYER_STATE = 'BITMAP';
-    this.ROWSCOLS_STATE = 'OFF';
+    this.STATE = 'BITMAP';
 
     this.relativeOrder = [ 'F2', 'F1', 'BF1' ];
 
@@ -13,8 +12,8 @@ var Map = function(map_data) {
         GRID: false,
         PATH: false,
         FRONTIER: false,
-        TRANSITION: false,
-    }
+        TRANSITION: false
+    };
     
 };
 
@@ -362,7 +361,7 @@ Map.prototype.getMapMaxDistance = function() {
     var tile2 = bottomFloor.getTile(bottomFloor.rows - 1, 0);
 
     return this.getMapEuclidDistance(tile1, tile2);
-}
+};
 
 
 
@@ -445,7 +444,7 @@ Map.prototype.createMapLayers = function(graph) {
 
     } 
     
-//    this.createMapTransitionLayer();
+    this.createMapTransitionLayer();
     
 };
 
@@ -738,5 +737,31 @@ Map.prototype.addRemoveGaps = function(add=true) {
 Map.prototype.getFloors = function() {
     
   return this.floors;  
+    
+};
+
+Map.prototype.updateMapLayers = function() {
+    
+    var game = this.game;
+    
+    this.layers.GRID;
+    
+//    if (game.getPathfinderLayer() === 'PATH') {
+//        this.layers.PATHFINDER = 'PATH';
+//        this.layers.FRONTIER = false;
+//    }
+//    else if (game.getPathfinderLayer() === 'FRONTIER') {
+//        this.layers.FRONTIER = true;
+//        this.layers.PATH = false;
+//    }
+    
+    if (game.getPlayerMoveState() === 'LADDER') {
+        this.layers.TRANSITION = true;
+    }
+    else {
+        this.layers.TRANSITION = false;
+    }
+    
+    return;
     
 };

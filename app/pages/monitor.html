@@ -1,11 +1,17 @@
 <div ng-controller='monitorController'>
     <div class="row is-flex">
         <div class="col-sm-6 col-md-3 no-padding" set-class-when-at-top="fix-to-top" >
-            <div user-console></div>
+            <div user-console-panel></div>
         </div>
         <div class="col-sm-6 col-md-9 extra-padding text-center"  set-class-when-at-top="col-md-offset-3">
             <div class="monitor-frame">
-                <div class="monitor-screen"><canvas id="monitor" ng-mousemove="movePointer($event)" ng-mousedown="clickPointer()"></canvas></div>
+                <div class="monitor-screen">
+                    <canvas 
+                        id="monitor" 
+                        ng-mousemove="movePointer($event)" 
+                        ng-mousedown="clickPointer(); startPlayerDrag($event);" 
+                        ng-mouseup="endPlayerDrag($event);"
+                        ng-mouseleave="endPlayerDrag($event);"></canvas></div>
             </div>
         </div>
             

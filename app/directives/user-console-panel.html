@@ -1,0 +1,314 @@
+<div class="consoleWrapper">
+    <div class="row">
+        <div class="col-sm-12"> 
+            
+            <button class="button-flat hide" ng-click="debugClick()">Debug Button</button>
+            <button class="button-flat hide" ng-click="debugClick2()">Debug Button 2</button>
+                
+            <section>
+                <h4 class="section-heading">Step 1: Choose Algorithm</h4>
+                <div class="row">
+                    <div class="col-xs-12">
+                        
+                        <select 
+                            class="button-flat" 
+                            ng-options="option.label 
+                                disable when disableAstar(option.id) 
+                                for option 
+                                in algorithms.options 
+                                track by option.id" 
+                        ng-model="algorithms.selected"></select>
+                                
+                    </div>  
+                       
+                    <section 
+                        class="edge-weight-sliders ng-hide"
+                        ng-show="showEdgeWeightSliders()">
+                    <div class="col-xs-12">
+                        <h5 class="text-center weight-header">Change Edge Weights</h5>
+                        
+                        <h5 class="text-center">Background Tiles</h5>
+                        <div class="row row-slider">
+                            <div class="col-xs-2 text-center">
+                                {{ edgeWeight.background }}
+                            </div>
+                            <div class="col-xs-10">
+                                <input type="range" 
+                                       name="range" 
+                                       ng-model="edgeWeight.background" 
+                                       min="{{ edgeWeight.min }}"  
+                                       max="{{ edgeWeight.max }}">
+                            </div>
+                        </div>
+                    </div>
+                        
+                    <div class="col-xs-12">
+                        <h5 class="text-center">Foreground Tiles</h5>
+                        <div class="row row-slider">
+                            <div class="col-xs-2 text-center">
+                                {{ edgeWeight.foreground }}
+                            </div>
+                            <div class="col-xs-10">
+                                <input type="range" 
+                                       name="range" 
+                                       ng-model="edgeWeight.foreground" 
+                                       min="{{ edgeWeight.min }}"  
+                                       max="{{ edgeWeight.max }}">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xs-12">
+                        <h5 class="text-center">Water</h5>
+                        <div class="row row-slider">
+                            <div class="col-xs-2 text-center">
+                                {{ edgeWeight.water }}
+                            </div>
+                            <div class="col-xs-10">
+                                <input type="range" 
+                                       name="range" 
+                                       ng-model="edgeWeight.water" 
+                                       min="{{ edgeWeight.min }}"  
+                                       max="{{ edgeWeight.max }}">
+                            </div>
+                        </div>
+                    </div>
+                    </section>
+                </div>
+            </section>
+            <hr>
+                
+            <section>
+                <h4 class="section-heading">Step 2: Choose Start Location</h4>
+                <div class="row">
+                    <div class="col-xs-12">         
+                        
+                        <select 
+                            class="button-flat" 
+                            ng-model="locations.source" 
+                            ng-options="option.label 
+                                disable when disableAllTiles(option.id) 
+                                for option 
+                                in locations.options 
+                                track by option.id"></select>
+                                
+                    </div>
+                        
+                    <div class="col-xs-12"><p class="or">-or-</p></div>
+                        
+                    <div class="col-xs-12">                   
+                        <button 
+                            class="button-flat"
+                            ng-click="clickSourceTarget('SOURCE')"
+                            ng-class="cssSourceTarget('SOURCE')">Click Source Tile</button>
+                    </div>
+                </div>
+            </section>
+                
+            <hr> 
+                
+            <section>
+                <h4>Step 3: Choose End Location</h4>
+                <div class="row">
+                    <div class="col-xs-12">         
+                        <div class="dropdow">
+                            <select 
+                                class="button-flat" 
+                                ng-model="locations.target" 
+                                ng-options="option.label 
+                                    for option 
+                                    in locations.options | filter : hideOptions
+                                    track by option.id " ></select>
+                        </div>
+                    </div>
+                        
+                    <div class="col-xs-12"><p class="or">-or-</p></div>
+                        
+                    <div class="col-xs-12">                   
+                        <button
+                            class="button-flat"
+                            ng-click="clickSourceTarget('TARGET')"
+                            ng-class="cssSourceTarget('TARGET')">Click Target Tile</button>
+                    </div>
+                </div> 
+            </section>
+                
+            <hr>  
+                
+            <section>
+                <h4 class="section-heading">Step 4: Choose Task</h4>
+                <div class="row">
+                    <div class="col-xs-12">         
+                        <button 
+                            class="button-flat full-width" 
+                            ng-click="startPathfinder('PATH')"
+                        ng-class="cssPathFrontier()">Follow Path</button>
+                                
+                    </div>
+                        
+                    <div class="col-xs-12"><p class="or">-or-</p></div>
+                        
+                    <div class="col-xs-12">                   
+                        <button 
+                            class="button-flat"
+                            ng-click="startPathfinder('FRONTIER')"
+                            ng-class="cssPathFrontier()">Generate Frontier</button>
+                    </div>
+                    
+                    
+                    
+                    <div class="col-xs-12">
+                        <div class="vcr">
+                            <div class="row">
+                                <div class="col-xs-4">
+                                    <button class="button-flat normal-border-width"
+                                            ng-class="cssVCR('PLAY')"
+                                            ng-mousedown="pressVCR($event, 'PLAY')">
+                                        <i class="fa fa-play" aria-hidden="true"></i>
+                                    </button>
+                                </div>
+                                <div class="col-xs-4">
+                                    <button class="button-flat"
+                                            ng-class="cssVCR('PAUSE')"
+                                            ng-mousedown="pressVCR($event, 'PAUSE')">
+                                        <i class="fa fa-pause" aria-hidden="true"></i>
+                                    </button>
+                                </div>
+                                <div class="col-xs-4">
+                                    <button class="button-flat"
+                                            ng-class="cssVCR('STEP RIGHT')"
+                                            ng-mousedown="pressVCR($event, 'STEP')">
+                                        <i class="fa fa-chevron-right" aria-hidden="true"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-xs-12">
+                        <button 
+                            class="button-flat full-width"
+                            ng-click="clearPathfinder()">Cancel</button>
+                    </div>
+                    
+                </div>
+            </section>
+                
+            <hr>
+                
+            <section>
+                <h4 class="section-heading">Step 6: Results</h4>
+                <div class="row">
+                    <div class="col-xs-6">
+                        <p>{{ message.content }}</p>
+                        <p ng-repeat="line in message.log track by $index">{{ line }}</p>
+                    </div>
+                </div>
+                    
+                    
+            </section>
+                
+            <section>
+                <h4 class="section-heading">Step 5: Choose Layers</h4>
+                <div class="row">
+                    <div class="col-xs-6">
+                        <button class="button-flat"  
+                                ng-mouseenter="enterMapStateButton('BITMAP')" 
+                                ng-mouseleave="leaveMapStateButton('BITMAP')"
+                                ng-click="clickMapStateButton('BITMAP')"
+                        ng-class="{ active: mapStateButton.click === 'BITMAP' }" >Bitmap</button>
+                                    
+                    </div>
+                    <div class="col-xs-6">    
+                        <button class="button-flat" 
+                                ng-mouseenter="enterMapStateButton('GRAPHIC')" 
+                                ng-mouseleave="leaveMapStateButton('GRAPHIC')"
+                                ng-click="clickMapStateButton('GRAPHIC')"
+                                ng-class="{ active: mapStateButton.click === 'GRAPHIC' }" >Graphic</button>
+                    </div>  
+                        
+                    <div class="col-xs-12">   
+                        <button class="button-flat"
+                                ng-click="clickGridButton()"
+                                ng-class="{ active: grid.click }" 
+                                ng-mouseenter="enterGridButton()" 
+                                ng-mouseleave="leaveGridButton()">Grid Lines</button>
+                    </div>        
+                        
+                    <div class="col-xs-6">              
+                        <button class="button-flat" 
+                                ng-mouseenter="enterPathButton('PATH')"
+                                ng-click="clickPathButton('PATH')" 
+                                ng-mouseleave="leavePathButton('PATH')" 
+                                ng-class="cssPathButton('PATH')">Path</button>
+                    </div>
+                        
+                    <div class="col-xs-6">   
+                        <button class="button-flat" 
+                                ng-mouseenter="enterFrontierButton('FRONTIER')"
+                                ng-click="clickFrontierButton('FRONTIER')" 
+                                ng-mouseleave="leaveFrontierButton('FRONTIER')" 
+                                ng-class="cssFrontierButton('FRONTIER')">Frontier</button>
+                    </div>
+                </div>      
+            </section>
+                
+            <hr>
+                
+            <section>
+                <h4 class="section-heading">Step 6: Choose Speed</h4>
+                <div class="row">
+                    <div class="col-xs-3"> 
+                        <button class="button-flat"
+                                ng-click="clickSpeed(1)"
+                                ng-mouseenter="enterSpeed(1)" 
+                                ng-mouseleave="leaveSpeed(1)"
+                                ng-class="{ active: speed.click === 1 }" >1x</button>
+                    </div>
+                        
+                    <div class="col-xs-3"> 
+                        <button class="button-flat"
+                                ng-click="clickSpeed(2)"
+                                ng-mouseenter="enterSpeed(2)" 
+                                ng-mouseleave="leaveSpeed(2)"
+                                ng-class="{ active: speed.click === 2 }" >2x</button>
+                    </div>
+                        
+                    <div class="col-xs-3"> 
+                        <button class="button-flat"
+                                ng-click="clickSpeed(3)"
+                                ng-mouseenter="enterSpeed(3)" 
+                                ng-mouseleave="leaveSpeed(3)"
+                                ng-class="{ active: speed.click === 3 }" >3x</button>
+                    </div>
+                </div>
+            </section>
+                
+            <hr>
+                
+            <section>
+                <h4 class="section-heading">Step 7: Choose Gender</h4>
+                <div class="row">
+                    <div class="col-xs-4"> 
+                        <button class="button-flat"
+                                ng-click="clickGender('BOY')"
+                                ng-mouseenter="enterGender('BOY')" 
+                                ng-mouseleave="leaveGender('BOY')"
+                                ng-class="{ active: GENDER.click === 'BOY' }" >Male</button>
+                    </div>
+                    <div class="col-xs-4"> 
+                        <button class="button-flat"
+                                ng-click="clickGender('GIRL')"
+                                ng-mouseenter="enterGender('GIRL')" 
+                                ng-mouseleave="leaveGender('GIRL')"
+                                ng-class="{ active: GENDER.click === 'GIRL' }" >Female</button>
+                    </div>
+                </div>
+            </section>
+                
+            <div class="div-padding"></div>
+            
+                
+        </div>
+    </div>
+        
+</div>

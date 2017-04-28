@@ -83,16 +83,27 @@ pokemonApp.controller('monitorController', function($scope, $log, pokeGame) {
     game.monitor.initCanvas();
     game.monitor.createMonitorBackground();
     game.monitor.createGrid();
-    game.monitor.drawMonitor
+    game.monitor.drawMonitor();
+    
+    $scope.startPlayerDrag = function($event) {
+ 
+        //alert('started dragging');
+        
+        game.startPlayerDrag($event);
+        
+    };
+    
+    $scope.endPlayerDrag = function($event) {
+        
+        //alert('finished dragging');
+        game.endPlayerDrag();
+        
+    };
 
 
     $scope.movePointer = function(event) {
         
-        $log.log(event);
-        var offsetX = event.offsetX;
-        var offsetY = event.offsetY;
-        game.setPointer(offsetX, offsetY, event.target);
-        
+        game.setMonitorPointer(event);    
         console.log('hovering');        
     };
     

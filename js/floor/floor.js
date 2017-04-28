@@ -292,15 +292,13 @@ Floor.prototype.createWaterLayer = function() {
 
 // Draw animated water layer
 Floor.prototype.drawWaterLayer = function() {
-    var  i = Math.floor(((this.game.ticks)/16) % 8);    
+    let i = Math.floor( (this.game.ticks/16) % 8 );    
     this.frame.ctx.drawImage(this.waterlayer[i].canvas, 0, 0, this.frame.canvas.width, this.frame.canvas.height);
 };
 
 // Draw background
 Floor.prototype.drawBackground = function() {
-    
     this.frame.ctx.drawImage(this.backgroundImg, 0, 0);
-    
 };
 
 // Draw foreground
@@ -492,20 +490,26 @@ Floor.prototype.createBitmapRockLayer = function() {
 
 Floor.prototype.drawImageToFrame = function(img, tile, span=1) {
     
+    if (!tile) {
+       var frame = this.frame;
+       this.frame.ctx.drawImage(img, 0, 0); 
+       return;
+    }
+    
     var row = tile.row;
     var col = tile.col;  
     var floor = tile.floor;
     var frame = floor.frame;
     var tile_size = floor.tile_size;
 
-    var offset = (1 - span)/2
+    var offset = (1 - span)/2;
 
     var x = (col + offset) * tile_size;
     var y = (row + offset) * tile_size;
 
     floor.frame.ctx.drawImage(img, x, y, tile_size * span, tile_size * span);
 
-}
+};
 
 
 
@@ -1018,3 +1022,28 @@ Floor.prototype.getXY = function(row, col) {
         y: y
     };
 };        
+
+Floor.prototype.drawShape = function(shape, tile, color) {
+    
+    var row = tile.row;
+    var col = tile.col;  
+    var floor = tile.floor;
+    var frame = floor.frame;
+    var tile_size = floor.tile_size;
+    var x = col * tile_size;
+    var y = row * tile_size;
+    
+    if (shape.toUpperCase() === 'CIRCLE') {
+        frame.ctx.fillStyle = '#FF5722';
+        frame.ctx.beginPath();
+        frame.ctx.arc(x, y, tile_size/3, 0, Math.PI * 2);
+        frame.ctx.fill();
+        frame.ctx.closePath();
+    }
+    
+    if (shape.toUpperCase() === 'SQUARE') {
+        frame.ctx.strokeStyle = '#FF5722';
+        frame.ctx.strokeRect(x, y, tile_size, tile_size);
+    }
+    
+};

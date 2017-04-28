@@ -1,4 +1,6 @@
-var Player = function() {
+var Player = function(game) {
+    
+    this.game = game;
     
     this.start = null;
     this.end = null;
@@ -6,6 +8,13 @@ var Player = function() {
     this.dir = {};
     this.tile = null;
     
+    
+    
+    this.headOptions = {
+        TYPE: 'HEAD',
+        GENDER: 'BOY',
+        FACING: 'DOWN'
+    };   
     
     this.shape = {};
     
@@ -90,14 +99,217 @@ Player.prototype.initShape = function() {
     
 };
 
-
-Player.prototype.initSprite = function() {
-//    
-//    var spritesheet = new SpriteSheet(spritesheet_data);
-//    spritesheet.initCanvas('color');
+Player.prototype.updatePlayer = function() {
     
-    //this.spritesheet = spritesheet;
-    //this.bitmap.canvas = spritesheet.canvas;
+    var game = this.game;
+    var MOVE_STATE = this.MOVE_STATE;
+    
+    
+    if (game.getPathfinderState() === 'VISUALIZER') {
+        return;
+    }
+    
+    if (MOVE_STATE === 'DRAG') {
+        this.updateDrag();
+        return;
+    }
+    
+    if (MOVE_STATE === 'STILL' ||
+            this.MOVE_STATE === 'WALL WALK') { 
+        
+        
+        if (game.getKeypress()) {
+            // console.log(this.KEYPRESS);
+            this.setupMove();
+        };
+        
+    }
+    
+    if (MOVE_STATE === 'WALK' || 
+            MOVE_STATE === 'SURF' || 
+            MOVE_STATE === 'JUMP ON' ||
+            MOVE_STATE === 'JUMP OFF' ||
+            MOVE_STATE === 'TURN' ||
+            MOVE_STATE === 'WALL WALK' ||
+            MOVE_STATE === 'LADDER') {
+        
+        if (MOVE_STATE === 'LADDER') {
+            console.log('climb  baby climb');
+        }
+        
+        this.interpolateMove();
+    } 
+    
+    if (game.getPathfinderState() === 'PATHER') {
+        game.KEYPRESS = null;
+    }
+    this.updateSpriteOptions();
+    
+};
+
+
+Player.prototype.setupMove = function() {
+    
+    var game = this.game;
+    var KEYPRESS = game.getKeypress();
+    //var graph = this.graph;
+    
+    var startTile = this.tile;
+    var floor = startTile.floor;
+    var row = startTile.row;
+    var col = startTile.col;  
+    
+    // Determine direction of movement
+    var displacement = {
+        row: 0,
+        col: 0
+    };
+    
+    if (KEYPRESS === 'UP') {
+        displacement.row = -1;  
+    }
+    else if (KEYPRESS === 'DOWN') {
+        displacement.row = +1; 
+    }
+    else if (KEYPRESS === 'LEFT') {
+        displacement.col = -1;
+    }
+    else if (KEYPRESS === 'RIGHT') {
+        displacement.col = +1;
+    }
+    
+    // ----- 0. Climbing ladder ----- //
+    // You were sent here by the end of another move
+    if (this.MOVE_STATE === 'LADDER') {
+        
+        
+        
+        this.startTile = startTile;
+        this.stopTile = game.getTileOtherEndLadder(startTile);
+        
+        //this.map.resetPath()
+        this.game.pathfinder.index += 1;
+        
+        
+        var speed = this.getSpeed();
+        this.time.total = 1/speed;
+        this.time.start = new Date();
+        this.interpolateMove();
+        return;        
+    }
+    
+    // ----- 1. Turning ----- //
+    // If player is still, and user direction does not match player direction
+    // and game not currently following path
+    if (this.MOVE_STATE === 'STILL' && game.getPathfinderState() === 'OFF') {
+        
+        //console.info('about to turn');
+        
+        if (KEYPRESS !== this.playerOptions.FACING) {
+            console.info('turn');
+            this.MOVE_STATE = 'TURN';
+            this.changeDirection(KEYPRESS);
+            
+            // Reset surf counter
+            this.surfTicks = 0;
+            
+            this.startTile = startTile;
+            this.stopTile = startTile;
+            
+            var speed = this.getSpeed();
+            this.time.total = 1/speed;
+            this.time.start = new Date();
+            this.interpolateMove();
+            
+            return;
+        }
+    }
+    
+    
+    // ----- 2a. Walking into Walls ----- //
+    // If user direction is same as current direction, continue walking into wall
+    // Otherwise, interrupt and process user input
+    if (this.MOVE_STATE === 'WALL WALK') {
+        
+        if (KEYPRESS === this.playerOptions.FACING) {
+            this.interpolateMove();
+            return;
+        }
+        
+    }
+    
+    // Determine final tile
+    var stopTile = game.getTile(floor, row + displacement.row, col + displacement.col);
+    
+    // If startTile is a ladder
+    
+    // If stopTile is a ladder
+    //    if (stopTile.ladder) {
+    //        // Redirect player, move to ladder instead
+    //        stopTile = this.getOtherEndLadder(stopTile);
+    //    }        
+    //    
+    // If tile is reachable
+    if (stopTile && game.hasEdge(startTile, stopTile)) {
+        
+        // Movement is admissable, begin interpolation 
+        this.changeDirection(KEYPRESS);
+        this.startTile = startTile;
+        this.stopTile = stopTile;
+        
+        
+        this.start.row = row;
+        this.start.col = col;
+        
+        this.displacement = displacement;
+        
+        // Set move state, determine time allotted for move
+        var speed;
+        // ----- 3. Jumping onto water pokemon ----- //
+        if (startTile.type === 'LAND' && stopTile.type === 'WATER') {
+            this.MOVE_STATE = 'JUMP ON';    
+        } 
+        // ----- 4. Jumping off of water pokemon ----- //
+        else if (startTile.type === 'WATER' && stopTile.type === 'LAND') {      
+            this.MOVE_STATE = 'JUMP OFF';
+        }
+        // ----- 5. Walking on land ----- //
+        else if (startTile.type === 'LAND') {
+            this.MOVE_STATE = 'WALK';
+        }
+        // ----- 6. Surfing on water ----- //
+        else if (startTile.type === 'WATER') {         
+            this.MOVE_STATE = 'SURF';
+        }
+        
+        var speed = this.getSpeed();
+        this.time.total = 1/speed;
+        this.time.start = new Date();
+        this.interpolateMove();
+        
+    }
+    
+    // ----- 2b. Walking into walls ----- //
+    // Animate walking against wall
+    else if (stopTile && !game.hasEdge(startTile, stopTile)) {
+        
+        // Only animate walking into walls on land
+        if(startTile.type === 'LAND') {
+            
+            this.MOVE_STATE = 'WALL WALK';
+            this.changeDirection(KEYPRESS);
+            
+            this.changeDirection(KEYPRESS);
+            this.startTile = startTile;
+            this.stopTile = startTile;
+            
+            var speed = this.getSpeed();
+            this.time.total = 1/speed;
+            this.time.start = new Date();
+            this.interpolateMove();
+        }
+        
+    }
     
 };
 
@@ -126,7 +338,8 @@ Player.prototype.getCurrentTile = function() {
     return {
         row: this.current.row,
         col: this.current.col,
-        floor: this.tile.floor
+        floor: this.tile.floor,
+        dof: this.tile.dof
     };
 };
 
@@ -232,7 +445,7 @@ Player.prototype.interpolateMove = function() {
             
             //let endB = this.map.getOtherEndLadder(this.stopTile);
             this.setTile(this.stopTile);    
-            this.game.startMove();
+            this.setupMove();
             return;
         }
         
@@ -495,19 +708,19 @@ Player.prototype.updateSpriteOptions = function() {
 Player.prototype.drawPlayer = function(floor, dof) {
  
     var game = this.game;
- 
     
+    if (this.MOVE_STATE === 'DRAG') {
+        this.drawDrag();
+        return;
+    }
+ 
 
-    if (this.MOVE_STATE === 'USER MOVE') {
+    if (this.game.getMapState() === 'GRAPHIC') {
+        game.drawShape('circle', this.current);
         return;
     }
 
-    if (this.game.getLayerState() === 'GRAPHIC') {
-        game.drawShape('circle', 0, this.current);
-        return
-    }
-
-    else if (this.game.getLayerState() === 'BITMAP') {
+    else if (this.game.getMapState() === 'BITMAP') {
 
         var tile = this.tile;
         var frame = floor.frame;
@@ -558,6 +771,79 @@ Player.prototype.drawPlayer = function(floor, dof) {
         }
     }  
 };
+
+Player.prototype.startDrag = function($event) {
+
+    var game = this.game;
+
+    if (this.MOVE_STATE === 'STILL' &&
+            game.getPathfinderState() === 'OFF') {
+        
+        game.setMonitorPointer($event);
+        let pointerTile = game.getTileFromMonitorPointer();
+        
+        
+        if (this.tile.id === pointerTile.id) {
+            this.MOVE_STATE = 'DRAG';
+        };     
+    }
+    
+};
+
+Player.prototype.updateDrag = function() {
+    
+    var game = this.game;
+    
+    var tile = game.getTileFromMonitorPointer();
+ 
+    if (tile && tile.type !== "ROCK") {
+        
+        this.dragTile = tile;
+        
+    }
+    else {
+        this.dragTile = null;
+    }
+    
+};
+
+
+Player.prototype.endDrag = function() {
+    
+    // Update sprite to hovertile (ie to draggie)
+    if (this.MOVE_STATE === 'DRAG') {
+        
+        if (this.dragTile) {
+            this.setTile(this.dragTile);
+        }
+        
+        this.MOVE_STATE = 'STILL';
+        
+    }
+    
+};
+
+
+
+Player.prototype.drawDrag = function() {
+  
+  // The player does not draw the drag sprite. It must be drawn by the monitor
+  // because it has to go over several layers
+  
+  // So, instead, aquire the sprite that the monitor will use;
+  this.headOptions.GENDER = this.playerOptions.GENDER;
+  
+  var dragSprite = this.game.getSprite(this.headOptions);
+  this.dragSprite = dragSprite;
+  
+  // However, can draw indicating square
+  if (this.dragTile) {
+      //this.game.drawShape('circle', this.dragTile);
+      this.game.drawShape('square', this.dragTile);
+  }
+    
+};
+
 
 
 
@@ -627,3 +913,5 @@ Player.prototype.getPlayerSprites = function() {
         return spriteArray;
     }  
 };
+
+

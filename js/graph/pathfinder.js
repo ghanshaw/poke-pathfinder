@@ -3,38 +3,38 @@ var Pathfinder = function(game, graph) {
     this.game = game;
     this.graph = graph;
     
-    this.headOptions = {
-        TYPE: 'HEAD',
-        GENDER: 'BOY',
-        FACING: 'DOWN'
-    };    
-    
-    this.flagOptions = {
-        TYPE: 'FLAG',
-        EVENT: 'SOURCE'
-    };
-    
+    //    this.headOptions = {
+    //        TYPE: 'HEAD',
+    //        GENDER: 'BOY',
+    //        FACING: 'DOWN'
+    //    };    
+    //    
+    //    this.flagOptions = {
+    //        TYPE: 'FLAG',
+    //        EVENT: 'SOURCE'
+    //    };
+    //    
     
     this.floors = {};
 
     
-    // Colors used for visualizer and router
+    // Colors used for visualizer and pather
     
-    this.hexPath = "#9C27B0";
+    this.hexPath = "#55ecff";
     this.hexFrom = "#FFFFFF";
-    this.hexTo =  "#7fffd4";
+    this.hexTo = "#E91E63";
+    //this.hexTo =  "#7fffd4";
     //this.hexFrom = "#7fffd4";
     //this.hexTo = "#673ab7";
     this.alpha = 0.7;
     
-    this.LAYER_STATE = null;
+    this.LAYER = null;
   
     //    this.hoverTile = {
     //        tile: null,
     //        sourceTarget: 'OFF'        
     //    };
 
-    
     this.flagSource = {
         type: 'SOURCE',
         show: false,
@@ -46,47 +46,17 @@ var Pathfinder = function(game, graph) {
         show: false,
         tile: null
     };
-   
-    this.console = {
-        SOURCE: {
-            tile: null
-        },
-        TARGET: {
-            tile: null
-        },
-        algorithm: {
-            
-        }
-    };
+
     
     this.PATH_STATE = 'OFF';
     
-    this.inaccessible = new Set();
+    this.vcr = {
+        COMMAND: null,
+    };
     
-
-    this.algorithms = [
-        {
-            id: 0,
-            label: 'Breadth-first search',
-            method: 'bfs'
-        },
-        {
-            id: 1,
-            label: 'Depth-first search',
-            method: 'dfs'
-        },
-        {   
-            id: 2,
-            label: 'Dijkstra\'s',
-            method: 'dijkstras'
-        },
-        {
-            id: 3,
-            label: 'A*',
-            method: 'astar'
-            
-        }
-    ];
+    this.data = null;
+    this.augment= null;
+    this.DATA = null;
     
     
     
@@ -94,21 +64,21 @@ var Pathfinder = function(game, graph) {
 
 
 Pathfinder.prototype.initMewtwo = function() {
-//    
-//    var game = this.game;
-//    var mewtwo = {};
-//    
-//    mewtwo.spriteOptions = {
-//        TYPE: 'MEWTWO'
-//    };
-//    
-//    mewtwo.tile = this.game.getKeyTile(1); 
-//    mewtwo.tile.occupied = true;
-//    
-//    game.removeEdgesToNeighbors(mewtwo.tile);
-//    
-//    this.mewtwo = mewtwo;
-//    
+    //    
+    //    var game = this.game;
+    //    var mewtwo = {};
+    //    
+    //    mewtwo.spriteOptions = {
+    //        TYPE: 'MEWTWO'
+    //    };
+    //    
+    //    mewtwo.tile = this.game.getKeyTile(1); 
+    //    mewtwo.tile.occupied = true;
+    //    
+    //    game.removeEdgesToNeighbors(mewtwo.tile);
+    //    
+    //    this.mewtwo = mewtwo;
+    //    
     //this.inaccessible.add(mewtwo.tile.id);
     
     
@@ -119,7 +89,7 @@ Pathfinder.prototype.initMewtwo = function() {
 
 Pathfinder.prototype.drawMewtwo = function() {
     
-  this.game.drawSprite(this.mewtwo.spriteOptions, this.mewtwo.tile);  
+    this.game.drawSprite(this.mewtwo.spriteOptions, this.mewtwo.tile);  
     
 };
 
@@ -129,16 +99,16 @@ Pathfinder.prototype.init = function() {
     this.source = this.game.getPlayerTile();
     this.target = this.game.map.keyTiles[2].tile;
     
-    this.flagSource.tile = this.source;
-    this.flagTarget.tile = this.target;
-    
-    this.flagSource.show = true;
-    this.flagTarget.show = true;
+    //    this.flagSource.tile = this.source;
+    //    this.flagTarget.tile = this.target;
+    //    
+    //    this.flagSource.show = true;
+    //    this.flagTarget.show = true;
 
     var canvasSize = {
         width: 100,
         height: 100
-    }
+    };
 
     // Create reusable arrow canvas
     this.arrow = this.createBlankLayer(canvasSize);
@@ -150,7 +120,7 @@ Pathfinder.prototype.init = function() {
     var pathMarker = {
         source: source,
         target: target
-    }
+    };
 
     pathMarker.source.show = true;
     pathMarker.source.tile = this.source;
@@ -191,29 +161,29 @@ Pathfinder.prototype.setHoverTile = function(tileId, type) {
 Pathfinder.prototype.createBlankLayer = function(canvas) {
 
     // Create sprite layer
-        var newCanvas = document.createElement('canvas');
-        var newCtx = newCanvas.getContext('2d');
+    var newCanvas = document.createElement('canvas');
+    var newCtx = newCanvas.getContext('2d');
 
-        newCtx.mozImageSmoothingEnabled = false;
-        newCtx.webkitImageSmoothingEnabled = false;
-        newCtx.msImageSmoothingEnabled = false;
-        newCtx.imageSmoothingEnabled = false;
+    newCtx.mozImageSmoothingEnabled = false;
+    newCtx.webkitImageSmoothingEnabled = false;
+    newCtx.msImageSmoothingEnabled = false;
+    newCtx.imageSmoothingEnabled = false;
             
-        newCanvas.width = canvas.width;
-        newCanvas.height = canvas.height;
+    newCanvas.width = canvas.width;
+    newCanvas.height = canvas.height;
         
-        //newCtx.fillStyle = 'transparent';
-        //newCtx.fillRect(0, 0, frame.canvas.width, frame.canvas.height);
+    //newCtx.fillStyle = 'transparent';
+    //newCtx.fillRect(0, 0, frame.canvas.width, frame.canvas.height);
 
-        newCanvas.id = Math.random() * 10;
-        newCtx.id = newCanvas.id;
+    newCanvas.id = Math.random() * 10;
+    newCtx.id = newCanvas.id;
 
-        var layer = {
-            canvas: newCanvas,
-            ctx: newCtx
-        }
+    var layer = {
+        canvas: newCanvas,
+        ctx: newCtx
+    };
 
-        return layer;
+    return layer;
 
 };
 
@@ -236,12 +206,12 @@ Pathfinder.prototype.createPathfinderFloorLayers = function() {
         var frontierlayer = {
             background: this.createBlankLayer(frame.canvas),
             foreground: this.createBlankLayer(frame.canvas)
-        } 
+        };
 
         var pathlayer = {
             background: this.createBlankLayer(frame.canvas),
             foreground: this.createBlankLayer(frame.canvas) 
-        }
+        };
 
         floors[id] = {};
         floors[id].tile_size = floor.tile_size;
@@ -286,51 +256,6 @@ Pathfinder.prototype.createPathfinderFloorLayers = function() {
 Pathfinder.prototype._________UTILITIES_________ = function() {};
 
 
-Pathfinder.prototype.hexToRgba = function(hex, alpha){
-    
-    var c;
-    if(/^#([A-Fa-f0-9]{3}){1,2}$/.test(hex)){
-        c= hex.substring(1).split('');
-        if(c.length === 3){
-            c = [c[0], c[0], c[1], c[1], c[2], c[2]];
-        }
-        c = '0x'+c.join('');
-        return {
-            red: (c >> 16) & 255,
-            green: (c >> 8) &255,
-            blue: c & 255,
-            alpha: alpha
-        };
-    }
-    throw new Error('Bad Hex');
-    
-};
-
-Pathfinder.prototype.rgbaToString = function(rgba) {
-  
-    return 'rgba(' + rgba.red + ', ' + rgba.green + ', ' + rgba.blue + ',' + rgba.alpha + ')';
-    
-};
-
-
-Pathfinder.prototype.interpolateColor = function(color1, color2, alpha, percent) {
-    
-    var resultRed = color1.red + percent * (color2.red - color1.red);
-    var resultGreen = color1.green + percent * (color2.green - color1.green);
-    var resultBlue = color1.blue + percent * (color2.blue - color1.blue);
-    
-    resultRed = Math.floor(resultRed);
-    resultGreen = Math.floor(resultGreen);
-    resultBlue = Math.floor(resultBlue);
-    
-    
-    var rgba = 'rgba(' + resultRed + ', ' + resultGreen + ', ' + resultBlue + ',' + alpha + ')';
-    
-    return rgba;  
-    //return { red: resultRed, green: resultGreen, blue: resultBlue };
-    
-};
-
 
 /***********************************************/
 /**********    Pathfinder Methods    ***********/
@@ -353,24 +278,42 @@ Pathfinder.prototype.startPathfinder = function(state) {
     }
     
     else if (state === 'FRONTIER' ||
-            state === 'ROUTER') {
-        this.startFrontierRouter(state);
+            state === 'PATH') {
+        this.startFrontierPather(state);
     }
     
 };
 
 Pathfinder.prototype.updatePathfinder = function() {
     
-    if (this.PATH_STATE === 'FRONTIER') {
-        this.updateFrontier();
-    } 
-    else if (this.PATH_STATE === 'ROUTER') {
-        this.updateRouter();
-    } else if (this.PATH_STATE === 'MARK SOURCE' ||
+    
+    if (this.PATH_STATE === 'MARK SOURCE' ||
             this.PATH_STATE === 'MARK TARGET') {
         this.updateMarker();
     }
     
+    if (this.vcr.COMMAND === 'PLAY' ||
+            this.vcr.COMMAND === 'STEP') {
+        
+        if (this.PATH_STATE === 'FRONTIER') {
+            this.updateFrontier();
+        } 
+        
+        else if (this.PATH_STATE === 'PATH') {
+            this.updatePath();
+        } 
+        
+        if (this.vcr.COMMAND === 'STEP') {
+            this.vcr.COMMAND = 'PAUSE';
+            return;
+        }
+        
+    }
+    
+    if (this.vcr.COMMAND === 'PAUSE') {
+        this.game.KEYPRESS = null;
+        return;
+    }  
     
 };
 
@@ -405,13 +348,16 @@ Pathfinder.prototype.clearPathfinder = function() {
 
         pathlayer.background.ctx.clearRect(0, 0, width, height);
         pathlayer.foreground.ctx.clearRect(0, 0, width, height);
-        //pathlayer.ctx.beginPath();
+ 
     }
    
     console.log('clear this up');
     this.PATH_STATE = 'OFF';
+    this.LAYER = null;
+    this.game.toggleMapPathfinderLayer(null);
     //this.game.setPlayerMoveState("STILL");
     this.game.KEYPRESS = null;
+    this.vcr.COMMAND = null;
     
 };
 
@@ -420,7 +366,7 @@ Pathfinder.prototype.startMarker = function(state) {
     
     // Cannot switch from these states to SELECT state    
     if (this.PATH_STATE === 'FRONTIER' ||
-            this.PATH_STATE === 'ROUTER') { return; }
+            this.PATH_STATE === 'PATH') { return; }
         
     
     // Just clicked 'MARK SOURCE'
@@ -463,12 +409,14 @@ Pathfinder.prototype.startMarker = function(state) {
             return;
         } 
         
+        // 'MARK SOURCE' --> 'MARK TARGET ' : switch
         if (this.PATH_STATE === 'MARK SOURCE') {
             this.pathMarker.source.tile = this.source;
             this.pathMarker.source.show = true;
         }
         
-        this.pathMarker.source.show = false;
+        // 'OFF' or 'MARK SOURCE' --> 'MARK TARGET' : activate
+        this.pathMarker.target.show = false;
         this.PATH_STATE = 'MARK TARGET';
         return;
     }
@@ -487,7 +435,11 @@ Pathfinder.prototype.updateMarker = function() {
         if (this.PATH_STATE === 'MARK SOURCE') {
             marker = this.pathMarker.source;
             if (marker.show) {
+                // Update source marker
                 this.source = marker.tile;
+                
+                // Update user console view
+                game.setUserConsoleSourceLocation(4);
             }
             else {
                 marker.tile = this.source;
@@ -498,6 +450,9 @@ Pathfinder.prototype.updateMarker = function() {
             marker = this.pathMarker.target;
             if (marker.show) {
                 this.target = marker.tile;
+                
+                // Update user console view
+                game.setUserConsoleTargetLocation(4);
             }
             else {
                 marker.tile = this.target;
@@ -510,11 +465,9 @@ Pathfinder.prototype.updateMarker = function() {
         game.CLICKED = false;
         return;    
         
-    }
+    };
     
-    //var position = ui.position;
-    var pointer = game.getPointer();
-    var tile = game.getTileFromPointer(pointer);
+    var tile = game.getTileFromMonitorPointer();
     
     // Get flag based on what you're selecting
     var marker = this.PATH_STATE === 'MARK SOURCE' ? this.pathMarker.source : this.pathMarker.target;
@@ -530,27 +483,34 @@ Pathfinder.prototype.updateMarker = function() {
 };
 
 
-Pathfinder.prototype.startFrontierRouter = function(state) {
+Pathfinder.prototype.startFrontierPather = function(state) {
      
-    // Cannot switch SELECT states to Frontier or Router   
+    // Cannot switch SELECT states to Frontier or Pather   
     if (this.PATH_STATE === 'MARK SOURCE' ||
             this.PATH_STATE === 'MARK TARGET') { return; }
    
    
     var game = this.game;
+    var userConsole = this.game.userConsole;
     
     // Get source and target from console
-    this.source = this.getConsoleTile('SOURCE');
-    this.target = this.getConsoleTile('TARGET');
-    this.target = this.game.map.keyTiles[2].tile;
+    this.source = game.getUserConsoleLocationTile('SOURCE');
+    this.target = game.getUserConsoleLocationTile('TARGET');
+    //this.target = this.game.map.keyTiles[2].tile;
     
-    // Update flag locations with source and target    
-
-
-
-    this.flagSource.tile = this.source;
-    this.flagTarget.tile = this.target;
+    // Update path markers
+    this.pathMarker.source.tile = this.source;
+    this.pathMarker.target.tile = this.target;
+    if (this.target === 'ALL') {
+        this.pathMarker.target.tile.show = false;
+    }
     
+    //userConsole.log("I'm doing it!");
+    
+    // Get algorithm
+    this.algorithm = game.getUserConsoleAlgorithm();
+    
+
     // Declare data structures
     this.parent = {};
     this.q = [];
@@ -562,34 +522,32 @@ Pathfinder.prototype.startFrontierRouter = function(state) {
     this.deltaFrontier = {
         open: [],
         closed: []
-    }
+    },
+    
     this.cost = {};
     this.path = [];
     this.index = 0;
     this.complete = false;
 
-    // // Reset frontier
-    // if (state === 'FRONTIER') {
-    //     // Prepare to loop through path backwards
-    //     this.index = this.path.length - 1;
-    // } else if (state === 'ROUTER') {
-    //     // Prepare to loop through path forwards
-    //     this.index = 0;
-    // }
-      
-    // Run algorithm
-    //this.runAlgorithm(state);   
-
+    
+    // Turn off pathfinder, if in progress
+    this.clearPathfinder();
+    
+    // Turn on pathfinder state
+    this.LAYER = state;
+    this.game.userConsole.activatePathFrontierButton(this.LAYER);
+    this.game.toggleMapPathfinderLayer(this.LAYER);
+    this.PATH_STATE = state;
 
     // Setup algorithm
     this.setupAlgorithm();
 
-    if (state === 'ROUTER') {
+    if (state === 'PATH') {
         this.completeAlgorithm();
+        this.constructPath();
     }
 
-    // Turn off pathfinder, if in progress
-    this.clearPathfinder();
+    
     
     // Move player to source tile
     game.setPlayerMoveState('STILL');
@@ -600,9 +558,7 @@ Pathfinder.prototype.startFrontierRouter = function(state) {
     // Make player face down
     game.setPlayerFacing('DOWN');
     
-    // Turn on pathfinder state
-    this.LAYER_STATE = state;
-    this.PATH_STATE = state;
+    this.vcr.COMMAND = 'PLAY';
     
 };
  
@@ -615,18 +571,20 @@ Pathfinder.prototype.updateFrontier = function() {
     if (!this.complete) {
 
         // Step through algorithm
+       console.time('step algorithm');
         this.stepAlgorithm();
+        console.timeEnd('step algorithm');
 
-        console.log('Open List: ')
-        console.log(this.deltaFrontier.open);
-
-        console.log('Closed List: ')
-        console.log(this.deltaFrontier.closed);
+//        console.log('Open List: ')
+//        console.log(this.deltaFrontier.open);
+//
+//        console.log('Closed List: ')
+//        console.log(this.deltaFrontier.closed);
 
         var open = this.deltaFrontier.open;
         var closed = this.deltaFrontier.closed;
         
-
+        console.time('draw arrows');
         // Draw open set
         for (let t of open) {
             let tile = game.getTileFromId(t);
@@ -638,6 +596,7 @@ Pathfinder.prototype.updateFrontier = function() {
             let tile = game.getTileFromId(t);
             this.drawArrow(tile, 'CLOSED');
         }
+        console.timeEnd('draw arrows');
 
     }
 
@@ -664,64 +623,243 @@ Pathfinder.prototype.updateFrontier = function() {
 };
 
 
-
-Pathfinder.prototype.updateRouter = function() {
+Pathfinder.prototype.getDisplacement = function(tileA, tileB) {
     
-    this.simulateKeyPress();
-    if (this.PATH_STATE !== 'OFF') {
-        //this.game.updatePlayer();
-
-        this.appendPath();
+    var displacement = {
+        row: 0,
+        col: 0
     };
     
+    // Determine displacement from startTile to stopTile
+    displacement.row = tileA.row - tileB.row;
+    displacement.col = tileA.col - tileB.col;
+    
+    return displacement;
+    
+};
+
+
+Pathfinder.prototype.appendPathSegment = function(tile, neighbor, layer, tile_size) {
+
+    var displacement = this.getDisplacement(neighbor, tile);
+    
+    // Get length of segment
+    displacement.row = (1/2) * displacement.row * tile_size;
+    displacement.col = (1/2) * displacement.col * tile_size;
+    
+    // Get coordinates of tile's center
+    var x = (tile.col + .5) * tile_size;
+    var y = (tile.row + .5) * tile_size;
+    
+    // Get coordinates of edge between tile and neighbor
+    var x1 = x + displacement.col;
+    var y1 = y + displacement.row;
+    
+    layer.ctx.beginPath();
+    layer.ctx.moveTo(x, y);
+    layer.ctx.lineTo(x1, y1);
+    layer.ctx.stroke();
+    
+    
+};
+
+Pathfinder.prototype.constructPath = function() {
+    
+    var game = this.game;
+    var path = this.path;
+    
+    for (let i = 0; i < this.path.length; i++) {
+     
+        
+        // Get tile in path
+        let tile = game.getTileFromId(path[i]);
+        
+        // Get pathlayer associated with that tile
+        let f = tile.floor.id;
+        let pathFloor = this.floors[f];
+        let tile_size = pathFloor.tile_size;
+        
+        var layer;
+         if (tile.dof === 'FOREGROUND') {
+            layer = pathFloor.pathlayer.foreground;
+        }
+
+        else if (tile.dof === 'BACKGROUND') {
+            layer = pathFloor.pathlayer.background;
+        }
+        
+        layer.ctx.strokeStyle = this.hexPath;
+        layer.ctx.lineWidth = tile_size / 8;
+        
+        // Get indices of neighbors in path
+        let prev = i - 1;
+        let next = i + 1;
+        
+        if (prev >= 0) {
+        
+            var prevTile = game.getTileFromId(path[prev]);    
+            
+            if (!tile.ladder || !prevTile.ladder) {
+                
+                this.appendPathSegment(tile, prevTile, layer, tile_size);
+            }
+            
+            
+            
+        }
+        
+        if (next < path.length) {
+            
+            var nextTile = game.getTileFromId(path[next]); 
+            
+            if (!tile.ladder || !nextTile.ladder) {
+                this.appendPathSegment(tile, nextTile, layer, tile_size);
+            }
+            
+        }    
+        
+    }
+    
+    game.userConsole.message.content = 'Path construction complete';
+    
+};
+
+
+
+Pathfinder.prototype.appendPath = function() {
+
+    
+    var game = this.game;
+    
+    var pTile = game.getPlayerCurrentTile();
+    var f = pTile.floor.id;
+    
+    var tile_size = this.floors[f].tile_size;
+    var MOVE_STATE = game.getPlayerMoveState();
+    
+    var row = pTile.row;
+    var col = pTile.col;
+    
+    
+    
+    //    // Adjust path during jump on/jump off
+    //    if (MOVE_STATE === 'JUMP ON' || MOVE_STATE === 'JUMP OFF') {
+    //        if (row < player.stopTile.row && player.playerOptions.FACING !== 'DOWN') {
+    //            var y = player.stopTile.row * this.tile_size;
+    //        }
+    //    }
+    
+    var x = pTile.col * tile_size;
+    var y = pTile.row * tile_size;
+    
+    x += tile_size / 2;
+    y += tile_size / 2;        
+    
+    if (pTile.dof === 'FOREGROUND') {
+        layer = this.floors[f].pathlayer.foreground;
+    }
+    
+    else if (pTile.dof === 'BACKGROUND') {
+        layer = this.floors[f].pathlayer.background;
+    }
+    
+    //layer.ctx.beginPath();
+    layer.ctx.strokeStyle = this.hexPath;
+    layer.ctx.lineWidth = tile_size / 8;
+    layer.ctx.lineTo(x, y);
+    layer.ctx.stroke();
+    
 };
 
 
 
 
 
- Pathfinder.prototype.setConsoleTile = function(consoleTile, sourceTarget) {
+Pathfinder.prototype.updatePath = function() {
+    
+    //this.constructPath();
+    this.simulateKeyPress();
+    
+//    if (this.LAYER === 'PATH') {
+//        
+//    }
+//    
+//    if (this.PATH_STATE !== 'OFF') {
+//        //this.game.updatePlayer();
+//        //this.appendPath();
+//        
+//    };
+    
+};
+
+
+
+
+
+Pathfinder.prototype.setConsoleTile = function(consoleTile, sourceTarget) {
   
-  this.console[sourceTarget].tile = consoleTile;
+    this.console[sourceTarget].tile = consoleTile;
+    
+};
+
+Pathfinder.prototype.setConsoleTileId = function() {
+  
+    console.log(this.console);
     
 };
  
+Pathfinder.prototype.getUserConsole = function() {
+     
+
+     
+};
  
- Pathfinder.prototype.getConsoleTile = function(sourceTarget) {
+ 
+Pathfinder.prototype.getConsoleLocation = function(sourceTarget) {
      
-     var game = this.game;
+    var game = this.game;
      
-     var tile;
+    var tile;
      
-     var console = this.console[sourceTarget];
+    var console = game.getUserConsole();
      
-     // If Console tile is Player Tile
-     if (console.tile.id === 0) {
-         tile = game.getPlayerTile();
-     }
-     // If console tile is Entrance
-     else if (console.tile.id === 1) {
-         var keyTileId = console.tile.keyTile;
-         tile = game.getKeyTile(keyTileId);
-     }  
-     // If console tile is Mewtwo
-     else if (console.tile.id === 2) {
-         var keyTileId = console.tile.keyTile;
-         tile = game.getKeyTile(keyTileId);   
-     }
-     else if (console.tile.id === 3) {
-         tile = game.getRandomTile();       
-     }
-     else if (console.tile.id === 4) {
-         if (sourceTarget === 'SOURCE') {
-             tile = this.flagSource.tile;
-         }
-         else {
-             tile = this.flagTarget.tile;
-         }
-     }
+    var location;
+    if (sourceTarget === 'SOURCE') {
+        locaton = console.source;
+    } else if (sourceTarget === 'TARGET') {
+        location = console.target;
+    }
      
-     return tile;
+     
+    var console = this.console[sourceTarget];
+     
+    // If Console tile is Player Tile
+    if (console.tile.id === 0) {
+        tile = game.getPlayerTile();
+    }
+    // If console tile is Entrance
+    else if (console.tile.id === 1) {
+        var keyTileId = console.tile.keyTile;
+        tile = game.getKeyTile(keyTileId);
+    }  
+    // If console tile is Mewtwo
+    else if (console.tile.id === 2) {
+        var keyTileId = console.tile.keyTile;
+        tile = game.getKeyTile(keyTileId);   
+    }
+    else if (console.tile.id === 3) {
+        tile = game.getRandomTile();       
+    }
+    else if (console.tile.id === 4) {
+        if (sourceTarget === 'SOURCE') {
+            tile = this.flagSource.tile;
+        }
+        else {
+            tile = this.flagTarget.tile;
+        }
+    }
+     
+    return tile;
      
     
 };
@@ -738,25 +876,25 @@ Pathfinder.prototype.setConsoleAlgorithm = function(algorithm) {
 
 Pathfinder.prototype.runAlgorithm = function(state) {
      
-     var algorithm = this.console.algorithm;
-     
-     // Run BFS
-     if (algorithm.id === 0) {
-        this.bfs();
-     }
-     // Run DFS
-     else if (algorithm.id === 1) {
-        this.dfs();
-     }  
-     // Run Dijkstra's
-     else if (algorithm.id === 2) {
-        this.dijkstras();
-     }
-     // Run A*
-     else if (algorithm.id === 3) {
-        this.astar();   
-     }
-        
+//    var algorithm = this.console.algorithm;
+//     
+//    // Run BFS
+//    if (algorithm.id === 0) {
+//        this.bfs();
+//    }
+//    // Run DFS
+//    else if (algorithm.id === 1) {
+//        this.dfs();
+//    }  
+//    // Run Dijkstra's
+//    else if (algorithm.id === 2) {
+//        this.dijkstra();
+//    }
+//    // Run A*
+//    else if (algorithm.id === 3) {
+//        this.astar();   
+//    }
+//        
 };
 
  
@@ -766,8 +904,8 @@ Pathfinder.prototype.runAlgorithm = function(state) {
 Pathfinder.prototype.createMarkers = function() {
 
     // Create source visual marker
-   var marker = this.pathMarker.source;
-   var marker_size = marker.canvas.width;
+    var marker = this.pathMarker.source;
+    var marker_size = marker.canvas.width;
 
     marker.ctx.shadowBlur = marker_size;
     marker.ctx.shadowColor = "#00ff0b";
@@ -790,12 +928,12 @@ Pathfinder.prototype.createMarkers = function() {
 
     marker.ctx.fillStyle = "rgba(0, 0, 0, .5)";
 
-    var length = 8;
+    var length = 12;
     var cube = marker_size/length;
     for (let i = 0; i < length; i++) {
         for (let j = 0; j < length; j++) {
-            if (i % 2 == 0 && j % 2 == 0 ||
-                i % 2 != 0 && j % 2 != 0) {
+            if (i % 2 === 0 && j % 2 === 0 ||
+                    i % 2 !== 0 && j % 2 !== 0) {
                 marker.ctx.fillStyle = "rgba(0, 0, 0, .5)";
             }
             else {
@@ -809,12 +947,12 @@ Pathfinder.prototype.createMarkers = function() {
     // Slice out the shape of a circle
     marker.ctx.globalCompositeOperation = 'destination-in';
 
-    //marker.ctx.fillRect(marker_size/4, marker_size/4, marker_size/2, marker_size/2);
+    marker.ctx.fillRect((1/3) * marker_size, (1/3) * marker_size, (1/3) * marker_size, (1/3) * marker_size);
 
-    marker.ctx.fillStyle = "pink";
-    marker.ctx.beginPath();
-    marker.ctx.arc(marker_size/2, marker_size/2, marker_size/5, 0, 2*Math.PI);
-    marker.ctx.fill();
+    //    marker.ctx.fillStyle = "pink";
+    //    marker.ctx.beginPath();
+    //    marker.ctx.arc(marker_size/2, marker_size/2, marker_size/5, 0, 2*Math.PI);
+    //    marker.ctx.fill();
 
     //Place white glow beneath circle
     marker.ctx.globalCompositeOperation = 'destination-over';
@@ -823,12 +961,15 @@ Pathfinder.prototype.createMarkers = function() {
     marker.ctx.shadowColor = "#FFFFFF";
     marker.ctx.fillStyle = "rgba(255, 255, 255, 1)";
     marker.ctx.strokeStyle = "rgba(255, 255, 255, .5)";
+    
+    marker.ctx.fillRect((1/3) * marker_size, (1/3) * marker_size, (1/3) * marker_size, (1/3) * marker_size);
+    //marker.ctx.fillRect(marker_size/4, marker_size/4, marker_size/2, marker_size/2);
 
-    marker.ctx.beginPath();
-    marker.ctx.arc(marker_size/2, marker_size/2, marker_size/5, 0, 2*Math.PI);
-    marker.ctx.lineWidth = 4;
-    //marker.ctx.stroke();
-    marker.ctx.fill();
+    //    marker.ctx.beginPath();
+    //    marker.ctx.arc(marker_size/2, marker_size/2, marker_size/5, 0, 2*Math.PI);
+    //    marker.ctx.lineWidth = 4;
+    //    //marker.ctx.stroke();
+    //    marker.ctx.fill();
 
     marker.ctx.globalCompositeOperation = 'source-over';
 
@@ -882,29 +1023,49 @@ Pathfinder.prototype.drawFrontier = function(floor, dof) {
 
     var game = this.game;
     var map = this.game.map;
+    var f = floor.id;
 
     var activeLayers = game.getMapLayers();
     
-    if (activeLayers.FRONTIER) {
+    if (activeLayers.PATHFINDER === 'FRONTIER') {
      
         let layer;
         if (dof === 'BACKGROUND') {
-            layer = this.frontierlayer.background;
+            layer = this.floors[f].frontierlayer.background;
         }
         else if (dof === 'FOREGROUND') {
-            layer = this.frontierlayer.foreground;
+            layer = this.floors[f].frontierlayer.foreground;
         }
         
-        floor.drawImageToFrame(layer.canvas)
-        
+        floor.drawImageToFrame(layer.canvas);      
     }
 
-}
+};
 
 Pathfinder.prototype.drawPath = function(floor, dof) {
-    // Todo
+ 
+    var game = this.game;
+    var map = this.game.map;
+    var f = floor.id;
+
+    var activeLayers = game.getMapLayers();
+    
+    if (activeLayers.PATHFINDER === 'PATH') {
+     
+        let layer;
+        if (dof === 'BACKGROUND') {
+            layer = this.floors[f].pathlayer.background;
+        }
+        else if (dof === 'FOREGROUND') {
+            layer = this.floors[f].pathlayer.foreground;
+        }
+        
+        floor.drawImageToFrame(layer.canvas);
+        
+    }
+ 
     return;
-}
+};
 
 
 Pathfinder.prototype._________FRONTIER_METHODS_________ = function() {};
@@ -922,10 +1083,12 @@ Pathfinder.prototype.drawTests = function() {
     //ctx.fillRect(0, 0, test1.width, test1.height);
     ctx.drawImage(this.floors['F1'].frontierlayer.foreground.canvas, 0, 0, test1.width, test1.height);
 
-}
+};
 
 
 Pathfinder.prototype.drawArrow = function(tile, type) {
+    
+    var game = this.game;
     
     var row = tile.row;
     var col = tile.col;  
@@ -943,11 +1106,10 @@ Pathfinder.prototype.drawArrow = function(tile, type) {
     
     
     // Rotate arrow
-    var arrow = this.arrow
+    var arrow = this.arrow;
 
     var arrow_size = arrow.canvas.width;
     
-
     arrow.ctx.save();
     arrow.ctx.translate( arrow.canvas.width/2, arrow.canvas.height/2 );
     arrow.ctx.rotate( angle );
@@ -979,16 +1141,16 @@ Pathfinder.prototype.drawArrow = function(tile, type) {
     //console.log(source.id, tile.id, percent);
     if (type === 'CLOSED') {
 
-        this.rgbaFrom = this.hexToRgba(this.hexFrom, this.alpha);
-        this.rgbaTo = this.hexToRgba(this.hexTo, this.alpha);
+        this.rgbaFrom = game.hexToRgba(this.hexFrom, this.alpha);
+        this.rgbaTo = game.hexToRgba(this.hexTo, this.alpha);
         
 
-        let rgba = this.interpolateColor(this.rgbaFrom, this.rgbaTo, this.alpha, percent);
+        let rgba = game.interpolateColor(this.rgbaFrom, this.rgbaTo, this.alpha, percent);
         color = rgba;
     } else if (type === 'OPEN') {
         this.hexOpen = "#FFC107"
-        this.rgbaOpen = this.hexToRgba(this.hexOpen, 1);
-        let rgba = this.rgbaToString(this.rgbaOpen);
+        this.rgbaOpen = game.hexToRgba(this.hexOpen, 1);
+        let rgba = game.rgbaToString(this.rgbaOpen);
         color = rgba;
     }
 
@@ -1035,17 +1197,14 @@ Pathfinder.prototype.getAngleFromParent = function(tile) {
 
 
     var displacement = {
-            row: 0,
-            col: 0
-        };
-
-        
+        row: 0,
+        col: 0
+    };
 
 
-
-        var parent = this.parent;
-        var tileId = tile.id;
-     // If tile does not have a parent pointer, sprite faces down
+    var parent = this.parent;
+    var tileId = tile.id;
+    // If tile does not have a parent pointer, sprite faces down
     if (!parent[tileId]) {
         displacement.row = -1;
     }
@@ -1063,7 +1222,7 @@ Pathfinder.prototype.getAngleFromParent = function(tile) {
 
 
     var angle;
-        // Use displacement to determine rotation
+    // Use displacement to determine rotation
     if (displacement.row === -1) {
         // Arrow faces up
         angle = 0;
@@ -1083,7 +1242,7 @@ Pathfinder.prototype.getAngleFromParent = function(tile) {
     }
 
     return angle;
-}
+};
 
 
 
@@ -1157,7 +1316,7 @@ Pathfinder.prototype.drawSpriteToFrontierLayer = function(tileId, interpolate) {
     
 };
 
-Pathfinder.prototype._________ROUTER_METHODS_________ = function() {};
+Pathfinder.prototype._________PATH_METHODS_________ = function() {};
 
 
 
@@ -1237,11 +1396,6 @@ Pathfinder.prototype.simulateKeyPress = function() {
 };
 
 
-Pathfinder.prototype.appendPath = function() {
-    this.game.appendPath(this.hexPath);
-};
-
-
 /***************************************************/
 /**********    Pathfinding Algorithms    ***********/
 /***************************************************/
@@ -1256,7 +1410,7 @@ Pathfinder.prototype.makePath = function(node) {
     var parent = this.parent;
 
     while (node) {
-        if (this.PATH_STATE === 'ROUTER') {
+        if (this.PATH_STATE === 'PATH') {
             path.unshift(node);
         } else if (this.PATH_STATE === 'FRONTIER') {
             path.push(node);
@@ -1265,30 +1419,113 @@ Pathfinder.prototype.makePath = function(node) {
         node = parent[node];
     }   
     return path;
+    
 };
 
 
-
-
 Pathfinder.prototype.setupAlgorithm = function() {
+    
+    var game = this.game;
+    var algorithm = this.algorithm;
+    
+    game.logToUserConsole('Running ' + this.algorithm.label + '...');
+    
+    
+    if (algorithm.id === 0) {
+        this.bfs_setup();
+    }
+    else if (algorithm.id === 1) {
+        this.dfs_setup();
+    }
+    else if (algorithm.id === 2) {
+        this.dijkstra_setup();
+    }
+    else if (algorithm.id === 3) {
+        this.astar_setup();
+    }
+    
+    //this.dijkstra_setup();
+    
+    
+    //userConsole.log('');
 
-    this.bfs_setup();
+    
 
 };
 
 
 Pathfinder.prototype.completeAlgorithm = function() {
+    
+    var algorithm = this.algorithm;
+    
     while(!this.complete) {
+        this.stepAlgorithm();        
+    }
+    
+};
+
+
+Pathfinder.prototype.stepAlgorithm = function() {
+    
+    var algorithm = this.algorithm;
+    
+    if (algorithm.id === 0) {
         this.bfs_step();
     }
-}
+    else if (algorithm.id === 1) {
+        this.dfs_step();
+    }
+    else if (algorithm.id === 2) {
+        this.dijkstra_step();
+    }
+    else if (algorithm.id === 3) {
+        this.astar_step();
+    }
+     
+};
 
-Pathfinder.prototype.stepAlgorithm = function(direction) {
-    this.bfs_step();
-}
+
+Pathfinder.prototype.getMapEuclidDistance = function(tile1, tile2) {
+
+    var game = this.game;
+    return game.getMapEuclidDistance(tile1, tile2);
+
+};
 
 
+/*******************************************/
+/*******    Breadth-first Search    ********/
+/*******************************************/
 
+
+Pathfinder.prototype.bfs_setup = function() {
+
+    var game = this.game;
+
+    // The open set is the queue
+    var q = this.q;
+
+    // Frontier structures
+    var open = this.open;
+    var closed = this.closed;
+    var cost = this.cost;
+
+    this.maxCost = game.getMapMaxDistance();
+
+    // Pathfining structures
+    var parent = this.parent;
+    var visited = this.visited;
+    var source = this.source.id;
+    var target = this.target.id;
+
+    // Setup algorithm
+    parent[source] = null;
+    cost[source] = 0;
+    visited.add(source);
+    q.push(source);
+    open.add(source);
+
+};
 
 Pathfinder.prototype.bfs_step = function() {
 
@@ -1350,35 +1587,26 @@ Pathfinder.prototype.bfs_step = function() {
             cost[uNode] = c + 1;
         }
     }
-}
+};
 
 
-
-Pathfinder.prototype.getMapEuclidDistance = function(tile1, tile2) {
-
-    var game = this.game;
-    return game.getMapEuclidDistance(tile1, tile2);
-}
+/*******************************************/
+/********    Depth-first Search    *********/
+/*******************************************/
 
 
-
-
-
-Pathfinder.prototype.bfs_setup = function() {
-
-    var game = this.game;
-
-    // The open set is the queue
-    var q = this.q;
+Pathfinder.prototype.dfs_setup = function() {
+    
+    // Stack for iterative implementation
+    this.stack = [];
+    var stack = this.stack;
 
     // Frontier structures
     var open = this.open;
     var closed = this.closed;
     var cost = this.cost;
 
-
-
-    this.maxCost = game.getMapMaxDistance();
+    this.maxCost = 300;
 
     // Pathfining structures
     var parent = this.parent;
@@ -1389,27 +1617,339 @@ Pathfinder.prototype.bfs_setup = function() {
     // Setup algorithm
     parent[source] = null;
     cost[source] = 0;
+    stack.push(source);
     visited.add(source);
-    q.push(source);
     open.add(source);
 
-}
+};
 
 
-
-Pathfinder.prototype.dfs  = function() {
+Pathfinder.prototype.dfs_step = function() {
     
+    // Get the game
+    var game = this.game;
+    
+    // Get the stack
+    var stack = this.stack;
+
+    // Return if queue is empty
+    if (stack.length <= 0) { 
+        console.log('Target not found');
+        this.complete = true;
+        return; 
+    }
+
+    // Frontier structures
+    var open = this.open;
+    var closed = this.closed;
+    var cost = this.cost;
+    var deltaFrontier = this.deltaFrontier;
+    deltaFrontier.open = [];
+    deltaFrontier.closed = [];
+
+    // Pathfining structures
+    var parent = this.parent;
+    var visited = this.visited;
     var source = this.source.id;
     var target = this.target.id;
-    this.visited = new Set();
-    this.parent[source] = null;
-    this.visited.add(source);
+
+    var vNode = stack.pop();
+    closed.add(vNode);
+    open.delete(vNode);
+    deltaFrontier.closed.push(vNode);
+
     
-    var found = this.dfs_helper(source, target, this.step);
-    if (found) {
-        this.makePath(target, this.parent, this.path);
+    if (vNode === target) {
+        game.logToUserConsole('Target found!');
+        this.makePath(vNode);
+        this.found = true;
+        this.complete = true;
+        return;
     }
+    
+    for (let edge of this.graph.getAdj(vNode)) {
+        
+        let uNode = edge.to();
+        
+        if (!visited.has(uNode)) {
+            
+            visited.add(uNode);
+            parent[uNode] = vNode;
+            stack.push(uNode);
+
+
+            open.add(uNode);  
+            deltaFrontier.open.push(uNode);
+            //let c = this.getMapEuclidDistance(uNode, source);
+            let c = cost[vNode];
+            cost[uNode] = c + 1;
+        }
+    }
+    
 };
+
+
+/*******************************************/
+/************    Dijkstra's    *************/
+/*******************************************/
+
+
+Pathfinder.prototype.dijkstra_setup = function() {
+    
+    // Stack for iterative implementation
+    this.pq = new BinaryHeap(function(x){return x[1];});
+    var pq = this.pq;
+
+    // Frontier structures
+    var open = this.open;
+    var closed = this.closed;
+    var cost = this.cost;
+
+    this.maxCost = 300;
+
+    // Pathfining structures
+    var parent = this.parent;
+    var visited = this.visited;
+    var source = this.source.id;
+    var target = this.target.id;
+
+    // Setup algorithm
+    parent[source] = null;
+    
+    for (let node in this.graph.getNodes()) {
+        cost[node] = Number.POSITIVE_INFINITY;
+        parent[node] = null;
+    }
+    
+    cost[source] = 0;
+    pq.push([source, 0]);
+    visited.add(source);
+    open.add(source);
+    
+};
+
+
+Pathfinder.prototype.dijkstra_step = function() {
+
+    var pq = this.pq;
+    
+    // Frontier structures
+    var open = this.open;
+    var closed = this.closed;
+    var cost = this.cost;
+    var deltaFrontier = this.deltaFrontier;
+    deltaFrontier.open = [];
+    deltaFrontier.closed = [];
+
+    // Pathfining structures
+    var parent = this.parent;
+    var visited = this.visited;
+    var source = this.source.id;
+    var target = this.target.id;   
+    
+    this.game.logToUserConsole(pq.size());
+    
+    // Return if queue is empty
+    if (pq.size() <= 0) { 
+        console.log('Target not found');
+        this.complete = true;
+        return; 
+    }  
+    
+    //console.time('pop node');
+    var vNode = pq.pop()[0];
+    closed.add(vNode);
+    open.delete(vNode);
+    deltaFrontier.closed.push(vNode);
+    //console.timeEnd('pop node');
+    
+    if (vNode === target) {
+        this.game.logToUserConsole('Target found!');
+        this.makePath(vNode);
+        this.found = true;
+        this.complete = true;
+        return;
+    }
+    
+    for (let edge of this.graph.getAdj(vNode)) {
+        
+        let uNode = edge.to();
+        let weight = this.getWeight(uNode); 
+        
+        let relax = cost[vNode] + weight;
+        if (relax < cost[uNode]) {
+            cost[uNode] = relax;
+            parent[uNode] = vNode;
+            pq.push([uNode, relax]);
+            
+            open.add(uNode);  
+            deltaFrontier.open.push(uNode);
+        }         
+    }    
+    
+};
+
+
+/*******************************************/
+/************    A* Search    **************/
+/*******************************************/
+
+
+
+Pathfinder.prototype.astar_setup = function() {
+    
+    // Stack for iterative implementation
+    this.pq = new BinaryHeap(function(x){return x[1];});
+    var pq = this.pq;
+
+    // Frontier structures
+    var open = this.open;
+    var closed = this.closed;
+    this.fCost = [];
+    this.gCost = [];
+    this.cost = this.fCost;
+    
+    var fCost = this.fCost;
+    var gCost = this.gCost;
+
+    this.maxCost = 300;
+
+    // Pathfining structures
+    var parent = this.parent;
+    var visited = this.visited;
+    var source = this.source.id;
+    var target = this.target.id;
+
+    // Setup algorithm
+    parent[source] = null;
+    
+    for (let node in this.graph.getNodes()) {
+        gCost[node] = Number.POSITIVE_INFINITY;
+        parent[node] = null;
+    }
+    
+    gCost[source] = 0;
+    fCost[source] = 0;
+    pq.push([source, fCost[source]]);
+    visited.add(source);
+    open.add(source);
+    
+};
+
+
+Pathfinder.prototype.astar_step = function() {
+
+    var pq = this.pq;
+    
+    // Frontier structures
+    var open = this.open;
+    var closed = this.closed;
+    var fCost = this.fCost;
+    var gCost = this.gCost;
+    var deltaFrontier = this.deltaFrontier;
+    deltaFrontier.open = [];
+    deltaFrontier.closed = [];
+
+    // Pathfining structures
+    var parent = this.parent;
+    var visited = this.visited;
+    var source = this.source.id;
+    var target = this.target.id;   
+    
+    this.game.logToUserConsole(pq.size());
+    
+    // Return if queue is empty
+    if (pq.size() <= 0) { 
+        console.log('Target not found');
+        this.complete = true;
+        return; 
+    }  
+    
+    //console.time('pop node');
+    var vNode = pq.pop()[0];
+    closed.add(vNode);
+    open.delete(vNode);
+    deltaFrontier.closed.push(vNode);
+    //console.timeEnd('pop node');
+    
+    if (vNode === target) {
+        this.game.logToUserConsole('Target found!');
+        this.makePath(vNode);
+        this.found = true;
+        this.complete = true;
+        return;
+    }
+    
+    for (let edge of this.graph.getAdj(vNode)) {
+        
+        let uNode = edge.to();
+        let weight = this.getWeight(uNode);     
+        
+        let relax = gCost[vNode] + weight;
+        if (relax < gCost[uNode]) {
+            
+            parent[uNode] = vNode;
+            gCost[uNode] = relax;
+            
+            var hCost = this.heuristic(uNode, source);
+            
+            fCost[uNode] = gCost[uNode] + hCost;
+            
+            pq.push([uNode, fCost[uNode]]);
+            open.add(uNode);  
+            deltaFrontier.open.push(uNode);
+        }    
+        
+    }    
+};
+
+
+Pathfinder.prototype.getWeight = function(node) {
+    
+    var game = this.game;
+    var weights = this.game.getEdgeWeights();
+    
+    let tile = game.getTileFromId(node);
+    
+    if (tile.type === 'WATER') {
+        return weights.water;
+    }
+    else if (tile.dof === 'BACKGROUND') {
+        return weights.background;
+    }
+    else if (tile.dof === 'FOREGROUND') {
+        return weights.foreground;
+    }
+    
+};
+
+Pathfinder.prototype.heuristic = function(vNode, uNode) {
+    
+    var game = this.game;
+    
+    var vTile = game.getTileFromId(vNode);
+    var uTile = game.getTileFromId(uNode);
+    
+    var delta_row = vTile.row - uTile.row;
+    var delta_col = vTile.col - uTile.col;
+    
+    var row2 = Math.pow(delta_row, 2);
+    var col2 = Math.pow(delta_col, 2);
+    
+    var distance = Math.pow(row2 + col2, .5);
+    
+    return distance;
+    
+};
+
+
+/*******************************************/
+/************       **************/
+/*******************************************/
+
+
+
+
 
 Pathfinder.prototype.dfs_helper = function(vNode, target, s) {
     
@@ -1450,7 +1990,7 @@ Pathfinder.prototype.dfs_helper = function(vNode, target, s) {
 
 Pathfinder.prototype.astar = function() {
   
-  var pq = new BinaryHeap(function(x){return x[1];});
+    var pq = new BinaryHeap(function(x){return x[1];});
     //alert(pq);
     
     var game = this.game;
@@ -1495,13 +2035,13 @@ Pathfinder.prototype.astar = function() {
             if (relax < distanceTo[uNode]) {
                 distanceTo[uNode] = relax;
                 parent[uNode] = vNode;
-//                var uTile = game.getTileFromId(uNode);
-//                //uTile.floor = vTile.floor;
-//                var tile = {
-//                    row: uTile.row,
-//                    col: uTile.col, 
-//                    floor: vTile.floor
-//                }
+                //                var uTile = game.getTileFromId(uNode);
+                //                //uTile.floor = vTile.floor;
+                //                var tile = {
+                //                    row: uTile.row,
+                //                    col: uTile.col, 
+                //                    floor: vTile.floor
+                //                }
                 var hn = this.heuristic(uNode, target);
                 console.log('Heuristic of ' +  uNode + ' and Target ' + target +  ' is : ' + hn);
                 var fn = relax + hn;
@@ -1515,96 +2055,8 @@ Pathfinder.prototype.astar = function() {
 };
 
 
-Pathfinder.prototype.heuristic = function(vNode, uNode) {
-    
-    var game = this.game;
-    
-    var vTile = game.getTileFromId(vNode);
-    var uTile = game.getTileFromId(uNode);
-    
-    var delta_row = vTile.row - uTile.row;
-    var delta_col = vTile.col - uTile.col;
-    
-    // Get top/left, or x/y of tile (they're the same thing)
-//    var tile1_xy = this.getTileTopLeft(tile1);
-//    var tile2_xy = this.getTileTopLeft(tile2);
-    
-//    var delta_y = tile1_xy.top - tile2_xy.top;
-//    var delta_x = tile1_xy.left - tile2_xy.left;
-    
-    var row2 = Math.pow(delta_row, 2);
-    var col2 = Math.pow(delta_col, 2);
-    
-    var distance = Math.pow(row2 + col2, .5);
-    
-    return distance;
-    
-//    var max_width = this.getHeight();
-//    var max_height = this.getWidth();
-//    
-//    var max_height2 = Math.pow(max_height, 2);
-//    var max_width2 = Math.pow(max_width, 2);
-//    var max_distance = Math.pow(max_width2 + max_height2, .5);
-//    
-//    return distance/max_distance;
-    
-};
 
-Pathfinder.prototype.dijkstra = function() {
-    
-    var pq = new BinaryHeap(function(x){return x[1];});
-    //alert(pq);
-    
-    var source = this.source.id;
-    var target = this.target.id;
-    var stepbystep = this.stepbystep;
-    var parent = this.parent;
-    var graph = this.graph;
-    
-    this.parent[source] = null;
-    var distanceTo = [];
-    
-    for (let node in graph.getNodes()) {
-        distanceTo[node] = Number.POSITIVE_INFINITY;
-        parent[node] = null;
-    }
-    
-    stepbystep.push([]);
-    var step = 0;
-    stepbystep[step].push(source);
-    
-    distanceTo[source] = 0;
-    pq.push([source, 0]);
-    
-    while (pq.size() > 0) {
-        
-        
-        
-        var vNode = pq.pop()[0];
-        
-        stepbystep.push([]);
-        stepbystep[step].push(vNode);
-        
-        if (vNode === target) {
-            console.log('Thank You, Dijkstra!');
-            this.makePath(vNode, this.parent, this.path);
-            return;
-        }
-        
-        for (let edge of graph.getAdj(vNode)) {
-            let uNode = edge.to();
-            let relax = distanceTo[vNode] + edge.weight;
-            if (relax < distanceTo[uNode]) {
-                distanceTo[uNode] = relax;
-                parent[uNode] = vNode;
-                pq.push([uNode, relax]);
-                
-            }  
-        }  
-        step++;
-    }
-    
-};
+
 
 
 Pathfinder.prototype.ladderCheck = function(vNode, uNode) {
@@ -1635,3 +2087,31 @@ Pathfinder.prototype.ladderCheck = function(vNode, uNode) {
     return true;
     
 };
+
+Pathfinder.prototype.handleVCRCommand = function(COMMAND) {
+  
+    if (this.PATH_STATE !== 'PATH' &&
+            this.PATH_STATE !== 'FRONTIER') {
+        console.info("You much be generating a frontier or following a path to use the VCR");
+        return;
+    }
+    
+    var vcr = this.vcr;
+    
+    if (COMMAND === 'PLAY') {
+        vcr.COMMAND = 'PLAY';
+    }
+    
+    else if (COMMAND === 'PAUSE') {
+        vcr.COMMAND = 'PAUSE';
+    }
+    
+    else if (COMMAND === 'STEP') {
+        vcr.COMMAND = 'STEP';
+    }
+    
+    console.info(vcr);
+    
+};
+
+

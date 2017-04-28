@@ -90,9 +90,9 @@ pokemonApp.service('pokeGame', function($log, $document, $location, $interval) {
 
         let post_update_game = performance.now();
 
-        console.time('updateMap');  
+//        console.time('updateMap');  
         game.updateMap();
-        console.timeEnd('updateMap');
+//        console.timeEnd('updateMap');
         let post_update_map = performance.now();
 
         // ----- Render game ----- //
@@ -147,8 +147,8 @@ pokemonApp.service('pokeGame', function($log, $document, $location, $interval) {
         if (total_time > 6) {
             //$log.info('Loop Time is over 6ms ' + total_time);
         }
-        $log.log(time);
-        $log.log('Loop Time: ' +  time.total_time);
+//        $log.log(time);
+//        $log.log('Loop Time: ' +  time.total_time);
         
     };
     
@@ -156,3 +156,10 @@ pokemonApp.service('pokeGame', function($log, $document, $location, $interval) {
     
     
 });
+
+
+//pokemonApp.service('userConsole', function($log, $document, $location, $interval) {
+//  
+//    
+//    
+//});

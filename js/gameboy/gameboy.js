@@ -49,6 +49,7 @@ Gameboy.prototype.drawGameboy = function() {
     this.drawGameboyBackground();
     this.drawFloor();
     this.drawGrid();
+    this.drawTransition();
     
 };
 
@@ -60,6 +61,26 @@ Gameboy.prototype.getOrigin = function(tile) {
     };
     
     return origin;
+    
+};
+
+Gameboy.prototype.drawTransition = function() {
+    
+    var game = this.game;
+    
+    if (game.getPlayerMoveState() === 'LADDER') {
+    
+        // Get transition layer from the game (from the map)
+        var transitionlayer = this.game.getTransitionLayer();
+
+        // Update layer with new shade black (based on current alpha set during interpolation);
+        transitionlayer.ctx.clearRect(0, 0, transitionlayer.canvas.width, transitionlayer.canvas.height);
+        transitionlayer.ctx.fillStyle = 'black';
+        transitionlayer.ctx.fillRect(0, 0, transitionlayer.canvas.width, transitionlayer.canvas.height);
+
+        this.ctx.drawImage(transitionlayer.canvas, 0, 0, this.canvas.width, this.canvas.height);
+    
+    }  
     
 };
 
@@ -186,7 +207,7 @@ Gameboy.prototype.drawGameboyBackground = function() {
     
     var game = this.game;
     
-    if (game.getLayerState() === 'GRAPHIC') {
+    if (game.getMapState() === 'GRAPHIC') {
         this.ctx.fillStyle = this.rockGreen;
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
         return;

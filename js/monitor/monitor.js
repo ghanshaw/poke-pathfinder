@@ -8,11 +8,13 @@ var Monitor = function(game) {
         cols: 2
     };
     
+    this.pointer = null;
+    
     this.floorDimensions = {
         'F1': {},
         'F2': {},
         'F3': {}
-    }
+    };
     
     
     // Define the order in which floors appear
@@ -81,7 +83,7 @@ Monitor.prototype.initCanvas = function() {
 Monitor.prototype.drawMonitor = function() {
     
     // Draw cave background
-    if (this.game.getLayerState() === 'GRAPHIC') {
+    if (this.game.getMapState() === 'GRAPHIC') {
         this.ctx.fillStyle = this.rockGreen;
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
     } else {
@@ -93,9 +95,49 @@ Monitor.prototype.drawMonitor = function() {
 
     // Draw grid
     this.drawGrid();
+    
+    // Draw player drag icon
+    this.drawPlayerDrag();
 
     //Draw transition layer
+    this.drawTransition();
 };
+
+
+Monitor.prototype.drawPlayerDrag = function() {
+    
+    var game = this.game;
+    var tile_size = this.tile_size;
+    
+    if (game.getPlayerMoveState() === 'DRAG') {
+        
+        this.pointer;
+        var sprite = game.getPlayerDragSprite();
+        this.ctx.drawImage(sprite.canvas, this.pointer.x - tile_size, this.pointer.y - tile_size, tile_size * 2, tile_size * 2);
+        
+    }
+    
+};
+
+Monitor.prototype.drawTransition = function() {
+    
+    var game = this.game;
+    
+    if (game.getPlayerMoveState() === 'LADDER') {
+    
+        // Get transition layer from the game (from the map)
+        var transitionlayer = this.game.getTransitionLayer();
+
+        // Update layer with new shade black (based on current alpha set during interpolation);
+        transitionlayer.ctx.clearRect(0, 0, transitionlayer.canvas.width, transitionlayer.canvas.height);
+        transitionlayer.ctx.fillStyle = 'black';
+        transitionlayer.ctx.fillRect(0, 0, transitionlayer.canvas.width, transitionlayer.canvas.height);
+
+        this.ctx.drawImage(transitionlayer.canvas, 0, 0, this.canvas.width, this.canvas.height);
+    
+    }
+};
+
 
 Monitor.prototype.drawFloors = function() {
     
@@ -243,7 +285,7 @@ Monitor.prototype.createGrid = function() {
         ctx: ctx
     };
 
-}
+};
 
 
 Monitor.prototype.drawGrid = function() {
@@ -254,11 +296,13 @@ Monitor.prototype.drawGrid = function() {
         this.ctx.drawImage(this.grid.canvas, 0, 0);
     }
 
-}
+};
 
 
 
-Monitor.prototype.getTileFromPointer  = function(pointer) {
+Monitor.prototype.getTileFromPointer  = function() {
+    
+    var pointer = this.pointer;
     
     if (!pointer || pointer.target.id !== 'monitor') {
         return;
@@ -282,8 +326,6 @@ Monitor.prototype.getTileFromPointer  = function(pointer) {
             left -= dimensions.left;
             break;
         }
-
-        return null;
 
     }
 
