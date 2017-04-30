@@ -1,5 +1,8 @@
 // Floor object Constructor
-var Floor = function(floor_data) {
+var Floor = function(game, floor_data) {
+    
+    this.game = game;
+    
     this.id = floor_data.id();
     this.rows = floor_data.rows();
     this.cols = floor_data.cols();
@@ -8,8 +11,8 @@ var Floor = function(floor_data) {
     // Create canvas objects
     this.frame = null;
     this.waterlayer = null;
-    this.background = null;
-    this.foreground = null;
+    this.background = {};
+    this.foreground = {};
     
 //    this.bitmap = {};
 //    this.graphic = {};
@@ -26,6 +29,15 @@ var Floor = function(floor_data) {
     }
     
     console.log(this.tiles);
+};
+
+Floor.prototype.init = function(graph) {
+  
+    this.addFloorData();
+    this.addFloorToGraph(graph);
+    this.createBackgroundandForeground();
+    this.createFrame();
+    
 };
 
 // Update floor to reflect map details
@@ -197,13 +209,13 @@ Floor.prototype.createBackgroundandForeground = function() {
     
     // Get floor map png from html img
     var imgId = this.floor_data.imgBackground();
-    this.backgroundImg = document.getElementById(imgId);
+    this.background['img'] = document.getElementById(imgId);
     
     // Get floor map png from html img
     imgId = this.floor_data.imgForeground();
     // Return if there is not foreground layer
     if (!imgId) { this.foregroudImg = null; }
-    this.foregroundImg = document.getElementById(imgId);           
+    this.foreground['img'] = document.getElementById(imgId);           
     
 };
 
@@ -213,7 +225,7 @@ Floor.prototype.createFrame = function() {
     var canvas = document.createElement('canvas');
     var ctx = canvas.getContext('2d');
 
-    var img = this.backgroundImg;
+    var img = this.background.img;
     
     this.width = canvas.width = img.width;
     this.height = canvas.height = img.height;

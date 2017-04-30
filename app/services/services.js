@@ -85,6 +85,7 @@ pokemonApp.service('pokeGame', function($log, $document, $location, $interval) {
         //$log.log($location.path());
        
         // ----- Update game ----- // 
+        game.userConsole.updateSettings();
           
         game.updateGame();
 
@@ -148,7 +149,7 @@ pokemonApp.service('pokeGame', function($log, $document, $location, $interval) {
             //$log.info('Loop Time is over 6ms ' + total_time);
         }
 //        $log.log(time);
-//        $log.log('Loop Time: ' +  time.total_time);
+        //$log.log('Loop Time: ' +  time.total_time);
         
     };
     

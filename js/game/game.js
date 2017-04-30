@@ -37,16 +37,24 @@ var Game = function() {
 Game.prototype.initGame = function() {
     
     
-    
+    // ------ Init Spritesheet ------
     this.initSpritesheet();
-    this.initMap();
+    
     
     // ------ Init graph ------
     this.initGraph();
     
     
+    // ------ Init Map ------
+    this.initMap();
+
+    
     // ------ Init player ------
     this.initPlayer();
+    
+    
+    // ------ Init user console ------
+    this.initUserConsole();
     
     
     // ------ Init pathfinder ------
@@ -62,15 +70,20 @@ Game.prototype.initGame = function() {
     var gameboy = new Gameboy(this);
     this.gameboy = gameboy;
     
-    this.initUserConsole();
+    
     
     
 };
 
+Game.prototype.getWaterlayer = function() {
+    
+  return this.map.waterlayer;  
+    
+};
+
+
 Game.prototype.initUserConsole = function() {
-    
-    this.userConsole = new UserConsole(this);
-    
+    this.userConsole = new UserConsole(this);    
 };
 
 
@@ -85,18 +98,14 @@ Game.prototype.initSpritesheet = function() {
 Game.prototype.initPathfinder = function() {
     
     // Create new pathfinder
-    this.pathfinder = new Pathfinder(this, this.graph);
+    this.pathfinder = new Pathfinder(this, this.userConsole, this.graph);
     
     // Initialize pathfinder
     this.pathfinder.init();
     
-    // Create sprite and add visualization to floors
-    //this.pathfinder.initSprite();
-    this.pathfinder.createPathfinderFloorLayers();
-    
-    console.log(this.pathfinder);
-    
 };
+
+
 
 
 Game.prototype.initPlayer = function() {
@@ -117,40 +126,26 @@ Game.prototype.initPlayer = function() {
 };
 
 
-Game.prototype.initMap = function() {
-    
-    
+Game.prototype.initMap = function() {   
     
     // Create Floor object objects
-    var F1 = new Floor(F1_data);    
-    var F2 = new Floor(F2_data);
-    var BF1 = new Floor(BF1_data)
+    var F1 = new Floor(this, F1_data);    
+    var F2 = new Floor(this, F2_data);
+    var BF1 = new Floor(this, BF1_data)
     
-    // Add floor data
-    F1.addFloorData();
-    F2.addFloorData();
-    BF1.addFloorData();
+    F1.init(this.graph);
+    F2.init(this.graph);
+    BF1.init(this.graph);
+    
+    
+    //    // Add floor data
+    //    F1.addFloorData();
+    //    F2.addFloorData();
+    //    BF1.addFloorData();
     
     // Create game map
-    this.map = new Map(map_data);
-    
-    // Expose game to map
-    this.map.game = this;
-    
-    // Add floors to map
-    this.map.addFloor(F1);
-    this.map.addFloor(F2);
-    this.map.addFloor(BF1);
-    
-    // Add map data to map
-    this.map.addMapData();
-    
-    // Add ladders data to map
-    //this.map.addLadders();
-    
-    // Create map layers
-    this.map.createMapLayers();
-    
+    this.map = new Map(this, map_data);
+    this.map.init([F1, F2, BF1], this.graph);
     
 };
 
@@ -161,8 +156,14 @@ Game.prototype.initGraph = function() {
     this.graph = new Graph();
     
     // Add map to graph
-    this.map.addMapToGraph(this.graph);
-    console.log(Object.keys(this.graph.adj).length);
+    //this.map.addMapToGraph(this.graph);
+    //console.log(Object.keys(this.graph.adj).length);
+    
+};
+
+Game.prototype.initMonitor = function() {
+    
+  
     
 };
 
@@ -199,15 +200,16 @@ Game.prototype.updateMap = function() {
             let frame = floor. frame;
             let pathfinderFloor = this.pathfinder.floors[f];
             
+            frame.ctx.clearRect(0, 0, floor.width, floor.height);
             
             
             // ---- Draw Background ---- //
             
             // Draw floor layers
             //            console.time('drawWater');
-            floor.drawWaterLayer();
+            //floor.drawWaterLayer();
             //            console.timeEnd('drawWater');
-            floor.drawBackground();
+            //floor.drawBackground();
             
             // Draw path markers (if on foreground);
             pathfinder.drawMarkers(floor, 'BACKGROUND');
@@ -222,7 +224,7 @@ Game.prototype.updateMap = function() {
             // ---- Draw Foreground ---- //
             
             // Draw floor layer
-            floor.drawForeground();
+            //floor.drawForeground();
             
             // Draw path markers (if on foreground);
             pathfinder.drawMarkers(floor, 'FOREGROUND');
@@ -238,11 +240,11 @@ Game.prototype.updateMap = function() {
         }
     } else if (this.map.STATE === 'GRAPHIC')  {
         
-        for (let f in floors) {
-            this.map.floors[f].drawFloorLayer();
-            
-        }
-        this.drawPlayer();
+//        for (let f in floors) {
+//            this.map.floors[f].drawFloorLayer();
+//            
+//        }
+//        this.drawPlayer();
         
     }
     
@@ -497,18 +499,14 @@ Game.prototype.getMapState = function() {
     return this.map.STATE;  
 };
 
-Game.prototype.toggleGrid = function(state) {
-    this.map.layers.GRID = state;
-};
+
 
 Game.prototype.toggleMapLayers = function(layer) {
     //this.map.LAYER_STATE = layer;
 };
 
 
-Game.prototype.toggleMapState = function(state) {
-    this.map.STATE = state;
-};
+
 
 Game.prototype.toggleMapGrid = function(state) {
     this.map.layers.GRID = state;
@@ -524,10 +522,16 @@ Game.prototype.toggleMapPathfinderLayer = function(layer) {
         //        if (this.map.layers.PATHFINDER !== layer) {
         //            
         //        }
-        return;
+        return true;
     }
     
     this.map.layers.PATHFINDER = null;
+    
+};
+
+Game.prototype.getMapPathfinderLayer = function() {
+
+    return this.map.layers.PATHFINDER;
     
 };
 
@@ -655,7 +659,7 @@ Game.prototype.getTileOtherEndLadder = function(endA) {
 
 
 Game.prototype.__________PATHFINDER_METHODS__________ = function() {};
-
+  
 Game.prototype.setPathfinderSourceTarget = function(tile) {
     this.pathfinder.setSourceTarget(tile)
 };
@@ -979,9 +983,6 @@ Game.prototype.handleVCRCommand = function(COMMAND) {
     this.pathfinder.handleVCRCommand(COMMAND);
 };
 
-Game.prototype.getVCRCommand = function() {
-    return this.pathfinder.vcr.COMMAND;
-};
 
 Game.prototype.getPathfinderState = function() {
     return this.pathfinder.PATH_STATE;
@@ -1076,4 +1077,19 @@ Game.prototype.getEdgeWeights = function() {
 
 return this.userConsole.edgeWeight;
 
+};
+
+Game.prototype.getRocklayer = function() {
+    
+  return this.map.rocklayer;
+    
+    
+};
+
+Game.prototype.getTicks = function() {
+    return this.ticks;
+};
+
+Game.prototype.getPathMarkers = function() {
+    return this.pathfinder.pathMarker;
 };

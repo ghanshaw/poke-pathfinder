@@ -2,7 +2,8 @@ var UserConsole = function(game) {
     
     this.game = game;
     
-    this.algorithms = {
+    this.algorithms = {};
+    this.algorithms.options = {
         0: {
             id: 0,
             label: 'Breadth-first search',
@@ -24,9 +25,11 @@ var UserConsole = function(game) {
             method: 'astar'
             
         }
-    };
+    };   
     
-    this.locations = [
+    
+    this.locations = {};
+    this.locations.options = [
         {
             id: 0,
             label: 'Current Player Tile'
@@ -55,14 +58,7 @@ var UserConsole = function(game) {
         }          
     ];
     
-    this.selectedAlgorithm = this.algorithms[0];
-    this.sourceLocation = {
-        id: 1,
-        label: 'Entrance',
-        keyTile: 0
-    };
     
-    this.targetLocation = this.locations[2];
     
     this.message = {
         
@@ -82,7 +78,57 @@ var UserConsole = function(game) {
         speed: .6
     };
     
-    this.edgeWeight = {
+    
+//    
+//    this.map.mode;
+//    this.pathfinder.mode;
+    
+    
+    this.LAYER = null;
+    
+    this.hexWeightLayer = "#FFEB3B";
+    this.opacity = .3;
+    
+    
+    
+    
+    
+    
+    
+    
+        // Settings
+    this.speed = 0;
+    
+    this.layers = {
+        GRID: false,
+        PATH: false,
+        VISUALIZER: false
+    };
+
+    this.algorithms.selected = this.algorithms.options[0];
+    this.locations.source = this.locations.options[1];
+    this.locations.target = this.locations.options[2];
+    
+    this.pathmarker = {
+        source: {
+            show: false,
+            disabled: false
+        },
+        target: {
+            show: false,
+            disabled: false
+        }
+    };
+    
+    
+    this.vcr = {
+        COMMAND: null
+    };
+    this.map = {
+        state: 'BITMAP'
+    };
+    
+    this.edge_weight = {
         background: 1,
         foreground: 10,
         water: 20 ,
@@ -90,12 +136,323 @@ var UserConsole = function(game) {
         max: 30
     };
     
-    this.LAYER = null;
     
-    this.hexWeightLayer = "#FFEB3B";
-    this.opacity = .3;
+    this.pathfinder = {
+        state: null,
+        layer: {
+            path: {
+                on: false,
+                disabled: false,
+                active: false
+            },
+            frontier: {
+                on: false,
+                disabled: false,
+                active: false,
+            }
+        }        
+    };
+    
+    
+//    this.selected_algorithm = this.algorithms[0];
+//    this.source_location = this.locations[1];
+//    this.target_location = this.locations[2];
+    
+//     this.pathlayer = 
+//    
+//    this.frontierlayer = {
+//        on: false,
+//        disabled: false
+//    };
+    
+    
+    
+    
+    
+    
+    
     
 };
+
+
+UserConsole.prototype.updateSettings = function() {
+    
+    var game = this.game;
+    
+    this.pathfinder.state = game.getPathfinderState();
+    this.pathfinder.layer.path.disabled = true;
+    this.pathfinder.layer.frontier.disabled = true;
+    
+    if (game.getPathfinderState() === 'MARK SOURCE') {
+        this.pathmarker.source.disabled = true;
+    } else {
+        this.pathmarker.source.disabled = false;
+    }
+    
+    if (game.getPathfinderState() === 'MARK TARGET') {
+        this.pathmarker.target.disabled = true;
+    } else {
+        this.pathmarker.target.disabled = false;
+    }
+    
+    if (game.getPathfinderState() === 'PATH') {
+        this.pathfinder.layer.path.disabled = false;
+    } 
+    
+    if (game.getPathfinderState() === 'FRONTIER') {
+        this.pathfinder.layer.frontier.disabled = false;
+    } 
+    
+
+    //this.vcr.COMMAND = game.getVCRCommand();
+
+};
+
+
+UserConsole.prototype.getSelectedAlgorithm = function() {
+    return this.algorithms.selected;
+};
+
+UserConsole.prototype.setSelectedAlgorithm = function(algorithm) {
+    this.algorithms.selected = algorithm;
+};
+
+UserConsole.prototype.getAlgorithms = function() {
+    return this.algorithms.options;
+};
+
+UserConsole.prototype.getEdgeWeights = function() {
+    return this.edgeWeight;
+};
+
+
+UserConsole.prototype.getLocations = function() {
+    return this.locations.options;
+};
+
+UserConsole.prototype.getSourceLocation = function() {
+    return this.locations.source;
+};
+
+UserConsole.prototype.setSourceLocation = function(location) {
+    this.locations.source = location;    
+};
+
+UserConsole.prototype.getTargetLocation = function() {
+    return this.locations.target;
+};
+
+UserConsole.prototype.setTargetLocation = function(location) {
+    this.locations.target = location;    
+};
+
+UserConsole.prototype.startPathfinder = function(state) {    
+    this.game.startPathfinder(state);    
+};
+
+UserConsole.prototype.clearPathfinder = function() {
+    this.game.clearPathfinder();    
+};
+
+UserConsole.prototype.getPathfinderState = function() {
+    return this.pathfinder.state;
+};
+
+UserConsole.prototype.handleVCRCommand = function(command) {
+    
+    if (this.pathfinder.state !== 'PATH'  &&
+            this.pathfinder.state !== 'FRONTIER') {
+        console.info("You much be generating a frontier or following a path to use the VCR");
+        return;
+    }
+    
+    var vcr = this.vcr;
+    
+    if (command === 'PLAY') {
+        vcr.COMMAND = 'PLAY';
+    }
+    
+    else if (command === 'PAUSE') {
+        vcr.COMMAND = 'PAUSE';
+    }
+    
+    else if (command === 'STEP') {
+        vcr.COMMAND = 'STEP';
+    }
+    
+    console.info(vcr);
+    
+};
+
+
+UserConsole.prototype.getVCRCommand = function() {
+    return this.vcr.COMMAND;
+};
+
+UserConsole.prototype.toggleMapState = function(state) {
+    this.map.state = state;
+};
+
+UserConsole.prototype.toggleGrid = function(state) {
+    this.layers.GRID = state;
+};
+
+
+
+
+
+UserConsole.prototype.getPathMarker = function(point) {
+    
+    if (point === 'SOURCE') {
+
+        return this.pathmarker.source;
+    }
+    
+    else if (point === 'TARGET') {
+        return this.pathmarker.target;
+    }
+    
+};
+
+
+UserConsole.prototype.togglePathMarker = function(point, checkbox) {
+  
+    var game = this.game;
+    var pathmarker;
+    
+    if (point === 'SOURCE') {
+        pathmarker = this.pathmarker.source;
+    } else {
+        pathmarker = this.pathmarker.target;
+    }
+  
+    // If pathfinder is currently in MARK SOURCE or MARK TARGET states
+    if (game.getPathfinderState().search(point) !== -1) {
+        checkbox.disabled = true;
+        checkbox.active = false;
+        checkbox.label = '';
+        pathmarker.show = false;
+        return;
+    }
+    
+    var status = pathmarker.show;
+    
+    checkbox.disabled = false;
+    checkbox.active = !status;
+    pathmarker.show = !status;
+    
+    if (pathmarker.show) {
+        checkbox.label = 'hide';
+    } else {
+        checkbox.label = 'show';
+    }
+  
+};
+
+
+
+
+
+UserConsole.prototype.getPathlayer = function() {
+    return this.pathlayer;
+};
+
+UserConsole.prototype.togglePathlayer = function(button) {
+   
+    if (this.game.pathfinder.LAYER !== 'PATH') {       
+        this.pathlayer.on = false;
+        this.pathlayer.disabled = true;        
+    }  
+    
+    else if (button.click) {          
+        this.pathlayer.on = !button.active;
+        this.pathlayer.disabled = false;
+        
+    }   
+    
+    else if (button.hover) {
+        this.pathlayer.on = true;
+        this.pathlayer.disabled = false;   
+    }
+
+    
+    else if (!button.active && !button.hover) {
+        this.pathlayer.on = false;
+        this.pathlayer.disabled = false;
+    }
+    
+    return this.pathlayer;
+    
+};
+
+
+UserConsole.prototype.getFrontierlayer = function() {
+    return this.pathlayer;
+};
+
+
+UserConsole.prototype.togglePathfinderLayer = function(selection, button) {
+   
+
+    if (selection === 'FRONTIER') {
+        layer = this.pathfinder.layer.frontier;        
+    } else if (selection === 'PATH') {      
+        layer = this.pathfinder.layer.path;
+    }
+    
+    if (layer.disabled) { 
+        return; 
+    }
+    else if (button.click) {
+        var state = layer.active;
+        layer.active = !state;
+        layer.on = layer.active;
+    }   
+    else if (button.hover) {
+        layer.on = true;
+    }      
+    else {
+        layer.on = layer.active;
+    }
+    
+};
+
+UserConsole.prototype.getPathfinderLayer = function(selection) {
+    
+    var layer;
+    if (selection === 'FRONTIER') {
+        layer = this.pathfinder.layer.frontier;        
+    } else if (selection === 'PATH') {      
+        layer = this.pathfinder.layer.path;
+    }
+    
+    return layer;
+    
+};
+
+UserConsole.prototype.activatePathfinderLayer = function(selection, state) {
+    
+    var layer;
+    if (selection === 'FRONTIER') {
+        layer = this.pathfinder.layer.frontier;        
+    } else if (selection === 'PATH') {      
+        layer = this.pathfinder.layer.path;
+    }
+    
+    layer.on = state;
+    layer.active = state;
+};
+
+UserConsole.prototype.setPlayerSpeed = function(speed) {    
+    this.game.setPlayerSpeed(speed);
+    this.speed = speed;
+};
+
+UserConsole.prototype.setPlayerGender = function(gender) {
+    this.game.setPlayerGender(gender);
+    this.gender = gender;
+};
+
 
 
 UserConsole.prototype.createWeightLayers = function() {
@@ -232,22 +589,16 @@ UserConsole.prototype.drawWeightLayers = function(floor) {
 
 
 
-UserConsole.prototype.getSourceLocation = function() {
-    
-    return this.sourceLocation;
-    
-};
-
 UserConsole.prototype.getLocationTile = function(sourceTarget) {
     
     var game = this.game;
     
     var location;
     if (sourceTarget === 'SOURCE') {
-        location = this.sourceLocation;
+        location = this.locations.source;
     }
     else {
-        location = this.targetLocation;
+        location = this.locations.target;
     }
     
     // If Console tile is Player Tile
@@ -279,27 +630,9 @@ UserConsole.prototype.getLocationTile = function(sourceTarget) {
 };
 
 
-UserConsole.prototype.getTargetLocation = function() {
-    
-    return this.targetLocation;
-    
-};
 
-UserConsole.prototype.setSourceLocation = function(id) {
-    
-    var location = this.locations[id];
-    this.sourceLocation.label = location.label;
-    this.sourceLocation.id = location.id;
-    
-};
 
-UserConsole.prototype.setTargetLocation = function(id) {
-    
-    var location = this.locations[id];
-    this.targetLocation.label = location.label;
-    this.targetLocation.id = location.id;
-    
-};
+
 
 UserConsole.prototype.activatePathFrontierButton = function(button) {
     
@@ -327,5 +660,35 @@ UserConsole.prototype.log = function(text) {
     
     
     
+    
+};
+
+
+UserConsole.prototype.toggleFrontierPathLayers = function(button, action) {
+    
+    // If the layer is avaiable
+    if (this.game.pathfinder.LAYER === button) {
+        
+        if (action === 'ON') {
+            
+            // Turn it on
+            this.game.map.layers.PATHFINDER = button;
+        } else if (action === 'OFF') {
+            this.game.map.layers.PATHFINDER = null;
+        }
+        else if (action === 'SWITCH') {
+            let layer = this.game.map.layers.PATHFINDER;
+            
+            this.game.map.layers.PATHFINDER = button ? layer === null : null;
+        }
+        //        // If layer is off, turn it on
+        //        if (this.map.layers.PATHFINDER !== layer) {
+        //            
+        //        }
+        return true;
+    }
+    
+    this.game.map.layers.PATHFINDER = null;
+    return false;
     
 };

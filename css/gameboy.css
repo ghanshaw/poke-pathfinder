@@ -70,12 +70,12 @@ body {
       border-right-color: #4e5a65;
       border-bottom-color: #a9b3bd; }
       body .system-container#gbasp .screen-border img {
-        position: absolute;
-        left: 11.2rem;
-        bottom: 3.6rem;
-        opacity: .8;
-        width: 17.5rem; }
-    body .system-container#gbasp .screen {
+        /*                position: absolute;
+                        left: 11.2rem;
+                        bottom: 3.6rem;
+                        opacity: .8;
+                        width: 17.5rem;*/ }
+    body .system-container#gbasp .gameboy-screen {
       background-color: #777788;
       margin: 2.0rem auto;
       width: 90%;
@@ -83,7 +83,17 @@ body {
       display: flex;
       justify-content: center;
       align-items: center;
-      background-color: #333333; }
+      background-color: #333333;
+      position: relative;
+      overflow: hidden; }
+      body .system-container#gbasp .gameboy-screen .layer {
+        position: absolute;
+        /* left: 11.2rem; */
+        /* bottom: 3.6rem; */
+        /* opacity: .8; */
+        /* width: 17.5rem; */
+        top: 0;
+        left: 0; }
     body .system-container#gbasp .screen-bumper {
       border-radius: 100%;
       width: 2.2rem;

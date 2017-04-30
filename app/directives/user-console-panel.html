@@ -81,26 +81,41 @@
                 <h4 class="section-heading">Step 2: Choose Start Location</h4>
                 <div class="row">
                     <div class="col-xs-12">         
-                        
                         <select 
                             class="button-flat" 
                             ng-model="locations.source" 
                             ng-options="option.label 
-                                disable when disableAllTiles(option.id) 
                                 for option 
-                                in locations.options 
-                                track by option.id"></select>
-                                
+                                in locations.options | filter : hideOptions
+                                track by option.id">
+                        </select>
                     </div>
-                        
+                                       
                     <div class="col-xs-12"><p class="or">-or-</p></div>
-                        
-                    <div class="col-xs-12">                   
-                        <button 
-                            class="button-flat"
-                            ng-click="clickSourceTarget('SOURCE')"
-                            ng-class="cssSourceTarget('SOURCE')">Click Source Tile</button>
-                    </div>
+                    <div class="col-xs-12">   
+                        <div class="row marker-buttons">
+                            <div class="col-xs-10">                   
+                                <button 
+                                    class="button-flat normal-border-width"
+                                    ng-click="clickSourceTarget('SOURCE')"
+                                    ng-class="cssSourceTarget('SOURCE')">Click Source Tile</button>
+                            </div>
+                            <div class="col-xs-2">   
+                                <button
+                                    class="button-flat"
+                                    ng-class="cssPathMarkerCheckbox('SOURCE')"
+                                    ng-click="clickPathMarkerCheckbox('SOURCE')">
+                                    <i class="fa fa-square-o marker-icon" 
+                                       aria-hidden="true" 
+                                       ng-show="pathMarkerCheckbox.source.active === false"></i>
+                                    <i class="fa fa-check-square-o marker-icon" 
+                                       aria-hidden="true"
+                                       ng-show="pathMarkerCheckbox.source.active === true"></i>
+                                </button>
+                                <label>{{ pathMarkerCheckbox.source.label }}</label>
+                            </div>
+                        </div>
+                    </div> 
                 </div>
             </section>
                 
@@ -112,22 +127,41 @@
                     <div class="col-xs-12">         
                         <div class="dropdow">
                             <select 
-                                class="button-flat" 
+                                class="button-flat"
+                                
                                 ng-model="locations.target" 
                                 ng-options="option.label 
+                                    disable when disableAllTiles(option.id) 
                                     for option 
-                                    in locations.options | filter : hideOptions
+                                    in locations.options
                                     track by option.id " ></select>
                         </div>
                     </div>
                         
                     <div class="col-xs-12"><p class="or">-or-</p></div>
-                        
-                    <div class="col-xs-12">                   
-                        <button
-                            class="button-flat"
-                            ng-click="clickSourceTarget('TARGET')"
-                            ng-class="cssSourceTarget('TARGET')">Click Target Tile</button>
+                    <div class="col-xs-12">   
+                        <div class="row marker-buttons">
+                            <div class="col-xs-10">                   
+                                <button
+                                    class="button-flat normal-border-width"
+                                    ng-click="clickSourceTarget('TARGET')"
+                                    ng-class="cssSourceTarget('TARGET')">Click Target Tile</button>
+                            </div>
+                            <div class="col-xs-2">   
+                                    <button
+                                        class="button-flat"
+                                        ng-class="cssPathMarkerCheckbox('TARGET')"
+                                        ng-click="clickPathMarkerCheckbox('TARGET')">
+                                        <i class="fa fa-square-o marker-icon" 
+                                           aria-hidden="true" 
+                                           ng-show="pathMarkerCheckbox.target.active === false"></i>
+                                        <i class="fa fa-check-square-o marker-icon" 
+                                           aria-hidden="true"
+                                           ng-show="pathMarkerCheckbox.target.active === true"></i>
+                                    </button>
+                                    <label>{{ pathMarkerCheckbox.target.label }}</label>
+                           </div>
+                        </div>
                     </div>
                 </div> 
             </section>
@@ -141,7 +175,7 @@
                         <button 
                             class="button-flat full-width" 
                             ng-click="startPathfinder('PATH')"
-                        ng-class="cssPathFrontier()">Follow Path</button>
+                        ng-class="cssPathFrontierButtons('PATH')">Follow Path</button>
                                 
                     </div>
                         
@@ -151,7 +185,7 @@
                         <button 
                             class="button-flat"
                             ng-click="startPathfinder('FRONTIER')"
-                            ng-class="cssPathFrontier()">Generate Frontier</button>
+                            ng-class="cssPathFrontierButtons('FRONTIER')">Generate Frontier</button>
                     </div>
                     
                     
@@ -175,7 +209,7 @@
                                 </div>
                                 <div class="col-xs-4">
                                     <button class="button-flat"
-                                            ng-class="cssVCR('STEP RIGHT')"
+                                            ng-class="cssVCR('STEP')"
                                             ng-mousedown="pressVCR($event, 'STEP')">
                                         <i class="fa fa-chevron-right" aria-hidden="true"></i>
                                     </button>
@@ -190,22 +224,23 @@
                             ng-click="clearPathfinder()">Cancel</button>
                     </div>
                     
-                </div>
-            </section>
-                
-            <hr>
-                
-            <section>
-                <h4 class="section-heading">Step 6: Results</h4>
-                <div class="row">
-                    <div class="col-xs-6">
-                        <p>{{ message.content }}</p>
-                        <p ng-repeat="line in message.log track by $index">{{ line }}</p>
+                    <div class="col-xs-12">
+                        <div class="row">
+                        <div class="col-xs-12">
+                            <h5>Activity Log:</h5>
+                            <div class="log">                                
+                                <span ng-repeat="line in message.log track by $index">{{ line }}<br></span>
+                                
+                            </div>
+                        </div>
                     </div>
                 </div>
                     
                     
+                </div>
             </section>
+                
+            <hr>
                 
             <section>
                 <h4 class="section-heading">Step 5: Choose Layers</h4>
@@ -229,25 +264,25 @@
                     <div class="col-xs-12">   
                         <button class="button-flat"
                                 ng-click="clickGridButton()"
-                                ng-class="{ active: grid.click }" 
+                                ng-class="{ active: gridButton.click }" 
                                 ng-mouseenter="enterGridButton()" 
                                 ng-mouseleave="leaveGridButton()">Grid Lines</button>
                     </div>        
                         
                     <div class="col-xs-6">              
                         <button class="button-flat" 
-                                ng-mouseenter="enterPathButton('PATH')"
-                                ng-click="clickPathButton('PATH')" 
-                                ng-mouseleave="leavePathButton('PATH')" 
-                                ng-class="cssPathButton('PATH')">Path</button>
+                                ng-mouseenter="enterPathfinderLayerButton('PATH')"
+                                ng-click="clickPathfinderLayerButton('PATH')" 
+                                ng-mouseleave="leavePathfinderLayerButton('PATH')" 
+                                ng-class="cssPathfinderLayerButton('PATH')">Path</button>
                     </div>
                         
                     <div class="col-xs-6">   
                         <button class="button-flat" 
-                                ng-mouseenter="enterFrontierButton('FRONTIER')"
-                                ng-click="clickFrontierButton('FRONTIER')" 
-                                ng-mouseleave="leaveFrontierButton('FRONTIER')" 
-                                ng-class="cssFrontierButton('FRONTIER')">Frontier</button>
+                                ng-mouseenter="enterPathfinderLayerButton('FRONTIER')"
+                                ng-click="clickPathfinderLayerButton('FRONTIER')" 
+                                ng-mouseleave="leavePathfinderLayerButton('FRONTIER')" 
+                                ng-class="cssPathfinderLayerButton('FRONTIER')">Frontier</button>
                     </div>
                 </div>      
             </section>

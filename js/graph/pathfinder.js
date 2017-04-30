@@ -1,7 +1,8 @@
-var Pathfinder = function(game, graph) {
+var Pathfinder = function(game, userConsole, graph) {
     
     this.game = game;
     this.graph = graph;
+    this.userConsole = userConsole;
     
     //    this.headOptions = {
     //        TYPE: 'HEAD',
@@ -49,10 +50,6 @@ var Pathfinder = function(game, graph) {
 
     
     this.PATH_STATE = 'OFF';
-    
-    this.vcr = {
-        COMMAND: null,
-    };
     
     this.data = null;
     this.augment= null;
@@ -132,6 +129,13 @@ Pathfinder.prototype.init = function() {
     // Create source and target markers on their own layers
     this.createMarkers();
     
+    
+    // Create sprite and add visualization to floors
+    //this.pathfinder.initSprite();
+    this.createPathfinderFloorLayers();
+    
+    console.log(this.pathfinder);
+    
 };
 
 Pathfinder.prototype.initSprite = function() {
@@ -201,16 +205,22 @@ Pathfinder.prototype.createPathfinderFloorLayers = function() {
         var floor = map.floors[f];
         var id = floor.id;
         var frame = floor.frame;
+        
+        let frameSize = {
+            width: floor.background.img.width,
+            height: floor.background.img.height
+        };
+        
 
 
         var frontierlayer = {
-            background: this.createBlankLayer(frame.canvas),
-            foreground: this.createBlankLayer(frame.canvas)
+            background: this.createBlankLayer(frameSize),
+            foreground: this.createBlankLayer(frameSize)
         };
 
         var pathlayer = {
-            background: this.createBlankLayer(frame.canvas),
-            foreground: this.createBlankLayer(frame.canvas) 
+            background: this.createBlankLayer(frameSize),
+            foreground: this.createBlankLayer(frameSize) 
         };
 
         floors[id] = {};
@@ -286,14 +296,15 @@ Pathfinder.prototype.startPathfinder = function(state) {
 
 Pathfinder.prototype.updatePathfinder = function() {
     
+    var console = this.userConsole;
     
     if (this.PATH_STATE === 'MARK SOURCE' ||
             this.PATH_STATE === 'MARK TARGET') {
         this.updateMarker();
     }
     
-    if (this.vcr.COMMAND === 'PLAY' ||
-            this.vcr.COMMAND === 'STEP') {
+    if (console.vcr.COMMAND === 'PLAY' ||
+            console.vcr.COMMAND === 'STEP') {
         
         if (this.PATH_STATE === 'FRONTIER') {
             this.updateFrontier();
@@ -303,14 +314,14 @@ Pathfinder.prototype.updatePathfinder = function() {
             this.updatePath();
         } 
         
-        if (this.vcr.COMMAND === 'STEP') {
-            this.vcr.COMMAND = 'PAUSE';
+        if (console.vcr.COMMAND === 'STEP') {
+            console.vcr.COMMAND = 'PAUSE';
             return;
         }
         
     }
     
-    if (this.vcr.COMMAND === 'PAUSE') {
+    if (console.vcr.COMMAND === 'PAUSE') {
         this.game.KEYPRESS = null;
         return;
     }  
@@ -319,6 +330,8 @@ Pathfinder.prototype.updatePathfinder = function() {
 
 
 Pathfinder.prototype.clearPathfinder = function() {
+    
+    var console = this.userConsole;
     
     if (this.PATH_STATE === 'MARK SOURCE' ||
             this.PATH_STATE === 'MARK TARGET') {
@@ -357,7 +370,7 @@ Pathfinder.prototype.clearPathfinder = function() {
     this.game.toggleMapPathfinderLayer(null);
     //this.game.setPlayerMoveState("STILL");
     this.game.KEYPRESS = null;
-    this.vcr.COMMAND = null;
+    console.vcr.COMMAND = null;
     
 };
 
@@ -484,6 +497,8 @@ Pathfinder.prototype.updateMarker = function() {
 
 
 Pathfinder.prototype.startFrontierPather = function(state) {
+    
+    var console = this.userConsole;
      
     // Cannot switch SELECT states to Frontier or Pather   
     if (this.PATH_STATE === 'MARK SOURCE' ||
@@ -508,7 +523,7 @@ Pathfinder.prototype.startFrontierPather = function(state) {
     //userConsole.log("I'm doing it!");
     
     // Get algorithm
-    this.algorithm = game.getUserConsoleAlgorithm();
+    this.algorithm = userConsole.getSelectedAlgorithm();
     
 
     // Declare data structures
@@ -519,6 +534,7 @@ Pathfinder.prototype.startFrontierPather = function(state) {
     this.visited = new Set();
     this.open = new Set();
     this.closed = new Set();
+    this.found = false;
     this.deltaFrontier = {
         open: [],
         closed: []
@@ -535,8 +551,9 @@ Pathfinder.prototype.startFrontierPather = function(state) {
     
     // Turn on pathfinder state
     this.LAYER = state;
-    this.game.userConsole.activatePathFrontierButton(this.LAYER);
-    this.game.toggleMapPathfinderLayer(this.LAYER);
+    this.userConsole.activatePathfinderLayer(state, true);
+    //this.game.userConsole.activatePathFrontierButton(this.LAYER);
+    //this.game.userConsole.togglePathFrontierLayers(this.LAYER, 'ON');
     this.PATH_STATE = state;
 
     // Setup algorithm
@@ -558,7 +575,7 @@ Pathfinder.prototype.startFrontierPather = function(state) {
     // Make player face down
     game.setPlayerFacing('DOWN');
     
-    this.vcr.COMMAND = 'PLAY';
+    console.vcr.COMMAND = 'PLAY';
     
 };
  
@@ -600,7 +617,8 @@ Pathfinder.prototype.updateFrontier = function() {
 
     }
 
-    else if (this.complete && this.found) {        
+    else if (this.complete && this.found) {    
+        
         let i = this.index;
         if (i < this.path.length) { 
 
@@ -660,6 +678,11 @@ Pathfinder.prototype.appendPathSegment = function(tile, neighbor, layer, tile_si
     layer.ctx.lineTo(x1, y1);
     layer.ctx.stroke();
     
+    // Draw circle at intersection
+    var radius = tile_size/16;
+    layer.ctx.moveTo(x, y);
+    layer.ctx.arc(x, y, radius, 0, 2 * Math.PI);  
+    layer.ctx.fill();
     
 };
 
@@ -689,6 +712,7 @@ Pathfinder.prototype.constructPath = function() {
         }
         
         layer.ctx.strokeStyle = this.hexPath;
+        layer.ctx.fillStyle = this.hexPath;
         layer.ctx.lineWidth = tile_size / 8;
         
         // Get indices of neighbors in path
@@ -716,7 +740,10 @@ Pathfinder.prototype.constructPath = function() {
                 this.appendPathSegment(tile, nextTile, layer, tile_size);
             }
             
-        }    
+        }  
+        
+        // Draw circle at tile center
+        //this.
         
     }
     
@@ -1021,13 +1048,15 @@ Pathfinder.prototype.drawMarkers = function(floor, dof) {
 
 Pathfinder.prototype.drawFrontier = function(floor, dof) {
 
+    var userConsole = this.userConsole;
+    
     var game = this.game;
     var map = this.game.map;
     var f = floor.id;
 
-    var activeLayers = game.getMapLayers();
+    //var activeLayers = game.getMapLayers();
     
-    if (activeLayers.PATHFINDER === 'FRONTIER') {
+    if (userConsole.pathfinder.layer.frontier.on) {
      
         let layer;
         if (dof === 'BACKGROUND') {
@@ -1045,12 +1074,14 @@ Pathfinder.prototype.drawFrontier = function(floor, dof) {
 Pathfinder.prototype.drawPath = function(floor, dof) {
  
     var game = this.game;
+    var userConsole = this.userConsole;
     var map = this.game.map;
     var f = floor.id;
 
     var activeLayers = game.getMapLayers();
     
-    if (activeLayers.PATHFINDER === 'PATH') {
+    //activeLayers.PATHFINDER
+    if (userConsole.pathfinder.layer.path.on) {
      
         let layer;
         if (dof === 'BACKGROUND') {
@@ -1428,6 +1459,7 @@ Pathfinder.prototype.setupAlgorithm = function() {
     var game = this.game;
     var algorithm = this.algorithm;
     
+    this.game.logToUserConsole('----------------------------');
     game.logToUserConsole('Running ' + this.algorithm.label + '...');
     
     
@@ -1460,6 +1492,12 @@ Pathfinder.prototype.completeAlgorithm = function() {
     
     while(!this.complete) {
         this.stepAlgorithm();        
+    }
+    
+    if (this.found) {
+        this.game.logToUserConsole('Target was successfully found!');
+        this.game.logToUserConsole('Total Length of Path: ' + this.path.length + ' tiles.')
+        this.game.logToUserConsole('Total Weight: ');
     }
     
 };
@@ -2090,27 +2128,27 @@ Pathfinder.prototype.ladderCheck = function(vNode, uNode) {
 
 Pathfinder.prototype.handleVCRCommand = function(COMMAND) {
   
-    if (this.PATH_STATE !== 'PATH' &&
-            this.PATH_STATE !== 'FRONTIER') {
-        console.info("You much be generating a frontier or following a path to use the VCR");
-        return;
-    }
-    
-    var vcr = this.vcr;
-    
-    if (COMMAND === 'PLAY') {
-        vcr.COMMAND = 'PLAY';
-    }
-    
-    else if (COMMAND === 'PAUSE') {
-        vcr.COMMAND = 'PAUSE';
-    }
-    
-    else if (COMMAND === 'STEP') {
-        vcr.COMMAND = 'STEP';
-    }
-    
-    console.info(vcr);
+//    if (this.PATH_STATE !== 'PATH' &&
+//            this.PATH_STATE !== 'FRONTIER') {
+//        console.info("You much be generating a frontier or following a path to use the VCR");
+//        return;
+//    }
+//    
+//    var vcr = this.vcr;
+//    
+//    if (COMMAND === 'PLAY') {
+//        vcr.COMMAND = 'PLAY';
+//    }
+//    
+//    else if (COMMAND === 'PAUSE') {
+//        vcr.COMMAND = 'PAUSE';
+//    }
+//    
+//    else if (COMMAND === 'STEP') {
+//        vcr.COMMAND = 'STEP';
+//    }
+//    
+//    console.info(vcr);
     
 };
 

@@ -1,5 +1,34 @@
 var map_data = (function() {
     
+    
+    // Define canvas id
+    var rocklayer = {
+        id:  'rocklayer',
+        rows: 120,
+        cols: 60
+    };
+
+    // Define img id (id for img tag)
+    var waterlayer = {
+        id: [
+            'waterlayer-0',
+            'waterlayer-1',
+            'waterlayer-2',
+            'waterlayer-3',
+            'waterlayer-4',
+            'waterlayer-5',
+            'waterlayer-6',
+            'waterlayer-7'
+        ],
+        rows: 30,
+        cols: 60
+    };
+    
+    var transition = {
+        id: 'transition',
+    };
+    
+    
     var keyTiles = [ 
         { 
             id: 0,
@@ -138,6 +167,15 @@ var map_data = (function() {
      
     
     return {
+        rocklayer: function() {
+            return rocklayer;
+        },
+        waterlayer: function() {
+            return waterlayer;
+        },
+        transition: function() {
+            return transition;
+        },
         keyTiles: function() {
             return keyTiles;
         },

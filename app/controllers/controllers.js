@@ -78,12 +78,16 @@ pokemonApp.controller('monitorController', function($scope, $log, pokeGame) {
     
     
     var game = pokeGame.game;
+    $scope.monitor = game.monitor;
+    $scope.monitor.init();
+    $scope.monitor.resizeMonitor();
     
-    //game.initMonitor();
-    game.monitor.initCanvas();
-    game.monitor.createMonitorBackground();
-    game.monitor.createGrid();
-    game.monitor.drawMonitor();
+    
+//    //game.initMonitor();
+//    game.monitor.initCanvas();
+//    game.monitor.createMonitorBackground();
+//    game.monitor.createGrid();
+//    game.monitor.drawMonitor();
     
     $scope.startPlayerDrag = function($event) {
  
@@ -119,10 +123,17 @@ pokemonApp.controller('gameboyController', function($scope, $log, pokeGame) {
     var game = pokeGame.game;
     var gameboy = game.gameboy;
     
-    // Controller (re-)initializes the canvas  
-    gameboy.initCanvas();
-    gameboy.createGameboyBackground();
-    gameboy.createGrid();
+    gameboy.init();
+    gameboy.resizeGameboy();
+    
+ 
+//    
+//    
+//    
+//    // Controller (re-)initializes the canvas  
+//    gameboy.initCanvas();
+//    gameboy.createGameboyBackground();
+//    gameboy.createGrid();
 
 });
 

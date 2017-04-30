@@ -3,44 +3,35 @@ pokemonApp.directive('userConsolePanel', function(pokeGame) {
     
     var link = function($scope, element, attr) {
         
+        console.info('console loading');
+        
         var game = pokeGame.game;
         var userConsole = game.userConsole;
         
-        $scope.game = game;
-        
-        $scope.debugClick = function() {
-            
-            game.map.addRemoveGaps(true);
-            game.map.createMapLayers(game.graph);
-            
-        };
-        
-        $scope.debugClick2 = function() {
-            
-            game.map.addRemoveGaps(false);
-            
-        };
         
         /********* -- Select Algorithm -- ************/
         
         
         $scope.algorithms = {
-            options: userConsole.algorithms,
-            selected: userConsole.selectedAlgorithm
+            options: userConsole.getAlgorithms(),
+            selected: userConsole.getSelectedAlgorithm()
         };        
         
         $scope.$watch('algorithms.selected', function() {
             
-            userConsole.selectedAlgorithm = $scope.algorithms.selected;
+            var algorithm = $scope.algorithms.selected;
+            userConsole.setSelectedAlgorithm(algorithm);
             
         });
         
+        /********* -- Modify Edge Weights -- ************/
         
-        $scope.edgeWeight = userConsole.edgeWeight;
+        $scope.edgeWeight = userConsole.getEdgeWeights();
         
         $scope.showEdgeWeightSliders = function() {
             var id = $scope.algorithms.selected.id;
             
+            // Show sliders if selected algorithm is Dijkstra's or A*
             if (id === 2 || id === 3) {
                 return true;
             }
@@ -55,71 +46,62 @@ pokemonApp.directive('userConsolePanel', function(pokeGame) {
         }, true);
         
         
-        
-        
-        
-        
         /********* -- Select Source/Target Tiles -- ************/
         
-        
-        
         $scope.locations = {
-            options: userConsole.locations,
-            source: userConsole.sourceLocation,
-            target: userConsole.targetLocation
+            options: userConsole.getLocations(),
+            source: userConsole.getSourceLocation(),
+            target: userConsole.getTargetLocation()
         };
         
         //console.log($scope.locations.options);
         
         $scope.$watch('locations.source', function() {
             
-            userConsole.sourceLocation = $scope.locations.source;
+            var location = $scope.locations.source;
+            userConsole.setSourceLocation(location);
             
         });
         
         $scope.$watch('locations.target', function() {
             
-            userConsole.targetLocation = $scope.locations.target;
+            var location = $scope.locations.target;
+            userConsole.setTargetLocation(location);
             
         });
         
-        $scope.disableAstar = function(id) {
-            
-            if ($scope.locations.source.id === 5) {
-                
-                if (id === 3) {
-                    return true;
-                }
-                
-            }
-            
-            
+        //-----> Disable different options in dropdown //
+        
+        
+        $scope.disableAstar = function(id) {          
+            if ($scope.locations.target.id === 5) {
+                if (id === 3) { return true; }              
+            }     
         };
         
         $scope.disableAllTiles = function(id) {
-            
-            if ($scope.algorithms.selected.id === 3) {
-                
-                if (id === 5) {
-                    return true;
-                }
-                
+            if ($scope.algorithms.selected.id === 3) {  
+                if (id === 5) { return true; }        
             }
-            
         };
         
         $scope.hideOptions = function(value, index, array) {
-            if (value.id === 5) {
-                return false;
-            }
+            if (value.id === 5) { return false; }
             return true;
+        };
+        
+        
+        /********* -- PathMarker Buttons -- ************/
+        
+        $scope.pathMarkerButton = {
+            active: false,
+            disabled: false
         };
         
         $scope.clickSourceTarget = function(sourceTarget) {           
             state = 'MARK ' + sourceTarget;
             game.startPathfinder(state);          
         };
-        
         
         $scope.cssSourceTarget = function(sourceTarget) {
             
@@ -147,72 +129,182 @@ pokemonApp.directive('userConsolePanel', function(pokeGame) {
             
         };
         
+        /********* -- Path Marker Checkbox -- ************/
         
+        $scope.pathMarkerCheckbox = {
+            source: {
+                click: false,
+                active: false,
+                disabled: false,
+                freeze: false,
+                label: 'show'
+            },            
+            target: {
+                click: false,
+                active: false,
+                disabled: false,
+                freeze: false,
+                label: 'show'
+            }        
+        };
+        
+        
+        
+        $scope.clickPathMarkerCheckbox = function(point) {
+            
+            var checkbox;            
+            if (point === 'SOURCE') {
+                checkbox = $scope.pathMarkerCheckbox.source;
+            }
+            if (point === 'TARGET') {
+                checkbox = $scope.pathMarkerCheckbox.target;
+            }
+            
+            userConsole.togglePathMarker(point, checkbox);
+            
+        };
+        
+        
+        $scope.cssPathMarkerCheckbox = function(point) {
+            
+            var checkbox = $scope.pathMarkerCheckbox;
+            var pathmarker = userConsole.getPathMarker(point);
+            
+            if (point === 'SOURCE') {
+                
+                if (pathmarker.disabled) {
+                    checkbox.source.disabled = true;
+                    checkbox.source.active = false;
+                    checkbox.source.label = '';
+                    
+                } else {      
+                    checkbox.source.disabled = false;
+                    if (!checkbox.source.active) {
+                        checkbox.source.label = 'show';
+                    }
+                }
+                return checkbox.source;
+            }
+            else if (point === 'TARGET') {
+                
+                if (pathmarker.disabled) {
+                    checkbox.target.disabled = true;
+                    checkbox.target.active = false;
+                    checkbox.target.label = '';
+                    return checkbox.target;
+                }
+                else {
+                    checkbox.target.disabled = false;
+                    if (!checkbox.target.active) {
+                        checkbox.target.label = 'show';
+                    }
+                }
+            }
+            
+            return checkbox.target;
+        };
+
+
         /********* -- Start/Cancel Pathfinding -- ************/
         
-        $scope.startPathfinder = function(state) {
-            
-            game.startPathfinder(state);
-            
-        };
-        
-        $scope.clearPathfinder = function() {
-            
-            game.clearPathfinder();
-            
-        };
-        
-        $scope.cssPathFrontier = function() {
-            
-            var css = {
+        $scope.pathFrontierButtons = {
+            path: {
+                click: false,
+                active: false,
                 disabled: false
-            };
+            },            
+            frontier: {
+                click: false,
+                active: false,
+                disabled: false
+            }        
+        };
+        
+        $scope.startPathfinder = function(button) {  
+            userConsole.startPathfinder(button);
+        };
+        
+        $scope.clearPathfinder = function() {            
+            userConsole.clearPathfinder();            
+        };
+        
+        $scope.cssPathFrontierButtons = function(button) {
             
-            if (game.getPathfinderState() === 'MARK SOURCE' ||
-                    game.getPathfinderState() === 'MARK TARGET') {
-                css.disabled = true;
+            var element;
+            
+            if (button === 'PATH') {
+                element = $scope.pathFrontierButtons.path;
+            }
+            
+            else if (button === 'FRONTIER') {
+                element = $scope.pathFrontierButtons.frontier;
+            }
+            
+            var state = userConsole.getPathfinderState();
+            
+            if (state === 'MARK SOURCE' ||
+                    state === 'MARK TARGET') {
+                element.disabled = true;
+            }
+            else if (state === button) {
+                element.active = true;
             }
             else {
-                css.disabled = false;
+                element.active = false;
             }
             
-            return css;
+            return element;
             
         };
         
         /**************** -- Press VCR -- ******************/
+        $scope.vcrButtons = {
+            PLAY: {
+                active: false,
+                disabled: false
+            },
+            PAUSE: {
+               active: false,
+               disabled: false
+           },
+           STEP: {
+               active: false,
+               disabled: false
+           }
+       };
         
-        $scope.pressVCR = function($event, COMMAND) {
-            
-            game.handleVCRCommand(COMMAND);
-            
+
+        $scope.pressVCR = function($event, userCommand) {            
+            userConsole.handleVCRCommand(userCommand);
         };
         
         
-        $scope.cssVCR = function(COMMAND) {
+        $scope.cssVCR = function(userCommand) {
             
-            var css = {
-                active: false,
-                disabled: false
-            };
+            var button = $scope.vcrButtons[userCommand];
+            
+            button.active = false;
+            button.disabled = false;
             
             // Existing command
-            var vcrCOMMAND = game.getVCRCommand();
+            var vcrCommand = userConsole.getVCRCommand();        
             
-            if (vcrCOMMAND === null) {
-                css.disabled = true;
+            if (vcrCommand === null) {
+                button.disabled = true;
             }
+        
             // PAUSE button, when VCR set to STEP
-            else if (COMMAND === 'PAUSE' & vcrCOMMAND === 'STEP') {
-                css.disabled = false;
-                css.active = true;
+            else if (userCommand === 'PAUSE' & vcrCommand === 'STEP') {
+                button.disabled = false;
+                button.active = true;
             }
-            else if (vcrCOMMAND === COMMAND) {
-                css.disabled = false;
-                css.active = true;
+            
+            else if (vcrCommand === userCommand) {
+                button.disabled = false;
+                button.active = true;
             };
             
-            return css;
+            return button;
             
         };
         
@@ -239,10 +331,10 @@ pokemonApp.directive('userConsolePanel', function(pokeGame) {
             var mapStateButton = $scope.mapStateButton;
             
             if (mapStateButton.hover) {
-                game.toggleMapState(mapStateButton.hover);
+                userConsole.toggleMapState(mapStateButton.hover);
             }
             else {
-                game.toggleMapState(mapStateButton.click);
+                userConsole.toggleMapState(mapStateButton.click);
             }
             
         }, true);
@@ -271,255 +363,165 @@ pokemonApp.directive('userConsolePanel', function(pokeGame) {
             var button = $scope.gridButton;
             
             if (button.hover) {
-                game.toggleGrid(true);
+                userConsole.toggleGrid(true);
                 //map.ROWSCOLS_STATE = 'ON';
                 //map.drawGraphicRowsCols();   
             }
             else if (button.click) {
-                game.toggleGrid(true);
+                userConsole.toggleGrid(true);
                 //map.ROWSCOLS_STATE = 'ON';
                 //map.drawGraphicRowsCols();
             } else {
-                game.toggleGrid(false);
+                userConsole.toggleGrid(false);
                 //map.ROWSCOLS_STATE = 'OFF';       
             }
             
         }, true);
         
         
-        /********* -- Turn Frontier Button on/off -- ************/
+        /********* -- Toggle Path Layer -- ************/
         
-        
-        // Toggle rows/cols
-        userConsole.frontierButton = {
-            click: false,
-            hover: false
+        $scope.pathButton = {
+            active: false,
+            hover: false,
+            disabled: true  
         };
-        
-        $scope.frontierButton = userConsole.frontierButton;
-
-        
-        $scope.enterFrontierButton = function() { 
-            $scope.frontierButton.hover = true; 
-            watchFrontierButton(); 
-        };
-        
-        $scope.leaveFrontierButton = function() { 
-            $scope.frontierButton.hover = false; 
-            watchFrontierButton(); 
-        };
-        
-        $scope.clickFrontierButton = function() {
-            
-            var button = $scope.frontierButton;
-            button.click = !button.click;
-            button.hover = button.click;
-            watchFrontierButton();          
-        };
-        
-        var watchFrontierButton = function() {
-            
-            // Hide/reveal path layers
-            var button = $scope.frontierButton;
-            
-            if (button.hover) {
-                let LAYER = button.hover;
-                game.toggleMapPathfinderLayer('FRONTIER');
-            }
-            else if (button.click) {
-                let LAYER = button.click;
-                game.toggleMapPathfinderLayer('FRONTIER');
-                
-            } else {
-                game.toggleMapPathfinderLayer(null);     
-            }
-            
-        };
-        
-        // Update active view as necessary
-        $scope.$watch('frontierButton', watchFrontierButton, true);
-        
-        
-        $scope.cssFrontierButton =  function() {
-            
-            var css = {
-                active: false,
-                disabled: true
-            };
-            
-            // If pathfinder has this layer, enable it
-            if (game.getPathfinderLayer() === 'FRONTIER') {
-               css.disabled = false;
-            }
-                
-            // If layer is active in map, make it active
-            var mapLayers = game.getMapLayers();
-            if (mapLayers.PATHFINDER === 'FRONTIER') {
-                //$scope.frontierButton.click = true;
-            }                
-            
-            css.active = $scope.frontierButton.click;
-            
-            return css;
-            
-        };
-        
-        
-        /********* -- Turn Path Button on/off -- ************/
-        
-        
-        // Toggle rows/cols
-        userConsole.pathButton = {
-            click: false,
-            hover: false
-        };
-        
-        $scope.pathButton = userConsole.pathButton;
-
         
         $scope.enterPathButton = function() { 
-            $scope.pathButton.hover = true; 
-            watchPathButton(); 
+            
+            var button = $scope.pathButton;
+            button.hover = true;
+            userConsole.togglePathlayer(button);
+            
         };
         
-        $scope.leavePathButton = function() { 
-            $scope.pathButton.hover = false; 
-            watchPathButton(); 
+        $scope.leavePathButton = function() {
+            
+            var button = $scope.pathButton;
+            button.hover = false;
+            userConsole.togglePathlayer(button);
+            
         };
         
         $scope.clickPathButton = function() {
             
             var button = $scope.pathButton;
-            button.click = !button.click;
-            button.hover = button.click;
-            watchPathButton();          
-        };
-        
-        var watchPathButton = function() {
-            
-            // Hide/reveal path layers
-            var button = $scope.pathButton;
-            
-            if (button.hover) {
-                game.toggleMapPathfinderLayer('PATH');
-            }
-            else if (button.click) {
-                game.toggleMapPathfinderLayer('PATH');
-                
+            button.click = true;          
+            layer = userConsole.togglePathlayer(button);
+            if (layer.on) {
+                button.active = true;
             } else {
-                game.toggleMapPathfinderLayer(null);     
+                button.active = false;
             }
+            button.click = false;
+            button.hover = false;
             
         };
-        
-        // Update active view as necessary
-        $scope.$watch('pathButton', watchPathButton, true);
-        
         
         $scope.cssPathButton =  function() {
             
-            var css = {
-                active: false,
-                disabled: true
-            };
+            var button = $scope.pathButton;
             
-            // If pathfinder has this layer, enable it
-            if (game.getPathfinderLayer() === 'PATH') {
-               css.disabled = false;
+            var layer = userConsole.getPathlayer();
+            
+            if (layer.disabled) {
+                button.active = false;
+                button.disabled = true;
             }
+            else if (layer.on) {
                 
-            // If layer is active in map, make it active
-            var mapLayers = game.getMapLayers();
-            if (mapLayers.PATHFINDER === 'PATH') {
-                //$scope.frontierButton.click = true;
-            }                
+                button.disabled = false;
+                if (!button.hover) {
+                    button.active = true;  
+                }
+                
+            }
             
-            css.active = $scope.pathButton.click;
+            return button;
+        };
+        
+        /********* -- Toggle Path/Frontier Layer -- ************/
+        
+        $scope.pathfinderLayerButtons = {
+            path: {
+                active: false,
+                hover: false,
+                disabled: true, 
+                click: false
+            },
+            frontier: {
+                active: false,
+                hover: false,
+                disabled: true, 
+                click: false
+            }            
+        };
+        
+        $scope.getPathfinderLayerButton = function(selection) {
             
-            return css;
+            var button;
+            if (selection === 'PATH') {
+                button = $scope.pathfinderLayerButtons.path;
+            }
+            else if (selection === 'FRONTIER') {
+                button = $scope.pathfinderLayerButtons.frontier;
+            }
+            return button;
             
         };
         
+        $scope.enterPathfinderLayerButton = function(selection) { 
+            
+            var button = $scope.getPathfinderLayerButton(selection);
+            button.hover = true;
+            userConsole.togglePathfinderLayer(selection, button);
+            
+        };
+        
+        $scope.leavePathfinderLayerButton = function(selection) {
+            
+            var button = $scope.getPathfinderLayerButton(selection);         
+            button.hover = false;
+            userConsole.togglePathfinderLayer(selection, button);
+            
+        };
+        
+        $scope.clickPathfinderLayerButton = function(selection) {
+            
+            var button = $scope.getPathfinderLayerButton(selection);
+            button.click = true;
+            userConsole.togglePathfinderLayer(selection, button);
+            button.click = false;
+        };
+        
+        
+            
+        $scope.cssPathfinderLayerButton =  function(selection) {
+            
+            
+            var button = $scope.getPathfinderLayerButton(selection);
+            var layer = userConsole.getPathfinderLayer(selection);
+           
+            if (layer.disabled) {
+                button.disabled = true;
+                button.active = false;
+            }
+            
+            else if (layer.on) {
+                button.disabled = false;
+                button.active = layer.active;             
+            } else {
+                button.active = false;
+            }
+            
+            return button;
+        };
+        
+        
+        
         /********* -- Message to User -- ************/
         
-        
-        $scope.message = userConsole.message;
-        
-        
-        
-//        // Toggle rows/cols
-//        $scope.pathButton = {
-//            click: false,
-//            hover: false
-//        };
-//        
-//        $scope.enterPathfinderLayerButto = function(true) { 
-//            $scope.pathfinderLayerButton.hover = LAYER; 
-//            watchPathfinderLayerButton();
-//        };
-//        
-//        $scope.leavePathfinderLayerButto = function() { 
-//            $scope.pathfinderLayerButton.hover = null; 
-//            watchPathfinderLayerButton();
-//        };
-//        
-//        $scope.clickPathfinderLayerButton = function() {
-//            
-//            
-//            
-//            var button = $scope.pathfinderLayerButton.click;
-//            
-//            button.click = !button.click;
-//            
-//            watchPathfinderLayerButton();          
-//        };
-//        
-//        var watchPathfinderLayerButton = function() {
-//            
-//            // Hide/reveal path layers
-//            var button = $scope.pathfinderLayerButton;
-//            
-//            if (button.hover) {
-//                let LAYER = button.hover;
-//                game.toggleMapPathfinderLayer(LAYER);
-//            }
-//            else if (button.click) {
-//                let LAYER = button.click;
-//                game.toggleMapPathfinderLayer('FRONTIER');
-//                
-//            } else {
-//                game.toggleMapPathfinderLayer(null);     
-//            }
-//            
-//        };
-//        
-//        // Update active view as necessary
-//        $scope.$watch('pathfinderLayerButton', watchPathfinderLayerButton, true);
-//        
-//        
-//        $scope.cssPathfinderLayerButton =  function(LAYER) {
-//            
-//            var css = {
-//                active: false,
-//                disabled: true
-//            };
-//            
-//            // If pathfinder has this layer, enable it
-//            if (game.getPathfinderLayer() === LAYER) {
-//               css.disabled = false;
-//            }
-//                
-//            // If layer is active in map, make it active
-//            var mapLayers = game.getMapLayers();
-//            if (mapLayers.PATHFINDER === LAYER) {
-//                $scope.pathfinderLayerButton.click = LAYER;
-//            }                
-//            
-//            css.active = $scope.pathfinderLayerButton.click === LAYER;
-//            
-//            return css;
-//            
-//        };        
+        $scope.message = userConsole.message;          
         
         /********* -- Update Speed -- ************/
         
@@ -540,11 +542,11 @@ pokemonApp.directive('userConsolePanel', function(pokeGame) {
             var speed = $scope.speed;
             
             if (speed.hover) {
-                game.setPlayerSpeed(speed.hover);
+                userConsole.setPlayerSpeed(speed.hover);
                 //sprite.factorSpeed = speed.hover;
             }
             else if (speed.click) {
-                game.setPlayerSpeed(speed.click);
+                userConsole.setPlayerSpeed(speed.click);
             }
             
         }, true);
@@ -568,15 +570,33 @@ pokemonApp.directive('userConsolePanel', function(pokeGame) {
             var GENDER = $scope.GENDER;
             
             if (GENDER.hover) {
-                game.setPlayerGender(GENDER.hover);
-                //sprite.playerOptions.GENDER = ;
+                userConsole.setPlayerGender(GENDER.hover);
             }
             else if (GENDER.click) {
-                game.setPlayerGender(GENDER.click);
-                //sprite.playerOptions.GENDER = GENDER.click;
+                userConsole.setPlayerGender(GENDER.click);
             }
             
         }, true);
+        
+        
+        
+        
+        
+        $scope.game = game;
+        
+        $scope.debugClick = function() {
+            
+            game.map.addRemoveGaps(true);
+            game.map.createMapLayers(game.graph);
+            
+        };
+        
+        $scope.debugClick2 = function() {
+            
+            game.map.addRemoveGaps(false);
+            
+        };
+        
     };
     
     return {

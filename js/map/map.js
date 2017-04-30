@@ -1,4 +1,6 @@
-var Map = function(map_data) {
+var Map = function(game, map_data) {
+    
+    this.game = game;
     
     // Create object to hold floors
     this.floors = {};
@@ -14,6 +16,75 @@ var Map = function(map_data) {
         FRONTIER: false,
         TRANSITION: false
     };
+    
+    this.map_data = map_data;
+    
+    this.rocklayer = {};
+    
+    this.waterlayer = [];
+    
+    this.transition = {};
+    
+};
+
+Map.prototype.init = function(floors, graph) {
+    
+    
+    // Add floors to map
+    for (let f of floors) {  
+        this.addFloor(f);
+    }
+    
+    // Add map data to map
+    this.addMapData();
+    
+    // Add map data to graph
+    this.addMapToGraph(graph);
+    
+    // Add ladders data to map
+    //this.map.addLadders();
+    
+    // Create map layers
+    this.initMapLayers();
+    
+};
+
+Map.prototype.initMapLayers = function(graph) {
+    
+    //var imgId;
+    var img;
+    
+    // Get floor map png from html img
+    var rocklayer = this.map_data.rocklayer();
+    img = document.getElementById(rocklayer.id);
+    
+    this.rocklayer = {
+        img: img,
+        rows: rocklayer.rows,
+        cols: rocklayer.cols
+    };
+    
+    var waterlayer = this.map_data.waterlayer();
+    var imgArr = [];
+    for (let id of waterlayer.id) {
+        img = document.getElementById(id);
+        imgArr.push(img);
+    };
+    
+    this.waterlayer = {
+        img: imgArr,
+        rows: waterlayer.rows,
+        cols: waterlayer.cols
+    };
+    
+    // Get floor map png from html img
+    var transition = this.map_data.transition();
+    img = document.getElementById(transition.id);
+    this.transition = {
+        img: img
+    };
+    
+    console.log(this);
     
 };
 
@@ -153,7 +224,7 @@ Map.prototype.addFloor = function(floor) {
         this.floors[floor.id] = floor;
         
         // Expose game to floor
-        floor.game = this.game;
+        //floor.game = this.game;
     }
     
 };
@@ -427,26 +498,7 @@ Map.prototype.getTileOtherEndLadder = function(endA) {
 
 
 
-Map.prototype.createMapLayers = function(graph) {
-    
 
-    
-    for (let f in this.floors) {
-        // Bitmap Layers
-        this.floors[f].createBackgroundandForeground(); 
-        this.floors[f].createFrame();
-        this.floors[f].createWaterLayer();
-        
-        // Graphic Layers
-        this.floors[f].createFloorLayer();
-        
-        
-
-    } 
-    
-    this.createMapTransitionLayer();
-    
-};
 
 
 // Create black rectangle used for transitions
@@ -745,6 +797,7 @@ Map.prototype.updateMapLayers = function() {
     var game = this.game;
     
     this.layers.GRID;
+    
     
 //    if (game.getPathfinderLayer() === 'PATH') {
 //        this.layers.PATHFINDER = 'PATH';

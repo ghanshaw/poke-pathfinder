@@ -13,7 +13,7 @@ pokemonApp.directive('playerDraggie', function() {
         template: template,
         //replace: false,
         link: function(scope, elem, attrs) {
-            
+                        
             var game = scope.game;
             
             console.log('GENDER IS ' + game.getPlayerGender());
@@ -101,8 +101,11 @@ pokemonApp.directive('setClassWhenAtTop', function ($window) {
   return {
     restrict: 'A',
     link: function (scope, element, attrs) {
+        console.info('directive running');
+        
       var topClass = attrs.setClassWhenAtTop, // get CSS class from directive's attribute value
-          offsetTop = element.offset().top; // get element's offset top relative to document
+          //offsetTop = element.offset().top; // get element's offset top relative to document
+          offsetTop = $('nav.navbar').height();
 
       $win.on('scroll', function (e) {
         if ($win.scrollTop() >= offsetTop) {
