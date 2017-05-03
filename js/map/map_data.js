@@ -121,47 +121,56 @@ var map_data = (function() {
         { 
             id: 0,
             label: 'MEWTWO',
-            tile: ['BF1', 12, 7]
+            tile: ['BF1', 12, 7],
+            active: true
         },
         { 
             id: 1,
             label: 'POKEBALL',
-            tile: ['F1', 5, 25]
+            tile: ['F1', 5, 25],
+            active: false
         },
         { 
             id: 2,
             label: 'POKEBALL',
-            tile: ['F1', 16, 11]
+            tile: ['F1', 16, 11],
+            active: false
         },
         { 
             id: 3,
             label: 'BOULDER',
-            tile: ['F1', 18, 9]
+            tile: ['F1', 18, 9],
+            active: false
         },
         { 
             id: 4,
             label: 'BOULDER',
-            tile: ['F1', 20, 5]
+            tile: ['F1', 20, 5],
+            active: false
         },
         { 
             id: 5,
             label: 'BOULDER',
-            tile: ['F1', 21, 6]
+            tile: ['F1', 21, 6],
+            active: false
+        },
+        { 
+            id: 6,
+            label: 'BOULDER',
+            tile: ['F1', 21, 11],
+            active: false
         },
         { 
             id: 7,
             label: 'BOULDER',
-            tile: ['F1', 21, 11]
+            tile: ['F1', 21, 13],
+            active: false
         },
         { 
-            id: 5,
+            id: 8,
             label: 'BOULDER',
-            tile: ['F1', 21, 13]
-        },
-        { 
-            id: 5,
-            label: 'BOULDER',
-            tile: ['F1', 20, 14]
+            tile: ['F1', 20, 14],
+            active: false                
         }
     ];
      

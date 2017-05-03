@@ -1,19 +1,7 @@
-<div ng-controller="gameboyController" ng-keydown="changeDirection($event)" tabindex="0">
-    
-    
-    <div class="row is-flex">
-        
-            <div class="col-sm-6 col-md-3 no-padding" set-class-when-at-top="fix-to-top">
-        <div user-console-panel></div>        
-    </div>
-        
-    <div class="col-sm-6 col-md-9" set-class-when-at-top="col-md-offset-3">
-        
-        
-        
+<div ng-keydown="changeDirection($event)">
         
         <div>
-            <img src="../../gameboy/nintendo_gameboy_advance_sp.png" alt="" style=" display: none; width: 60%; margin: 0 auto"/>
+            <!--<img src="../../gameboy/nintendo_gameboy_advance_sp.png" alt="" style=" display: none; width: 60%; margin: 0 auto"/>-->
         </div>
         <div class="system-container" id="gbasp">
             <div class="screen-body">
@@ -23,7 +11,14 @@
                 <div class="screen-bumper small-bumper" id="bumper-ll"></div>
                 <div class="screen-bumper small-bumper" id="bumper-lr"></div>
                 <div class="screen-border">
-                    <div class="gameboy-screen"><canvas id="gameboy"></canvas></div>
+                    <div class="gameboy screen">
+                        <canvas 
+                            id=""
+                            class="gameboy foreground"></canvas>
+                        <canvas 
+                            id=""
+                            class="gameboy background"></canvas>
+                    </div>
                 </div>
             </div>
             <div class="gap"></div>

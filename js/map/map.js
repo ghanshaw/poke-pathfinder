@@ -24,6 +24,15 @@ var Map = function(game, map_data) {
     this.waterlayer = [];
     
     this.transition = {};
+
+    
+    this.obstacles = {
+        tiles: [],
+        spriteOptions: {
+            TYPE: 'OBSTACLE',
+            LABEL: 'MEWTWO'
+        }
+    };
     
 };
 
@@ -46,6 +55,12 @@ Map.prototype.init = function(floors, graph) {
     
     // Create map layers
     this.initMapLayers();
+    
+    // Create floor layers
+    for (let f in this.floors) {  
+        this.floors[f].initFloorLayer();
+    }
+    
     
 };
 
@@ -89,6 +104,14 @@ Map.prototype.initMapLayers = function(graph) {
 };
 
 
+Map.prototype.addObstacles = function() {
+    
+  
+    
+    
+};
+
+
 Map.prototype.addMapData = function() {
     
     // Extract key tile data
@@ -117,7 +140,6 @@ Map.prototype.addMapData = function() {
         
         tileA.ladderId = ladder.id;
         tileB.ladderId = ladder.id;
-
         
         ladder.tile[0] = tileA;
         ladder.tile[1] = tileB;
@@ -137,25 +159,53 @@ Map.prototype.addMapData = function() {
     }
     
     // Extract obstacle data
-    this.obstacles = map_data.obstacles();
+    this.obstacles.tiles = map_data.obstacles();
     
     // Turn tiles in tile objects
-    for (let ob of this.obstacles) {
+    for (let ob of this.obstacles.tiles) {
         var tileId = ob.tile.toString();
         ob.tile = this.getTileFromId(tileId);   
         
-        // Turn tile into gap
+        // Turn tile into obscle
         ob.tile.obstacle = ob.type;
         ob.tile.obstacleId = ob.id;
         
     }
     
-    
-    
-    
     this.map_data = map_data;
     
 };
+
+
+Map.prototype.drawObstacles = function() {
+    
+    var game = this.game;
+    
+    for (let ob of this.obstacles.tiles) {
+        if (ob.active) {
+             // Draw tile to screen
+            let tile = ob.tile;
+            let floorId = ob.tile.floor.id;
+            let dof = tile.dof;
+            
+            if (this.game.getMapState() === 'GRAPHIC') {
+                game.drawShapeToScreen('star', floorId, tile);
+                return;
+            }
+            
+            let label = ob.label;
+            let spriteOptions = this.obstacles.spriteOptions;
+            spriteOptions.LABEL = label;
+            let sprite = game.getSprite(spriteOptions);
+ 
+            game.drawImageToScreen(sprite.canvas, 'tile', floorId, dof, tile, 2);
+            //game.drawImageToScreen(sprite.canvas)
+            
+        }
+    }
+};
+
+
 
 Map.prototype.addMapToGraph = function(graph) {
     
@@ -165,9 +215,10 @@ Map.prototype.addMapToGraph = function(graph) {
     
     
     // Remove edges to obstacles
-    for (let ob of this.obstacles) {
-        if (ob.LABEL === 'MEWTWO') {
-            this.game.removeEdgesToNeighbors(ob.tile);   
+    for (let ob of this.obstacles.tiles) {
+        // Mewtwo is the only active obstacle
+        if (ob.active) {
+            //this.game.removeEdgesToNeighbors(ob.tile);   
         }
     }
     
@@ -543,6 +594,8 @@ Map.prototype.drawMapTransitionLayer = function() {
 };
 
 
+
+
 Map.prototype.drawGraphicLayers = function() {
     
     for (let f in this.floors) {   
@@ -718,50 +771,50 @@ Map.prototype.movePathPointerToSprite = function(game) {
   }  
     
 };
-
-
-
-
-Map.prototype.initGameboy = function() {
-    
-    this.gameboy = {};
-    
-    var canvas = document.getElementById('gameboy');
-    var ctx = canvas.getContext('2d');
-    
-    ctx.mozImageSmoothingEnabled = false;
-    ctx.webkitImageSmoothingEnabled = false;
-    ctx.msImageSmoothingEnabled = false;
-    ctx.imageSmoothingEnabled = false;
-    
-    
-    //var tile_size = canvas.width / 15;
-    var tile_size = 16;
-    canvas.width = tile_size * 15;
-    
-    canvas.height = tile_size * 10;
-    
-    this.gameboy= {
-        canvas: canvas,
-        ctx: ctx
-    };
-    
-    console.log(this.gameboy);
-    
-};
-
-
-Map.prototype.drawGameboy = function(player) {
-    
-    var floor = player.tile.floor;
-    //var frame = floor.frame;
-    
-    var sx = (player.current.col - 7) * floor.tile_size;
-    var sy = (player.current.row - 4.5) * floor.tile_size;
-    
-    this.gameboy.ctx.drawImage(floor.frame.canvas, sx, sy, floor.tile_size * 15, floor.tile_size * 10, 0, 0, this.gameboy.canvas.width, this.gameboy.canvas.height);
-    //ctx.drawSprite()
-};
+//
+//
+//
+//
+//Map.prototype.initGameboy = function() {
+//    
+//    this.gameboy = {};
+//    
+//    var canvas = document.getElementById('gameboy');
+//    var ctx = canvas.getContext('2d');
+//    
+//    ctx.mozImageSmoothingEnabled = false;
+//    ctx.webkitImageSmoothingEnabled = false;
+//    ctx.msImageSmoothingEnabled = false;
+//    ctx.imageSmoothingEnabled = false;
+//    
+//    
+//    //var tile_size = canvas.width / 15;
+//    var tile_size = 16;
+//    canvas.width = tile_size * 15;
+//    
+//    canvas.height = tile_size * 10;
+//    
+//    this.gameboy= {
+//        canvas: canvas,
+//        ctx: ctx
+//    };
+//    
+//    console.log(this.gameboy);
+//    
+//};
+//
+//
+//Map.prototype.drawGameboy = function(player) {
+//    
+//    var floor = player.tile.floor;
+//    //var frame = floor.frame;
+//    
+//    var sx = (player.current.col - 7) * floor.tile_size;
+//    var sy = (player.current.row - 4.5) * floor.tile_size;
+//    
+//    this.gameboy.ctx.drawImage(floor.frame.canvas, sx, sy, floor.tile_size * 15, floor.tile_size * 10, 0, 0, this.gameboy.canvas.width, this.gameboy.canvas.height);
+//    //ctx.drawSprite()
+//};
 
 Map.prototype.addRemoveGaps = function(add=true) {
     
@@ -816,5 +869,13 @@ Map.prototype.updateMapLayers = function() {
     }
     
     return;
+    
+};
+
+Map.prototype.drawFloorLayer = function(f, state) {
+    
+    if (state === 'GRAPHIC') {
+        this.floors[f].drawFloorLayer();
+    }
     
 };

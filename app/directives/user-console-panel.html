@@ -98,21 +98,21 @@
                                 <button 
                                     class="button-flat normal-border-width"
                                     ng-click="clickSourceTarget('SOURCE')"
-                                    ng-class="cssSourceTarget('SOURCE')">Click Source Tile</button>
+                                    ng-class="cssSourceTarget('SOURCE')">Move Source Tile</button>
                             </div>
                             <div class="col-xs-2">   
                                 <button
                                     class="button-flat"
-                                    ng-class="cssPathMarkerCheckbox('SOURCE')"
-                                    ng-click="clickPathMarkerCheckbox('SOURCE')">
+                                    ng-class="cssPointMarkerCheckbox('SOURCE')"
+                                    ng-click="clickPointMarkerCheckbox('SOURCE')">
                                     <i class="fa fa-square-o marker-icon" 
                                        aria-hidden="true" 
-                                       ng-show="pathMarkerCheckbox.source.active === false"></i>
+                                       ng-show="pointMarkerCheckbox.source.active === false"></i>
                                     <i class="fa fa-check-square-o marker-icon" 
                                        aria-hidden="true"
-                                       ng-show="pathMarkerCheckbox.source.active === true"></i>
+                                       ng-show="pointMarkerCheckbox.source.active === true"></i>
                                 </button>
-                                <label>{{ pathMarkerCheckbox.source.label }}</label>
+                                <label>{{ pointMarkerCheckbox.source.label }}</label>
                             </div>
                         </div>
                     </div> 
@@ -145,21 +145,21 @@
                                 <button
                                     class="button-flat normal-border-width"
                                     ng-click="clickSourceTarget('TARGET')"
-                                    ng-class="cssSourceTarget('TARGET')">Click Target Tile</button>
+                                    ng-class="cssSourceTarget('TARGET')">Move Target Tile</button>
                             </div>
                             <div class="col-xs-2">   
                                     <button
                                         class="button-flat"
-                                        ng-class="cssPathMarkerCheckbox('TARGET')"
-                                        ng-click="clickPathMarkerCheckbox('TARGET')">
+                                        ng-class="cssPointMarkerCheckbox('TARGET')"
+                                        ng-click="clickPointMarkerCheckbox('TARGET')">
                                         <i class="fa fa-square-o marker-icon" 
                                            aria-hidden="true" 
-                                           ng-show="pathMarkerCheckbox.target.active === false"></i>
+                                           ng-show="pointMarkerCheckbox.target.active === false"></i>
                                         <i class="fa fa-check-square-o marker-icon" 
                                            aria-hidden="true"
-                                           ng-show="pathMarkerCheckbox.target.active === true"></i>
+                                           ng-show="pointMarkerCheckbox.target.active === true"></i>
                                     </button>
-                                    <label>{{ pathMarkerCheckbox.target.label }}</label>
+                                    <label>{{ pointMarkerCheckbox.target.label }}</label>
                            </div>
                         </div>
                     </div>

@@ -6,25 +6,16 @@ pokemonApp.config(function ($routeProvider, $locationProvider) {
     
     $routeProvider   
     
-    .when('/',  {
-        templateUrl: 'app/pages/monitor.html',
-        controller: 'monitorController'     
-    })    
-    
-    .when('/gameboy/', {
+    .when('/', {
         templateUrl: 'app/pages/gameboy.html',
         controller: 'gameboyController'
     })
     
-    .when('/cave/', {
-        templateUrl: 'app/pages/cave.html',
-        controller: 'caveController'
-    })
-    
-    .when('/about/', {
-        templateUrl: 'app/pages/about.html',
-        controller: 'aboutController'
-    });
+    .when('/monitor/',  {
+        templateUrl: 'app/pages/monitor.html',
+        controller: 'monitorController'     
+    })    
+
     
 });
 

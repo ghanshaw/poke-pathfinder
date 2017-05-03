@@ -21,14 +21,29 @@ var Monitor = function(game) {
     this.background = {};
     this.foreground = {};
     this.rocklayer = {};
+    this.transition = {};
     
     this.zIndex = {
         rocklayer: 5,
         waterlayer: 10,
-        background: 15,        
-        foreground: 20,
-        canvas: 25
+        floor: {
+            background: 15,
+            foreground: 25
+        },        
+        frame: {
+            background: 20,
+            foreground: 30
+        },
+        transition: {
+            active: 45,
+            inactive: 0
+        },
+        graphic: {
+            background: 35,
+            foreground: 40
+        }
     };
+    
     
     this.currentLayer = 0;
     
@@ -44,19 +59,107 @@ Monitor.prototype.init = function() {
   
     this.initRocklayer();
     this.initFloors();
-    this.initCanvas();
+    this.initFrame();
 
 };
 
-
-
-Monitor.prototype.resizeMonitor = function() {
+Monitor.prototype.resize = function() {
     
-    this.resizeCanvas();
+    this.resizeFrame();
     this.resizeFloors();
     this.resizeRocklayer();
     
+    // These rely on dimensions of frame
+    this.initGrid();
+    this.initTransition();
+    
 };
+
+Monitor.prototype.initMonitorLayers = function() {
+    
+    
+    //this.initTransition();
+    
+};
+
+
+
+Monitor.prototype.initTransition = function() {
+
+    var game = this.game;
+    
+    if (this.transition.img) { 
+        this.appendImgToDom(this.transition.img);
+        return; 
+    }
+    
+    var transition = game.getTransitionLayer();  
+    
+    this.transition['img'] = $(transition.img).clone();
+    
+//    var width = this.frame.background; 
+//    
+//    $(this.rocklayer.img).addClass('layer');
+//    $(this.rocklayer.img).css('z-index', this.zIndex.rocklayer);
+    $(this.transition.img).addClass('layer');
+    $(this.transition.img).css('z-index', this.zIndex.transition.inactive);
+    this.appendImgToDom(this.transition.img);
+
+};
+
+
+Monitor.prototype.initGrid = function() {
+
+    // Create reusable context
+    var canvas = document.createElement('canvas');
+    var ctx = canvas.getContext('2d');
+    
+    ctx.mozImageSmoothingEnabled = false;
+    ctx.webkitImageSmoothingEnabled = false;
+    ctx.msImageSmoothingEnabled = false;
+    ctx.imageSmoothingEnabled = false;
+    
+    
+    canvas.width = this.frame.background.canvas.width;
+    canvas.height = this.frame.background.canvas.height;
+    ctx.strokeStyle = '#96fff4';
+
+    
+    for (let r = 0; r <= this.rows; r++) {
+     
+        ctx.beginPath();
+        let y = (r * this.tile_size);
+        ctx.moveTo(0, y);
+        ctx.lineTo(canvas.width, y);
+        ctx.stroke();
+        
+    };
+    
+    for (let c = 0; c <= this.cols; c++) {
+     
+        ctx.beginPath();
+        let x = (c * this.tile_size);
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, canvas.height);
+        ctx.stroke();
+        
+    };
+
+//    this.fillStyle = 'blue';
+//    this.ctx.fillRect(0, 0, 700, 1000);
+
+    canvas.id = 'gridCanvas';
+    ctx.id = 'gridCanvas';
+    
+    this.grid = {
+        canvas: canvas,
+        ctx: ctx
+    };
+
+};
+
+
+
 
 Monitor.prototype.resizeRocklayer = function() {
     
@@ -65,23 +168,23 @@ Monitor.prototype.resizeRocklayer = function() {
     
     
   
-//    var monitorScreen = $('.monitor-screen');
-//    var monitorFrame = $('.monitor-frame');
-//    
-//    // Compute tile size (based on canvas size, or fixed)
-//    var monitorFrameWidth = monitorFrame.width();
-//    var monitorScreenWidth = monitorScreen.width();
-//    this.tile_size = Math.floor(monitorFrameWidth / this.cols);
-//    if (this.tile_size % 2 !== 0) {
-//        this.tile_size--;
-//    }
-//    
-//    var tile_size = this.tile_size;
-//    
-//      // Update canvas height
-//    this.canvas.width = tile_size * this.cols;
-//    this.canvas.height = tile_size * this.rows;
-//    
+    //    var monitorScreen = $('.monitor-screen');
+    //    var monitorFrame = $('.monitor-frame');
+    //    
+    //    // Compute tile size (based on canvas size, or fixed)
+    //    var monitorFrameWidth = monitorFrame.width();
+    //    var monitorScreenWidth = monitorScreen.width();
+    //    this.tile_size = Math.floor(monitorFrameWidth / this.cols);
+    //    if (this.tile_size % 2 !== 0) {
+    //        this.tile_size--;
+    //    }
+    //    
+    //    var tile_size = this.tile_size;
+    //    
+    //      // Update canvas height
+    //    this.canvas.width = tile_size * this.cols;
+    //    this.canvas.height = tile_size * this.rows;
+    //    
     
 };
 
@@ -89,9 +192,13 @@ Monitor.prototype.resizeRocklayer = function() {
 Monitor.prototype.initRocklayer = function() {
   
     var game = this.game;
-
-    var rocklayer = game.getRocklayer();  
     
+    if (this.rocklayer.img) { 
+        this.appendImgToDom(this.rocklayer.img);
+        return; 
+    }
+    
+    var rocklayer = game.getRocklayer();  
     
     this.rocklayer['img'] = $(rocklayer.img).clone();
     this.rocklayer.rows = rocklayer.rows;
@@ -101,26 +208,54 @@ Monitor.prototype.initRocklayer = function() {
     
     $(this.rocklayer.img).addClass('layer');
     $(this.rocklayer.img).css('z-index', this.zIndex.rocklayer);
-    $('.monitor-screen').append(this.rocklayer.img);
+    this.appendImgToDom(this.rocklayer.img);
+    
+};
+
+
+Monitor.prototype.appendImgToDom = function(img) {
+
+    $('.monitor.screen').append(img);
     
 };
 
 
 
-Monitor.prototype.initCanvas = function() {
+// Screen consists of background and foreground canvas
+Monitor.prototype.initFrame = function() {
    
-   var game = this.game;
+    var game = this.game;
     
     var canvasId = 'monitor';
     
     // Define canvas objects
-    var canvas = document.getElementById(canvasId);
-    var ctx = canvas.getContext('2d');
+    var canvas;
+    var ctx;
+    
+    canvas = $('.monitor.foreground')[0];
+    ctx = canvas.getContext('2d');   
+    var foreground = {
+        canvas: canvas,
+        ctx: ctx
+    };
     
     ctx.mozImageSmoothingEnabled = false;
     ctx.webkitImageSmoothingEnabled = false;
     ctx.msImageSmoothingEnabled = false;
     ctx.imageSmoothingEnabled = false;
+    
+    canvas = $('.monitor.background')[0];
+    ctx = canvas.getContext('2d');   
+    var background = {
+        canvas: canvas,
+        ctx: ctx
+    };
+    
+    ctx.mozImageSmoothingEnabled = false;
+    ctx.webkitImageSmoothingEnabled = false;
+    ctx.msImageSmoothingEnabled = false;
+    ctx.imageSmoothingEnabled = false;
+    
     
     // Max number of cols in a floor
     // Sum of rows in floor
@@ -138,19 +273,31 @@ Monitor.prototype.initCanvas = function() {
     this.rows = rows;
     this.cols = cols;
     
-    $(canvas).css('z-index', this.zIndex.canvas);
+    // Update z-index of each frame
+    $(foreground.canvas).css('z-index', this.zIndex.frame.foreground);
+    $(background.canvas).css('z-index', this.zIndex.frame.background);
     
-    this.canvas = canvas;
-    this.ctx = ctx;
+    foreground.canvas.id = 'foreground';
+    background.canvas.id = 'background';
     
+    // Append canvas objects to DOM
+//    this.appendImgToDom(foreground.canvas);
+//    this.appendImgToDom(background.canvas);
+    
+    this.frame = {
+        foreground: foreground,
+        background: background
+    };
     
 };
 
 
 
-Monitor.prototype.resizeCanvas = function() {
+Monitor.prototype.resizeFrame = function() {
     
-    var monitorScreen = $('.monitor-screen');
+    $('.monitor.screen').css('width', '90%');
+    
+    var monitorScreen = $('.monitor.screen');
     var monitorFrame = $('.monitor-frame');
     
     // Compute tile size (based on canvas size, or fixed)
@@ -163,11 +310,15 @@ Monitor.prototype.resizeCanvas = function() {
     
     var tile_size = this.tile_size;
     
-      // Update canvas height
-    this.canvas.width = tile_size * this.cols;
-    this.canvas.height = tile_size * this.rows;
+    // Update canvas height
     
-    $('monitor-screen').css('width', 'auto');
+    this.frame.foreground.canvas.width = tile_size * this.cols;
+    this.frame.foreground.canvas.height = tile_size * this.rows;
+    
+    this.frame.background.canvas.width = tile_size * this.cols;
+    this.frame.background.canvas.height = tile_size * this.rows;
+    
+    $('.monitor.screen').css('width', 'auto');
     
 };
 
@@ -186,7 +337,18 @@ Monitor.prototype.initFloors = function() {
     
     for (let f in mapFloors) {
         
-        if (this.floors[f]) { return; }
+        
+        
+        if (this.floors[f]) { 
+            let floor = this.floors[f];
+            this.appendImgToDom(floor.background.img);
+            this.appendImgToDom(floor.foreground.img);
+            
+            for (let img of floor.waterlayer.img) {
+                this.appendImgToDom(img);
+            }
+            continue;
+        }
         
         let mapFloor = mapFloors[f];
         let floor = {
@@ -203,12 +365,12 @@ Monitor.prototype.initFloors = function() {
         
        
         floor.background.img = $(mapFloor.background.img).clone();
-        floor.background.img.css('z-index', this.zIndex.background);
+        floor.background.img.css('z-index', this.zIndex.floor.background);
         floor.background.img.addClass('layer');
 
         
         floor.foreground.img = $(mapFloor.foreground.img).clone(); 
-        floor.foreground.img.css('z-index', this.zIndex.foreground);
+        floor.foreground.img.css('z-index', this.zIndex.floor.foreground);
         floor.foreground.img.addClass('layer');
 
         
@@ -223,44 +385,37 @@ Monitor.prototype.initFloors = function() {
         floor.waterlayer.cols = waterlayer.cols;
         
         // Append all the elements to the monitor
-        $('.monitor-screen').append(floor.background.img);
-        $('.monitor-screen').append(floor.foreground.img);
+        this.appendImgToDom(floor.background.img);
+        this.appendImgToDom(floor.foreground.img);
         for (let img of floor.waterlayer.img) {
-            $('.monitor-screen').append(img);
-            
-            // Hide each water layer
-            //img.hide();
+            this.appendImgToDom(img);
         }
-
+        
         this.floors[f] = floor;
         
 
-//        $('.monitor-screen').append(img);
-//
-//        $('.monitor-screen').css('width', 'auto');
-//        
-//        let floor = floors[f];
-//        
-//        var width = floor.cols * this.tile_size;
-//        var height = floor.rows * this.tile_size;
-//        
-//        var offset_top = this.floorborder.rows * this.tile_size + prev_height;
-//        
-//        var max_floor_cols = this.cols - (this.floorborder.cols * 2);
-//        var offset_left = (max_floor_cols - floor.cols)/2 + this.floorborder.cols;
-//        offset_left *= this.tile_size;
-//        
-//
-//        // Update dimensions of floor on monitor
-//        this.floorDimensions[f] = {
-//            top: offset_top,
-//            left: offset_left,
-//            height: height,
-//            width: width
-//        };
-//
-//        this.ctx.drawImage(floor.frame.canvas, offset_left, offset_top, width, height);
-//        prev_height += height + (this.floorborder.rows * this.tile_size);
+        
+
+        //        $('.monitor-screen').append(img);
+        //
+        //        $('.monitor-screen').css('width', 'auto');
+        //        
+        //        let floor = floors[f];
+        //        
+        //        var width = floor.cols * this.tile_size;
+        //        var height = floor.rows * this.tile_size;
+        //        
+        //        var offset_top = this.floorborder.rows * this.tile_size + prev_height;
+        //        
+        //        var max_floor_cols = this.cols - (this.floorborder.cols * 2);
+        //        var offset_left = (max_floor_cols - floor.cols)/2 + this.floorborder.cols;
+        //        offset_left *= this.tile_size;
+        //        
+        //
+
+        //
+        //        this.ctx.drawImage(floor.frame.canvas, offset_left, offset_top, width, height);
+        //        prev_height += height + (this.floorborder.rows * this.tile_size);
         
     };
     
@@ -305,6 +460,9 @@ Monitor.prototype.resizeFloors = function() {
         floor.top = offset_top;
         floor.left = offset_left;
         
+        floor.height = height;
+        floor.width = width;
+        
         // Get and update image objects
         let foreground = floor.foreground;
         let background = floor.background;     
@@ -342,13 +500,13 @@ Monitor.prototype.resizeFloors = function() {
         
         
 
-//        // Update dimensions of floor on monitor
-//        this.floorDimensions[f] = {
-//            top: offset_top,
-//            left: offset_left,
-//            height: height,
-//            width: width
-//        };
+        //        // Update dimensions of floor on monitor
+        //        this.floorDimensions[f] = {
+        //            top: offset_top,
+        //            left: offset_left,
+        //            height: height,
+        //            width: width
+        //        };
 
         //this.ctx.drawImage(floor.frame.canvas, offset_left, offset_top, width, height);
         
@@ -357,31 +515,223 @@ Monitor.prototype.resizeFloors = function() {
     
 };
 
+Monitor.prototype.getXYFromTile = function(tile) {
+       
+    var floorId = tile.floor.id;
+    var floor = this.floors[floorId];
+    
+    var x = tile.col * this.tile_size;
+    var y = tile.row * this.tile_size;
+    
+    x += floor.left;
+    y += floor.top;
+    
+    return {
+        x: x,
+        y: y
+    };
+    
+};
+
+
+Monitor.prototype.clearFrame = function() {
+  
+    var frame = this.frame;
+    
+    var width = frame.background.canvas.width;
+    var height = frame.background.canvas.height;
+    
+    frame.background.ctx.clearRect(0, 0, width, height);
+    frame.foreground.ctx.clearRect(0, 0, width, height);
+    
+};
+
+Monitor.prototype.drawShapeToFrame = function(shape, floorId, tile, color) {
+
+
+    var dof = tile.dof;
+    
+    var tile_size = this.tile_size;    
+    var frame = this.frame;
+    
+    var xy = this.getXYFromTile(tile);
+    
+    var ctx;
+    if (dof === 'BACKGROUND') {
+        ctx = frame.background.ctx;
+    } else if (dof === 'FOREGROUND') {
+        ctx = frame.foreground.ctx;
+    }
+    
+    
+    if (shape.toUpperCase() === 'CIRCLE') {
+        
+        xy.x += (1/2) * tile_size;
+        xy.y += (1/2) * tile_size;
+        
+        ctx.fillStyle = '#FF5722';
+        ctx.beginPath();
+        ctx.arc(xy.x, xy.y, tile_size/3, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.closePath();
+    }
+    
+    if (shape.toUpperCase() === 'SQUARE') {
+        //frame.ctx.beginPath();
+        ctx.strokeStyle = "rgba(233, 30, 99, .7)";
+        ctx.lineWidth = tile_size / 10;
+        ctx.strokeRect(xy.x, xy.y, tile_size, tile_size);
+    }
+    
+    if (shape.toUpperCase() === 'STAR') {
+        
+        ctx.fillStyle = '#a472ff';
+        
+        let radius = tile_size / 2.5;
+        let points = 5;
+        let m = .5;
+        
+        xy.x += (1/2) * tile_size;
+        xy.y += (1/2) * tile_size;
+        
+        ctx.save();
+        ctx.beginPath();
+        ctx.translate(xy.x, xy.y);
+        ctx.moveTo(0, 0 - radius);
+        for (var i = 0; i < points; i++)
+        {
+            ctx.rotate(Math.PI / points);
+            ctx.lineTo(0, 0 - (radius *  m));
+            ctx.rotate(Math.PI / points);
+            ctx.lineTo(0, 0 - radius);
+        }
+        ctx.fill();
+        ctx.restore();
+    
+    }
+    
+};
+
+
+
+Monitor.prototype.drawImageToFrame = function(img, option, floorId, dof, tile, span=1, alpha=1) {
+    
+    
+    // Draw image at present location of pointer
+    if (option === 'pointer') {
+        let ctx = this.frame.foreground.ctx;
+        let tile_size = this.tile_size;
+        let offset = (1 - span)/2;
+        ctx.drawImage(img, this.pointer.x - tile_size, this.pointer.y - tile_size, tile_size * span, tile_size * span);
+        return;
+    }
+    
+    if (option === 'tile') {
+        
+        var floor = this.floors[floorId];
+        var frame = this.frame;
+        
+        var xy = this.getXYFromTile(tile);
+        
+        //var dof = tile.dof;
+        var tile_size = this.tile_size;
+        
+        var offset = (1 - span)/2;
+        
+        xy.x += offset * tile_size;
+        xy.y += offset * tile_size;   
+        
+        var ctx;
+        if (dof === 'BACKGROUND') {
+            ctx = frame.background.ctx;
+        } else if (dof === 'FOREGROUND') {
+            ctx = frame.foreground.ctx;
+        }
+        
+        ctx.drawImage(img, xy.x, xy.y, tile_size * span, tile_size * span);
+        return;
+    }
+    
+    if (option === 'floor') {
+        
+        var frame = this.frame;
+        
+        var ctx;
+        if (dof === 'BACKGROUND') {
+            ctx = frame.background.ctx;
+        } else if (dof === 'FOREGROUND') {
+            ctx = frame.foreground.ctx;
+        }
+        
+        var floor = this.floors[floorId];
+        
+        if (alpha !== 1) {
+            console.log(alpha);
+            ctx.globalAlpha = 1 - alpha;
+        }
+        ctx.drawImage(img, floor.left, floor.top, floor.width, floor.height);
+        ctx.globalAlpha = 1;
+
+        return;
+    }
+    
+    if (option === 'frame') {
+        
+    }
+    
+    
+    
+    
+    
+};
+
+Monitor.prototype.prepareMonitor = function(state) {
+  
+    // Draw cave background
+//    if (this.game.getMapState() === 'GRAPHIC') {
+//        this.frame.background.ctx.fillStyle = this.rockGreen;
+//        this.frame.background.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+//    }
+    
+    if (state === 'GRAPHIC') {
+    
+        // Give canvas background color;
+        $(this.frame.background.canvas).css('background-color', this.rockGreen);
+
+        // Move frame forward
+        $(this.frame.background.canvas).css('z-index', this.zIndex.graphic.background);
+        $(this.frame.foreground.canvas).css('z-index', this.zIndex.graphic.foreground);
+    
+    } else if (state === 'BITMAP') {
+        
+        // Remove canvas background color
+        $(this.frame.background.canvas).css('background-color', 'transparent');
+
+        // Return images to original z-index
+        $(this.frame.background.canvas).css('z-index', this.zIndex.frame.background);
+        $(this.frame.foreground.canvas).css('z-index', this.zIndex.frame.foreground);
+        
+    }
+    
+    
+};
 
 
 Monitor.prototype.drawMonitor = function() {
     
-    // Draw cave background
-    if (this.game.getMapState() === 'GRAPHIC') {
-        this.ctx.fillStyle = this.rockGreen;
-        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-    } else {
-        //this.ctx.drawImage(this.monitorbackground.canvas, 0, 0, this.canvas.width, this.canvas.height);
-    }
     
-    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     
     // Update water layer
     this.updateWaterlayer();
     
     // Draw Floor Frames
-    this.drawFloorFrames();
+    //this.drawFloorFrames();
 
     // Draw grid
     this.drawGrid();
     
     // Draw player drag icon
-    this.drawPlayerDrag();
+    //this.drawPlayerDrag();
 
     //Draw transition layer
     this.drawTransition();
@@ -485,18 +835,16 @@ Monitor.prototype.drawTransition = function() {
     var game = this.game;
     
     if (game.getPlayerMoveState() === 'LADDER') {
-    
-        // Get transition layer from the game (from the map)
-        var transitionlayer = this.game.getTransitionLayer();
-
-        // Update layer with new shade black (based on current alpha set during interpolation);
-        transitionlayer.ctx.clearRect(0, 0, transitionlayer.canvas.width, transitionlayer.canvas.height);
-        transitionlayer.ctx.fillStyle = 'black';
-        transitionlayer.ctx.fillRect(0, 0, transitionlayer.canvas.width, transitionlayer.canvas.height);
-
-        this.ctx.drawImage(transitionlayer.canvas, 0, 0, this.canvas.width, this.canvas.height);
+        
+        let opacity = game.getTransitionOpacity();
+        
+        $(this.transition.img).css('z-index', this.zIndex.transition.active);
+        $(this.transition.img).css('opacity', opacity);
+        return;
     
     }
+    
+    $(this.transition.img).css('z-index', this.zIndex.transition.inactive);
 };
 
 
@@ -555,61 +903,13 @@ Monitor.prototype.createMonitorBackground = function() {
 };
 
 
-Monitor.prototype.createGrid = function() {
-
-    // Create reusable context
-    var canvas = document.createElement('canvas');
-    var ctx = canvas.getContext('2d');
-    
-    canvas.width = this.canvas.width;
-    canvas.height = this.canvas.height;
-    ctx.strokeStyle = 'purple';
-
-    
-    for (let r = 0; r <= this.rows; r++) {
-     
-        ctx.beginPath();
-        let y = (r * this.tile_size);
-        ctx.moveTo(0, y);
-        ctx.lineTo(canvas.width, y);
-        ctx.stroke();
-        
-    };
-    
-    for (let c = 0; c <= this.cols; c++) {
-     
-        ctx.beginPath();
-        let x = (c * this.tile_size);
-        ctx.moveTo(x, 0);
-        ctx.lineTo(x, canvas.height);
-        ctx.stroke();
-        
-    };
-
-    this.fillStyle = 'blue';
-    this.ctx.fillRect(0, 0, 700, 1000);
-
-    canvas.id = 'gridCanvas';
-    ctx.id = 'gridCanvas';
-    
-    this.grid = {
-        canvas: canvas,
-        ctx: ctx
-    };
-
-};
-
 
 Monitor.prototype.drawGrid = function() {
-    
-    return;
-
-    var activeLayers = this.game.getMapLayers();
-
-    if (activeLayers.GRID) {
-        this.ctx.drawImage(this.grid.canvas, 0, 0);
+    if (this.game.isGridVisible()) {
+        let width = this.frame.foreground.canvas.width;
+        let height = this.frame.foreground.canvas.height;
+        this.frame.foreground.ctx.drawImage(this.grid.canvas, 0, 0, width, height);
     }
-
 };
 
 
@@ -618,26 +918,26 @@ Monitor.prototype.getTileFromPointer  = function() {
     
     var pointer = this.pointer;
     
-    if (!pointer || pointer.target.id !== 'monitor') {
+    if (!pointer || pointer.target.id !== 'foreground') {
         return;
     }
     
     var top = pointer.y;
     var left = pointer.x;
-    var floorDimensions =  this.floorDimensions;
+    //var floorDimensions =  this.floorDimensions;
 
-    for (var f in floorDimensions) {
-        let dimensions = floorDimensions[f];
+    for (var f in this.floors) {
+        let floor = this.floors[f];
 
 
         
-        if (top > dimensions.top && 
-            top < (dimensions.top + dimensions.height) &&
-            left > dimensions.left &&
-            left < (dimensions.left + dimensions.width)) {
+        if (top > floor.top && 
+                top < (floor.top + floor.height) &&
+                left > floor.left &&
+                left < (floor.left + floor.width)) {
 
-            top -= dimensions.top;
-            left -= dimensions.left;
+            top -= floor.top;
+            left -= floor.left;
             break;
         }
 

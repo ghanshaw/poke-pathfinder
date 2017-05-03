@@ -42,7 +42,7 @@ var UserConsole = function(game) {
         {   
             id: 2,
             label: 'Mewtwo',
-            keyTile: 1
+            obstacle: 0
         },
         {
             id: 3,
@@ -67,7 +67,7 @@ var UserConsole = function(game) {
         
     };
     
-    this.createWeightLayers();
+    
     
     // Time measures used to account for movement
     this.time = {
@@ -92,7 +92,7 @@ var UserConsole = function(game) {
     
     
     
-    
+    this.WEIGHT_CHANGE = null;
     
     
     
@@ -109,7 +109,7 @@ var UserConsole = function(game) {
     this.locations.source = this.locations.options[1];
     this.locations.target = this.locations.options[2];
     
-    this.pathmarker = {
+    this.pointmarker = {
         source: {
             show: false,
             disabled: false
@@ -153,6 +153,8 @@ var UserConsole = function(game) {
         }        
     };
     
+    this.floors = {};
+    
     
 //    this.selected_algorithm = this.algorithms[0];
 //    this.source_location = this.locations[1];
@@ -174,6 +176,10 @@ var UserConsole = function(game) {
     
 };
 
+UserConsole.prototype.init = function() {
+    this.initWeightLayers();
+};
+
 
 UserConsole.prototype.updateSettings = function() {
     
@@ -183,16 +189,18 @@ UserConsole.prototype.updateSettings = function() {
     this.pathfinder.layer.path.disabled = true;
     this.pathfinder.layer.frontier.disabled = true;
     
-    if (game.getPathfinderState() === 'MARK SOURCE') {
-        this.pathmarker.source.disabled = true;
+    if (game.getPathfinderState() === 'MARK SOURCE' ||
+          game.getPathfinderState() === 'DRAG SOURCE') {
+        this.pointmarker.source.disabled = true;
     } else {
-        this.pathmarker.source.disabled = false;
+        this.pointmarker.source.disabled = false;
     }
     
-    if (game.getPathfinderState() === 'MARK TARGET') {
-        this.pathmarker.target.disabled = true;
+    if (game.getPathfinderState() === 'MARK TARGET' ||
+            game.getPathfinderState() === 'DRAG TARGET') {
+        this.pointmarker.target.disabled = true;
     } else {
-        this.pathmarker.target.disabled = false;
+        this.pointmarker.target.disabled = false;
     }
     
     if (game.getPathfinderState() === 'PATH') {
@@ -293,37 +301,87 @@ UserConsole.prototype.toggleMapState = function(state) {
     this.map.state = state;
 };
 
+UserConsole.prototype.getMapState = function() {
+    return this.map.state;
+};
+
 UserConsole.prototype.toggleGrid = function(state) {
     this.layers.GRID = state;
 };
 
+UserConsole.prototype.isGridVisible = function() {
+    return this.layers.GRID;
+};
 
-
-
-
-UserConsole.prototype.getPathMarker = function(point) {
+UserConsole.prototype.isPointMarkerVisible = function(point) {
     
+    var marker;
     if (point === 'SOURCE') {
-
-        return this.pathmarker.source;
+       marker = this.pointmarker.source;
     }
     
     else if (point === 'TARGET') {
-        return this.pathmarker.target;
+       marker = this.pointmarker.target;
+    }
+    
+    return marker.show;
+    
+};
+
+
+UserConsole.prototype.showPointMarker = function(point, show) {
+    
+    var marker;
+    if (point === 'SOURCE') {
+       marker = this.pointmarker.source;
+    }
+    
+    else if (point === 'TARGET') {
+       marker = this.pointmarker.target;
+    }
+    
+    marker.show = show;
+    
+};
+
+UserConsole.prototype.enablePointMarker = function(point, enable) {
+    
+    var marker;
+    if (point === 'SOURCE') {
+       marker = this.pointmarker.source;
+    }
+    
+    else if (point === 'TARGET') {
+       marker = this.pointmarker.target;
+    }
+    
+    marker.disabled = !enable;
+    
+};
+
+
+UserConsole.prototype.getPointMarker = function(point) {
+    
+    if (point === 'SOURCE') {
+        return this.pointmarker.source;
+    }
+    
+    else if (point === 'TARGET') {
+        return this.pointmarker.target;
     }
     
 };
 
 
-UserConsole.prototype.togglePathMarker = function(point, checkbox) {
+UserConsole.prototype.togglePointMarker = function(point, checkbox) {
   
     var game = this.game;
-    var pathmarker;
+    var pointmarker;
     
     if (point === 'SOURCE') {
-        pathmarker = this.pathmarker.source;
+        pointmarker = this.pointmarker.source;
     } else {
-        pathmarker = this.pathmarker.target;
+        pointmarker = this.pointmarker.target;
     }
   
     // If pathfinder is currently in MARK SOURCE or MARK TARGET states
@@ -331,17 +389,17 @@ UserConsole.prototype.togglePathMarker = function(point, checkbox) {
         checkbox.disabled = true;
         checkbox.active = false;
         checkbox.label = '';
-        pathmarker.show = false;
+        pointmarker.show = false;
         return;
     }
     
-    var status = pathmarker.show;
+    var status = pointmarker.show;
     
     checkbox.disabled = false;
     checkbox.active = !status;
-    pathmarker.show = !status;
+    pointmarker.show = !status;
     
-    if (pathmarker.show) {
+    if (pointmarker.show) {
         checkbox.label = 'hide';
     } else {
         checkbox.label = 'show';
@@ -455,32 +513,63 @@ UserConsole.prototype.setPlayerGender = function(gender) {
 
 
 
-UserConsole.prototype.createWeightLayers = function() {
+UserConsole.prototype.initWeightLayers = function() {
     
     var game = this.game;
-    var floors = this.game.map.floors;
+    var mapFloors = game.getFloors();
     
-    for (let f in floors) {
+    // Create a canvas object for each floor in the map
+    for (let f in mapFloors) {
         
-        let floor = floors[f];
-        let frame = floor.frame;
         
-        let tile_size = floor.tile_size;
+        var mapFloor = mapFloors[f];
+        var id = mapFloor.id;
         
-        var background = game.createBlankLayer(frame.canvas);
-        var foreground = game.createBlankLayer(frame.canvas);
-        var water = game.createBlankLayer(frame.canvas);
+        var floor = {
+            weightlayer: {}
+        };
         
+        var width = mapFloor.background.img.width;
+        var height = mapFloor.background.img.height;
+        var tile_size = width/mapFloor.cols;
+        
+        // Create foreground, background and water layers for each floor
+        var background = game.createCanvasCtx();
+        background.canvas.width = width;
+        background.canvas.height = height;
+        
+        var foreground = game.createCanvasCtx();        
+        foreground.canvas.width = width;
+        foreground.canvas.height = height;
+        
+        var water = game.createCanvasCtx();        
+        water.canvas.width = width;
+        water.canvas.height = height;
+        
+        
+        
+        floor = {
+            weightlayer: {
+                background: background,
+                foreground: foreground,
+                water: water
+            },
+            tile_size: tile_size,
+            rows: mapFloor.rows,
+            cols: mapFloor.cols
+        };
+        
+        
+        // Draw rectangles on layers
         background.ctx.fillStyle = 'rgba(255, 235, 59, 0.3)';
         foreground.ctx.fillStyle = 'rgba(255, 235, 59, 0.3)';
-        water.ctx.fillStyle = 'rgba(255, 235, 59, 0.3)';
-        
+        water.ctx.fillStyle = 'rgba(255, 235, 59, 0.3)';     
         
         // Create various edge weight layers
         for (let r = 0; r < floor.rows; r++) {
             for (let c = 0; c < floor.cols; c++) {
                 
-                let tile = floor.getTile(r, c);
+                let tile = mapFloor.getTile(r, c);
                 let x = c * tile_size;
                 let y = r * tile_size;
                 
@@ -503,17 +592,53 @@ UserConsole.prototype.createWeightLayers = function() {
             
         }
         
-        floor.weightlayer = {
-            background: background,
-            foreground: foreground,
-            water: water
-        };
+        this.floors[id] = floor;
         
-        
-    }
+    }  
     
+    console.log('USER CONSOLE');
+    console.log(this.floors);
     
 };
+
+
+
+UserConsole.prototype.drawWeightLayers = function(floorId) {
+    
+    if (!this.WEIGHT_CHANGE) { return; }
+    
+    // Determine alpha based on time
+    var time = this.time;
+    this.time.delta = (new Date() - time.start)/1000;    
+    this.time.percent = time.delta/time.total; 
+    var alpha = time.percent;
+    
+    var floor = this.floors[floorId];
+    
+    var layer;
+    var dof;
+    if (this.WEIGHT_CHANGE === 'BACKGROUND') {
+        layer = floor.weightlayer.background;
+        dof = 'BACKGROUND';
+    }
+    else if (this.WEIGHT_CHANGE === 'FOREGROUND') {
+        layer = floor.weightlayer.foreground;
+        dof = 'FOREGROUND';
+    }
+    else if (this.WEIGHT_CHANGE === 'WATER') {
+        layer = floor.weightlayer.water;
+        dof = 'BACKGROUND';
+    }
+    
+    this.game.drawImageToScreen(layer.canvas, 'floor', floorId, dof, '', '', alpha);
+
+    if (time.percent >= .95) {
+        this.WEIGHT_CHANGE = null;
+        console.log(this.edgeWeight);
+    }
+};
+
+
 
 
 UserConsole.prototype.determineEdgeWeightChange = function(newValue, oldValue) {
@@ -535,18 +660,20 @@ UserConsole.prototype.determineEdgeWeightChange = function(newValue, oldValue) {
 };
 
 
-UserConsole.prototype.startInterpolateWeightLayer = function(newValue, oldValue) {
+UserConsole.prototype.startWeightChange = function(newValue, oldValue) {
     
     var speed = this.time.speed;
     this.time.total = 1/speed;
     this.time.start = new Date();
+    
+    
     
     var weightChange = this.determineEdgeWeightChange(newValue, oldValue);
     
     //if ()
     if (weightChange.difference === 0) { return; }
     
-    this.LAYER = weightChange.layer.toUpperCase();
+    this.WEIGHT_CHANGE = weightChange.layer.toUpperCase();
     
     console.log(weightChange);
     
@@ -555,39 +682,19 @@ UserConsole.prototype.startInterpolateWeightLayer = function(newValue, oldValue)
 };
 
 
-UserConsole.prototype.drawWeightLayers = function(floor) {
-    
-    if (!this.LAYER) { return;  }
-    
-    var time = this.time;
-    this.time.delta = (new Date() - time.start)/1000;    
-    this.time.percent = time.delta/time.total; 
-    this.alpha = time.percent;
-    
-    var layer;
-    if (this.LAYER === 'BACKGROUND') {
-        layer = floor.weightlayer.background;
-    }
-    else if (this.LAYER === 'FOREGROUND') {
-        layer = floor.weightlayer.foreground;
-    }
-    else if (this.LAYER === 'WATER') {
-        layer = floor.weightlayer.water;
-    }
-    
-    floor.frame.ctx.globalAlpha = 1 - this.alpha;
-    floor.frame.ctx.drawImage(layer.canvas, 0, 0);
-    floor.frame.ctx.globalAlpha = 1;
-    
-    if (time.percent >= .9) {
-        this.LAYER = null;
-        console.log(this.edgeWeight);
-    }
 
+
+UserConsole.prototype.setLocationTile = function(sourceTarget, id) {
+    
+    
+    if (sourceTarget === 'SOURCE') {
+        this.locations.source = this.locations.options[id];
+    }
+    else if (sourceTarget === 'TARGET') {
+        this.locations.target = this.locations.options[id];
+    }
+    
 };
-
-
-
 
 UserConsole.prototype.getLocationTile = function(sourceTarget) {
     
@@ -612,17 +719,17 @@ UserConsole.prototype.getLocationTile = function(sourceTarget) {
     }  
     // If console tile is Mewtwo
     else if (location.id === 2) {
-        var keyTileId = location.keyTile;
-        tile = game.getKeyTile(keyTileId);   
+        var obId = location.obstacle;
+        tile = game.getObstacle(obId);   
     }
     else if (location.id === 3) {
         tile = game.getRandomTile();       
     }
     else if (location.id === 4) {
-        tile = game.getPathMarkerTile(sourceTarget);
+        tile = game.getPointMarkerTile(sourceTarget);
     }
     else if (location.id === 5) {
-        tile = game.getPathMarkerTile(sourceTarget);
+        tile = game.getPointMarkerTile(sourceTarget);
     }
     
     return tile;
@@ -659,6 +766,12 @@ UserConsole.prototype.log = function(text) {
     console.log(this.message);
     
     
+    
+    
+};
+
+UserConsole.prototype.getPath = function() {
+  
     
     
 };

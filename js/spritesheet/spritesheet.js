@@ -144,10 +144,10 @@ SpriteSheet.prototype.getRowCol = function(spriteOptions) {
         return rowcol;
     }
     
-    // Sprite is Mewtwo
-    if (spriteOptions.TYPE === 'MEWTWO') {
-        return this.mewtwo;
-    }
+//    // Sprite is Mewtwo
+//    if (spriteOptions.TYPE === 'MEWTWO') {
+//        return this.mewtwo;
+//    }
     
     // Sprite is obstacle
     if (spriteOptions.TYPE === 'OBSTACLE') {

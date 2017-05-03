@@ -41,7 +41,7 @@ pokemonApp.directive('userConsolePanel', function(pokeGame) {
         // When user changes edge weight, reveal weight layer
         $scope.$watch('edgeWeight', function(newValue, oldValue) {
             
-            userConsole.startInterpolateWeightLayer(newValue, oldValue);
+            userConsole.startWeightChange(newValue, oldValue);
             
         }, true);
         
@@ -91,9 +91,9 @@ pokemonApp.directive('userConsolePanel', function(pokeGame) {
         };
         
         
-        /********* -- PathMarker Buttons -- ************/
+        /********* -- PointMarker Buttons -- ************/
         
-        $scope.pathMarkerButton = {
+        $scope.pointMarkerButton = {
             active: false,
             disabled: false
         };
@@ -129,9 +129,9 @@ pokemonApp.directive('userConsolePanel', function(pokeGame) {
             
         };
         
-        /********* -- Path Marker Checkbox -- ************/
+        /********* -- Point Marker Checkbox -- ************/
         
-        $scope.pathMarkerCheckbox = {
+        $scope.pointMarkerCheckbox = {
             source: {
                 click: false,
                 active: false,
@@ -150,29 +150,29 @@ pokemonApp.directive('userConsolePanel', function(pokeGame) {
         
         
         
-        $scope.clickPathMarkerCheckbox = function(point) {
+        $scope.clickPointMarkerCheckbox = function(point) {
             
             var checkbox;            
             if (point === 'SOURCE') {
-                checkbox = $scope.pathMarkerCheckbox.source;
+                checkbox = $scope.pointMarkerCheckbox.source;
             }
             if (point === 'TARGET') {
-                checkbox = $scope.pathMarkerCheckbox.target;
+                checkbox = $scope.pointMarkerCheckbox.target;
             }
             
-            userConsole.togglePathMarker(point, checkbox);
+            userConsole.togglePointMarker(point, checkbox);
             
         };
         
         
-        $scope.cssPathMarkerCheckbox = function(point) {
+        $scope.cssPointMarkerCheckbox = function(point) {
             
-            var checkbox = $scope.pathMarkerCheckbox;
-            var pathmarker = userConsole.getPathMarker(point);
+            var checkbox = $scope.pointMarkerCheckbox;
+            var pointmarker = userConsole.getPointMarker(point);
             
             if (point === 'SOURCE') {
                 
-                if (pathmarker.disabled) {
+                if (pointmarker.disabled) {
                     checkbox.source.disabled = true;
                     checkbox.source.active = false;
                     checkbox.source.label = '';
@@ -187,7 +187,7 @@ pokemonApp.directive('userConsolePanel', function(pokeGame) {
             }
             else if (point === 'TARGET') {
                 
-                if (pathmarker.disabled) {
+                if (pointmarker.disabled) {
                     checkbox.target.disabled = true;
                     checkbox.target.active = false;
                     checkbox.target.label = '';

@@ -1,25 +1,26 @@
-<div ng-controller='monitorController'>
-    <div class="row is-flex">
-        <div class="col-sm-6 col-md-3 no-padding" set-class-when-at-top="fix-to-top" >
-            <div user-console-panel></div>
+<div>
+    
+    <div class="momintor-container">
+        <div class="monitor-frame">
+            <span class="floor-label">F1</span>
+            <div class="monitor screen">
+                <canvas 
+                    id="foreground"
+                    class="monitor foreground"
+                    ng-mousemove="movePointer($event)" 
+                    ng-mousedown="clickPointer(); startDrag($event);" 
+                    ng-mouseup="endDrag($event);"
+                    ng-mouseleave="endDrag($event);"></canvas>
+                <canvas 
+                    id="background"
+                    class="monitor background"></canvas>
+            </div>           
         </div>
-        <div class="col-sm-6 col-md-9 extra-padding text-center"  set-class-when-at-top="col-md-offset-3">
-            <div class="monitor-frame">
-                <div class="monitor-screen">
-                    <canvas 
-                        id="monitor" 
-                        ng-mousemove="movePointer($event)" 
-                        ng-mousedown="clickPointer(); startPlayerDrag($event);" 
-                        ng-mouseup="endPlayerDrag($event);"
-                        ng-mouseleave="endPlayerDrag($event);"></canvas></div>
-                        
-            </div>
-        </div>
-            
+        
+        <canvas id="test1"></canvas>
+        <canvas id="test2"></canvas>
+        <canvas id="test3"></canvas>
+        <canvas id="test4"></canvas>
     </div>
-    <canvas id="test1"></canvas>
-    <canvas id="test2"></canvas>
-    <canvas id="test3"></canvas>
-    <canvas id="test4"></canvas>
 </div>
 

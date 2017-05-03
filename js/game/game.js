@@ -32,6 +32,8 @@ var Game = function() {
         }
     };
     
+    this.tile_size = 64;
+    
 };
 
 Game.prototype.initGame = function() {
@@ -83,7 +85,8 @@ Game.prototype.getWaterlayer = function() {
 
 
 Game.prototype.initUserConsole = function() {
-    this.userConsole = new UserConsole(this);    
+    this.userConsole = new UserConsole(this);  
+    this.userConsole.init();
 };
 
 
@@ -168,6 +171,26 @@ Game.prototype.initMonitor = function() {
 };
 
 
+Game.prototype.createCanvasCtx = function() {
+  
+    var canvas = document.createElement('canvas');
+    var ctx = canvas.getContext('2d');
+    
+    //var canvas = document.getElementById(canvasId);
+    
+    ctx.mozImageSmoothingEnabled = false;
+    ctx.webkitImageSmoothingEnabled = false;
+    ctx.msImageSmoothingEnabled = false;
+    ctx.imageSmoothingEnabled = false;
+    
+    return {
+        canvas: canvas,
+        ctx: ctx
+    };
+    
+};
+
+
 Game.prototype.updateGame = function() {
     
     this.updatePathfinder();
@@ -181,7 +204,133 @@ Game.prototype.getPlayerDOF = function() {
     return this.player.tile.dof;
 };
 
+Game.prototype.setView = function(view) {
+    this.view = view;
+};
+
+Game.prototype.getView = function() {
+    return this.view;
+};
+
+Game.prototype.drawShapeToScreen = function(img, floorId, tile, color) {
+    
+    var view = this.getView();
+
+    if (view === "monitor") {
+        this.monitor.drawShapeToFrame(img, floorId, tile, color);
+    } else if (view === "gameboy") {
+        this.gameboy.drawShapeToScreen(img, floorId, tile, color);
+    }
+    
+};
+
+
+Game.prototype.drawImageToScreen = function(img, option, floorId, dof, tile, span=1, alpha=1) {
+    
+    var view = this.getView();
+    
+    if (view === "monitor") {
+        this.monitor.drawImageToFrame(img, option, floorId, dof, tile, span, alpha);
+    } else if (view === "gameboy") {
+        let options = {};
+        options.location = option;
+        options.floorId = floorId;
+        options.dof = dof;
+        options.tile = tile;
+        options.span = span;
+        options.alpha = alpha;
+        this.gameboy.drawImageToScreen(img, options);
+    }
+    
+};
+
+Game.prototype.prepareScreen = function(state) {
+  
+    var view = this.getView();
+    
+    if (view === "monitor") {
+        this.monitor.prepareMonitor(state);
+    } else if (view === "gameboy") {
+        this.gameboy.prepareGameboy(state);
+    }
+    
+    
+};
+
+Game.prototype.clearScreen = function() {
+    
+    // Clear screen
+    var view = this.getView();
+    if (view === 'monitor') {
+        this.monitor.clearFrame();
+    }
+    else if (view === 'gameboy') {
+        this.gameboy.clearScreen();
+    }
+    
+};
+
 Game.prototype.updateMap = function() {
+    
+    
+    var floors = this.map.floors;
+    var map = this.map;
+    var pathfinder = this.pathfinder;
+    var player = this.player;
+    var userConsole = this.userConsole;
+    
+    
+    // Clear screen from previous iteration
+    this.clearScreen();
+   
+    // Modify screen based on map state
+    var MAP_STATE = userConsole.getMapState();  
+    this.prepareScreen(MAP_STATE);       
+    
+    //////////////////////
+    // Start rendering
+    /////////////////////
+    
+    // Draw point markers
+    pathfinder.drawMarkers();
+    
+    
+    for (let f in floors) {
+        
+        // Draw floor layer (if in graphic mode)
+        map.drawFloorLayer(f, MAP_STATE);
+        
+        // Draw background layers
+        
+        //pathfinder.drawObstacles(floor, 'BACKGROUND');
+        pathfinder.drawFrontier(f, 'BACKGROUND');
+        pathfinder.drawPath(f, 'BACKGROUND');
+
+        //    // Draw foreground layers
+        //    pathfinder.drawMarkers(floor, 'FOREGROUND');
+        //    pathfinder.drawObstacles(floor, 'BACKGROUND');
+        pathfinder.drawFrontier(f, 'FOREGROUND');
+        pathfinder.drawPath(f, 'FOREGROUND');
+        //player.drawPlayer(floor, 'FOREGROUND');
+        //    
+        //    // Draw weight layers
+        
+        userConsole.drawWeightLayers(f);
+
+    }
+    
+    map.drawObstacles();
+    pathfinder.drawDrag();
+    player.drawPlayer();
+    
+    // Draw additional layers that belong to the monitor and gameboy
+    this.drawScreenLayers();
+    
+};
+
+
+
+Game.prototype.updateMapOld = function() {
     
     this.map.updateMapLayers();
     
@@ -273,11 +422,27 @@ Game.prototype.updateMap = function() {
 };
 
 
+
+Game.prototype.drawScreenLayers = function() { 
+    
+    var view = this.getView();
+
+    if (view === "monitor") {
+        this.monitor.drawMonitor();
+    } else if (view === "gameboy") {
+        this.gameboy.drawGameboy();
+    }
+  
+};
+
+
+
+// Probs not needed
 Game.prototype.renderGame = function(path) {
     
-    if (path === "/") {
+    if (path === "/monitor/") {
         this.monitor.drawMonitor();
-    } else if (path === '/gameboy/') {
+    } else if (path === '/') {
         this.gameboy.drawGameboy();
     }
     
@@ -324,7 +489,6 @@ Game.prototype.getSprite = function(spriteOptions, color) {
 Game.prototype.drawSprite = function(spriteOptions, tile, layer='frame', color) {
     
     var sprite = this.getSprite(spriteOptions, color);
-    
     var row = tile.row;
     var col = tile.col;     
     var floor = tile.floor;
@@ -496,7 +660,7 @@ Game.prototype.drawTransition = function() {
 };
 
 Game.prototype.getMapState = function() {
-    return this.map.STATE;  
+    return this.userConsole.getMapState();  
 };
 
 
@@ -548,9 +712,6 @@ Game.prototype.getTile = function(floor, row, col) {
 };
 
 
-Game.prototype.getTileSize = function() {
-    return this.map.tile_size;    
-};
 
 
 Game.prototype.getTileTopLeft = function(tile) {
@@ -901,6 +1062,16 @@ Game.prototype.getTileFrameXY = function(tile) {
     
 };
 
+Game.prototype.setTransitionOpacity = function(opacity) {
+    this.transitionOpacity = opacity;
+};
+
+
+Game.prototype.getTransitionOpacity = function() {
+    return this.transitionOpacity;
+};
+
+
 Game.prototype.getTransitionLayer = function() {
     return this.map.transitionlayer;
 };
@@ -1086,6 +1257,11 @@ Game.prototype.getRocklayer = function() {
     
 };
 
+
+Game.prototype.getTransitionLayer = function() {
+  return this.map.transition;    
+};
+
 Game.prototype.getTicks = function() {
     return this.ticks;
 };
@@ -1093,3 +1269,23 @@ Game.prototype.getTicks = function() {
 Game.prototype.getPathMarkers = function() {
     return this.pathfinder.pathMarker;
 };
+
+Game.prototype.startPointMarkerDrag = function($event) {
+    this.pathfinder.startDragMode($event);
+};
+
+Game.prototype.endPointMarkerDrag = function() {
+    this.pathfinder.endDragMode();
+};
+
+Game.prototype.isGridVisible = function() {
+    return this.userConsole.isGridVisible();
+};
+
+Game.prototype.getObstacle = function(id) {
+    return this.map.obstacles.tiles[id].tile;    
+};
+
+Game.prototype.getTileSize = function() {
+    return this.tile_size;
+}

@@ -81,6 +81,8 @@ body {
             border-top-color: darken($cobalt, 25%);
             border-right-color: darken($cobalt, 15%);
             border-bottom-color: lighten($cobalt, 20%);
+            text-align: center;
+            padding-top: 5%;
             img {
 /*                position: absolute;
                 left: 11.2rem;
@@ -93,13 +95,15 @@ body {
             background-color: $lightgrey;
             margin: 2.0rem auto;
             width: 90%;
-            height: 21.0rem;
+            /*height: 21.0rem;*/
             display: flex;
             justify-content: center;
             align-items: center;
             background-color: #333333;
             position: relative;
             overflow: hidden;
+            text-align: center;
+            display: inline-block;
             .layer {
                 position: absolute;
                 /* left: 11.2rem; */
@@ -423,23 +427,25 @@ body {
 
 @media (min-width: 480px){
     html {
-        font-size: 1.5vw;
+        font-size: 2vw;
     }
 }
 
 @media (min-width: 600px){
     html {
         font-size: 1.2vw;
+        font-size: 2vw;
     }
 }
 
 @media (min-width: 720px){
     html {
         font-size: .8vw;
+        font-size: 1.5vw;
     }
 }
 
-@media (min-width: 1080px){
+@media (min-width: 990px){
     html {
         font-size: 1.2vw;
     }

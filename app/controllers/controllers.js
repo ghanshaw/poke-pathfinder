@@ -1,86 +1,108 @@
-pokemonApp.controller('caveController', function($scope, $log, pokeMap, pokeGame) {  
-    
-    var game = pokeGame.game;
-    
-    // Attach game to scope;
-    $scope.game = game;
-
-    // Attach player's current location to scope
-    $scope.player = {};
-    $scope.player.current = game.player.current;
+pokemonApp.controller('indexController', function($scope, $log, pokeGame, $window) {  
     
     
-    //map.sprite.MOVE_STATE = 'ON';
-    //map.sprite.KEYPRESS = 'LEFT';
-
-    /********* -- Change Game Direction -- **********/ 
+    $scope.panel = {
+        open: false
+    };
     
-    $scope.cancelDirection = function(event) {
-        var keyCode = event.keyCode;
-        if (game.keyCode === keyCode) {
-            $log.log('no longer pressing down');
-            $log.log(event);        
-            game.KEYPRESS = null;
-        }
+    $scope.about = {
+        visible: false
+    }
+    
+    
+    
+    $scope.togglePanel = function() {
+        
+        var status = $scope.panel.open;
+        $scope.panel.open = !status;
+        
+    };
+    
+    $scope.toggleAbout = function() {
+        
+        var status = $scope.about.visible;
+        $scope.about.visible = !status;
+        
+    };
+    
+//    $scope.sidePanelWidth = function() {
+//        var width = 
+//        return width;
+//    };
+//    
+    $scope.cssSidePanel = function() {
+        return { 
+            'panel-open': $scope.panel.open,
+            'panel-closed': !$scope.panel.open  
+        };
     };
     
     
-    $scope.changeDirectio = function(event) {
-        $log.log(event);      
-        var keyCode = event.keyCode;
-        game.keyCode = keyCode;
-        
-        switch(keyCode) {
-            case 37:
-                // Left arrow
-                $log.log('left arrow');
-                event.preventDefault();
-                game.KEYPRESS = 'LEFT';
-                
-                //map.moveSprite('left');
-                break;
-            case 38:
-                // Up arrow
-                $log.log('up arrow');
-                event.preventDefault();
-                game.KEYPRESS = 'UP';
-                //map.moveSprite('up');
-                
-                break;
-            case 39:
-                // Right arrow
-                $log.log('right arrow');
-                event.preventDefault();
-                game.KEYPRESS = 'RIGHT';
-                //map.moveSprite('right');
-                break;
-                
-            case 40:
-                // Down arrow
-                $log.log('down arrow');
-                event.preventDefault();
-                game.KEYPRESS = 'DOWN';
-                //map.moveSprite('down');
-                break;
-                      }
-        
-        //$scope.spriteTile = map.sprite.tile;
-        
-
-    };
+    
+    
+    
+    $('.side-bar').toggleClass('console-open');
+            $('.side-bar').toggleClass('console-closed');
+    
     
     
     
 });
 
+pokemonApp.controller('viewSwitcher', function($scope, $log, $location, pokeGame) {
 
-pokemonApp.controller('monitorController', function($scope, $log, pokeGame) { 
+    
+    //$scope.view;
+    var path = $location.path();
+    if (path === '/') {
+        $scope.view = 'gameboy';
+    } else {
+        $scope.view = 'monitor';
+    }
+    
+    
+    
+    $scope.switchViews = function() {
+        
+        pokeGame.viewLoaded = false;
+        
+        console.log('switching views');
+        $log.log($scope.view);
+        
+        if ($scope.view === 'gameboy') {
+            $location.path('/');
+            $scope.activeView = 'gameboy';
+        } else {
+            $location.path('/monitor/');
+            $scope.activeView = 'monitor';
+        }
+        
+        //$scope.activeView = 'monitor';
+        
+        $log.log($scope.activeView);
+    };
+    
+    $scope.$watch('view', function(newValue, oldValue) {
+        pokeGame.setView(newValue);        
+    });
+    
+});
+
+
+
+pokemonApp.controller('monitorController', function($scope, $log, $window, pokeGame) { 
     
     
     var game = pokeGame.game;
     $scope.monitor = game.monitor;
     $scope.monitor.init();
-    $scope.monitor.resizeMonitor();
+    $scope.monitor.resize();
+    
+    var appWindow = angular.element($window);
+    
+    appWindow.bind('resize', function () {
+	$scope.monitor.resize();
+    });
     
     
 //    //game.initMonitor();
@@ -89,18 +111,20 @@ pokemonApp.controller('monitorController', function($scope, $log, pokeGame) {
 //    game.monitor.createGrid();
 //    game.monitor.drawMonitor();
     
-    $scope.startPlayerDrag = function($event) {
+    $scope.startDrag = function($event) {
  
         //alert('started dragging');
         
         game.startPlayerDrag($event);
+        game.startPointMarkerDrag($event);
         
     };
     
-    $scope.endPlayerDrag = function($event) {
+    $scope.endDrag = function($event) {
         
         //alert('finished dragging');
         game.endPlayerDrag();
+        game.endPointMarkerDrag();
         
     };
 
@@ -113,18 +137,38 @@ pokemonApp.controller('monitorController', function($scope, $log, pokeGame) {
     
     $scope.clickPointer = function() { 
         console.log('clicked');
-        game.CLICKED = true; };     
+        game.CLICKED = true; 
+    };     
+    
+    pokeGame.viewLoaded = true;
     
 });
 
 
-pokemonApp.controller('gameboyController', function($scope, $log, pokeGame) { 
+pokemonApp.controller('gameboyController', function($scope, $log, $window, $document, pokeGame) { 
     
-    var game = pokeGame.game;
-    var gameboy = game.gameboy;
     
-    gameboy.init();
-    gameboy.resizeGameboy();
+    angular.element(document).ready(function () {
+             
+        var game = pokeGame.game;
+        var gameboy = game.gameboy;
+
+        gameboy.init();
+        gameboy.resize();
+
+        var appWindow = angular.element($window);
+
+        appWindow.bind('resize', function () {
+            console.log('resizing');
+            gameboy.resize();
+        });
+
+         pokeGame.viewLoaded = true;
+        
+    });
+    
+
+    
     
  
 //    

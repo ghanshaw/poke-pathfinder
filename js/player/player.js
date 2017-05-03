@@ -538,7 +538,9 @@ Player.prototype.interpolateLadder = function() {
     
     // Transparency of transiton layer follows parabola
     var formula_y = this.parabolicMove(formula_x);   
-    this.game.setTransitionAlpha(formula_y);   
+    
+    this.game.setTransitionOpacity(formula_y);
+    //this.game.setTransitionAlpha(formula_y);   
     
     if (time.percent > .5 && (this.tile.id !== this.stopTile.id)) {
         this.setTile(this.stopTile);
@@ -705,6 +707,29 @@ Player.prototype.updateSpriteOptions = function() {
 };
 
 
+Player.prototype.initCanvas = function() {
+    //var img = new Image();
+    var game = this.game;
+    
+    var avatar = game.createCanvasCtx();
+    
+    avatar.canvas.width = game.getSpriteSize();
+    avatar.canvas.height = game.getSpriteSize();
+    
+    this.avatar = avatar;
+    
+};
+
+
+
+Player.prototype.drawToAvatarCanvas = function(img) {
+    
+    this.avatar.ctx.drawImage(img, 0, 0);
+    
+};
+
+
+
 Player.prototype.drawPlayer = function(floor, dof) {
  
     var game = this.game;
@@ -714,28 +739,29 @@ Player.prototype.drawPlayer = function(floor, dof) {
         return;
     }
  
+    // Hide player during flood-fill
+    if (this.game.getPathfinderState() === 'FRONTIER') {
+        return;
+    }
+ 
 
     if (this.game.getMapState() === 'GRAPHIC') {
-        game.drawShape('circle', this.current);
+        let currentTile = this.getCurrentTile();
+        let floorId = currentTile.floor.id;
+        let dof = currentTile.dof;
+        game.drawShapeToScreen('circle', floorId, currentTile);
         return;
     }
 
     else if (this.game.getMapState() === 'BITMAP') {
 
         var tile = this.tile;
-        var frame = floor.frame;
+        var floorId = tile.floor.id;
 
-        if (tile.floor.id !== floor.id || tile.dof !== dof) {
-            return;
-        }
-        
-        
         var row = this.current.row;
         var col = this.current.col;     
         
-        var tile_size = this.game.getTileSize();
- 
-    
+//        var tile_size = this.game.getTileSize();
         
         //let sprite_size = this.spritesheet.sprite_size;
         
@@ -747,12 +773,18 @@ Player.prototype.drawPlayer = function(floor, dof) {
             
             // If he's jumping on, pokemon appear on end tile
             if (this.MOVE_STATE === 'JUMP ON') {
-                game.drawSprite(this.pokemonOptions, this.stopTile);
+                let sprite = game.getSprite(this.pokemonOptions);
+                let dof = this.stopTile.dof;
+                game.drawImageToScreen(sprite.canvas, 'tile', floorId, dof, this.stopTile, 2);
+                //game.drawSprite(this.pokemonOptions, this.stopTile);
             }    
             
             // If he's jumping off, pokemon appears on start tile
             else if (this.MOVE_STATE === 'JUMP OFF') {
-                game.drawSprite(this.pokemonOptions, this.startTile);  
+                let sprite = game.getSprite(this.pokemonOptions);
+                let dof = this.startTile.dof;
+                //game.drawSprite(this.pokemonOptions, this.startTile);
+                game.drawImageToScreen(sprite.canvas, 'tile', floorId, dof, this.startTile, 2);
             }
               
         }
@@ -760,13 +792,18 @@ Player.prototype.drawPlayer = function(floor, dof) {
         // Draw player sprite
         // Draw player on interpolated location
         let currentTile = this.getCurrentTile();
-        game.drawSprite(this.playerOptions, currentTile);
-                
+        let sprite = game.getSprite(this.playerOptions);
+        let dof = currentTile.dof;
+        game.drawImageToScreen(sprite.canvas, 'tile', floorId, dof, currentTile, 2);
+
 
         // Draw dust sprite  
         if (this.dustOptions.SHOW) { 
             // Draw dust on tile player is jumping to
-            game.drawSprite(this.dustOptions, this.stopTile);
+            let sprite = game.getSprite(this.dustOptions);
+            let dof = this.stopTile.dof;
+            game.drawImageToScreen(sprite.canvas, 'tile',  floorId, dof, this.stopTile, 2);
+            //game.drawSprite(this.dustOptions, this.stopTile);
             
         }
     }  
@@ -834,12 +871,15 @@ Player.prototype.drawDrag = function() {
   this.headOptions.GENDER = this.playerOptions.GENDER;
   
   var dragSprite = this.game.getSprite(this.headOptions);
-  this.dragSprite = dragSprite;
+  this.game.drawImageToScreen(dragSprite.canvas, 'pointer', '', '', '', 2);
+
+  //this.dragSprite = dragSprite;
   
   // However, can draw indicating square
   if (this.dragTile) {
       //this.game.drawShape('circle', this.dragTile);
-      this.game.drawShape('square', this.dragTile);
+      let dof = this.dragTile.dof;
+      this.game.drawShapeToScreen('square', this.dragTile.floor.id, this.dragTile);
   }
     
 };

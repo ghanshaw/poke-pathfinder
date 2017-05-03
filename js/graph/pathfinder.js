@@ -4,18 +4,7 @@ var Pathfinder = function(game, userConsole, graph) {
     this.graph = graph;
     this.userConsole = userConsole;
     
-    //    this.headOptions = {
-    //        TYPE: 'HEAD',
-    //        GENDER: 'BOY',
-    //        FACING: 'DOWN'
-    //    };    
-    //    
-    //    this.flagOptions = {
-    //        TYPE: 'FLAG',
-    //        EVENT: 'SOURCE'
-    //    };
-    //    
-    
+
     this.floors = {};
 
     
@@ -55,38 +44,26 @@ var Pathfinder = function(game, userConsole, graph) {
     this.augment= null;
     this.DATA = null;
     
+    this.pointmarker = {
+        source: null,
+        target: null
+    };
+    
+    
+    this.dragTile;
+    
+    
+    // Game level tile size
+    this.tile_size = game.getTileSize();
     
     
 };
 
 
-Pathfinder.prototype.initMewtwo = function() {
-    //    
-    //    var game = this.game;
-    //    var mewtwo = {};
-    //    
-    //    mewtwo.spriteOptions = {
-    //        TYPE: 'MEWTWO'
-    //    };
-    //    
-    //    mewtwo.tile = this.game.getKeyTile(1); 
-    //    mewtwo.tile.occupied = true;
-    //    
-    //    game.removeEdgesToNeighbors(mewtwo.tile);
-    //    
-    //    this.mewtwo = mewtwo;
-    //    
-    //this.inaccessible.add(mewtwo.tile.id);
+Pathfinder.prototype.obstacles = function() {
+  
+    this.obstacles
     
-    
-    
-    //game.addOccipiedTileToGraph();        
-};
-
-
-Pathfinder.prototype.drawMewtwo = function() {
-    
-    this.game.drawSprite(this.mewtwo.spriteOptions, this.mewtwo.tile);  
     
 };
 
@@ -110,28 +87,33 @@ Pathfinder.prototype.init = function() {
     // Create reusable arrow canvas
     this.arrow = this.createBlankLayer(canvasSize);
 
-    // Create reusable pathMarker canvases
+    // Create reusable pointMarker canvases
     var source = this.createBlankLayer(canvasSize);
     var target = this.createBlankLayer(canvasSize);
 
-    var pathMarker = {
+    var pointmarker = {
         source: source,
         target: target
     };
+    
+    this.pointmarker = {
+        source: {
+            tile: this.source,
+            canvas: source.canvas,
+            ctx: source.ctx
+        },
+        target:  {
+            tile: this.target,
+            canvas: target.canvas,
+            ctx: target.ctx
+        }       
+    };
 
-    pathMarker.source.show = true;
-    pathMarker.source.tile = this.source;
-
-    pathMarker.target.show = true;
-    pathMarker.target.tile = this.target;
-
-    this.pathMarker = pathMarker;
-    // Create source and target markers on their own layers
+    // Draw visual markers on pointMarker canvases
     this.createMarkers();
     
     
-    // Create sprite and add visualization to floors
-    //this.pathfinder.initSprite();
+    // 
     this.createPathfinderFloorLayers();
     
     console.log(this.pathfinder);
@@ -206,12 +188,13 @@ Pathfinder.prototype.createPathfinderFloorLayers = function() {
         var id = floor.id;
         var frame = floor.frame;
         
-        let frameSize = {
-            width: floor.background.img.width,
-            height: floor.background.img.height
-        };
+       
         
-
+        let frameSize = {
+            width: floor.cols * this.tile_size,
+            height: floor.rows * this.tile_size
+        };
+       
 
         var frontierlayer = {
             background: this.createBlankLayer(frameSize),
@@ -224,35 +207,10 @@ Pathfinder.prototype.createPathfinderFloorLayers = function() {
         };
 
         floors[id] = {};
-        floors[id].tile_size = floor.tile_size;
+        //floors[id].tile_size = floor.tile_size;
+        floors[id].tile_size = this.tile_size;
         floors[id]['frontierlayer'] = frontierlayer;
-        floors[id]['pathlayer'] = pathlayer;
-
-        // // Create sprite layer
-        // var canvas = document.createElement('canvas');
-        // var ctx = canvas.getContext('2d');
-        
-        // canvas.width = frame.canvas.width;
-        // canvas.height = frame.canvas.height;
-        
-        
-        // var foreground = {};
-        // visualizerlayer.canvas = canvas;
-        // visualizerlayer.ctx = ctx;       
-        // floor.visualizerlayer = visualizerlayer;
-      
-        // // Create sprite layer
-        // canvas = document.createElement('canvas');
-        // ctx = canvas.getContext('2d');
-        
-        // canvas.width = frame.canvas.width;
-        // canvas.height = frame.canvas.height;
-       
-        // // Create path layer
-        // var pathlayer = {};
-        // pathlayer.canvas = canvas;
-        // pathlayer.ctx = ctx;       
-        // floor.pathlayer = pathlayer;    
+        floors[id]['pathlayer'] = pathlayer;  
    
     }  
 };
@@ -283,7 +241,7 @@ Pathfinder.prototype.startPathfinder = function(state) {
     if (state === 'MARK SOURCE' ||
             state === 'MARK TARGET') {
     
-        this.startMarker(state);
+        this.startMarkMode(state);
     
     }
     
@@ -300,7 +258,12 @@ Pathfinder.prototype.updatePathfinder = function() {
     
     if (this.PATH_STATE === 'MARK SOURCE' ||
             this.PATH_STATE === 'MARK TARGET') {
-        this.updateMarker();
+        this.updateMarkMode();
+    }
+    
+    if (this.PATH_STATE === 'DRAG SOURCE' ||
+            this.PATH_STATE === 'DRAG TARGET') {
+        this.updateDragMode();
     }
     
     if (console.vcr.COMMAND === 'PLAY' ||
@@ -375,7 +338,116 @@ Pathfinder.prototype.clearPathfinder = function() {
 };
 
 
-Pathfinder.prototype.startMarker = function(state) {
+Pathfinder.prototype.startDragMode = function($event) {
+    
+    var game = this.game;
+    var userConsole = this.userConsole;
+
+    if (game.getPlayerMoveState() === 'STILL' &&
+            this.PATH_STATE === 'OFF') {
+        
+        game.setMonitorPointer($event);
+        let pointerTile = game.getTileFromMonitorPointer();
+        
+        if (pointerTile.id === this.pointmarker.source.tile.id &&
+                userConsole.isPointMarkerVisible('SOURCE')) {
+            this.PATH_STATE = 'DRAG SOURCE';
+            
+            // Hide and disable point marker
+            userConsole.showPointMarker('SOURCE', false);
+            userConsole.enablePointMarker('SOURCE', false);
+            this.userConsole.log('DRAG TARGET MODE HAS BEGUN');
+        }    
+        
+        else if (pointerTile.id === this.pointmarker.target.tile.id &&
+                userConsole.isPointMarkerVisible('TARGET')) {
+            this.PATH_STATE = 'DRAG TARGET';
+            
+            // Hide and disable point marker
+            userConsole.showPointMarker('TARGET', false);
+            userConsole.enablePointMarker('TARGET', false);
+            this.userConsole.log('DRAG TARGET MODE HAS BEGUN');
+        }
+        
+    }
+    
+};
+
+
+Pathfinder.prototype.updateDragMode = function($event) {
+    
+    var game = this.game;   
+    var tile = game.getTileFromMonitorPointer();
+ 
+    if (tile && tile.type !== "ROCK") {       
+        this.dragTile = tile;       
+    }
+    else {
+        this.dragTile = null;
+    }
+    
+};
+
+
+Pathfinder.prototype.endDragMode = function() {
+    
+    var userConsole = this.userConsole;
+    
+    
+    if (this.PATH_STATE === 'DRAG SOURCE') {
+        
+        // If drag tile is valid
+        if (this.dragTile) {
+            // Move point marker to drag tile
+            this.pointmarker.source.tile = this.dragTile;
+            userConsole.setLocationTile('SOURCE', 4);
+        }
+        
+        userConsole.enablePointMarker('SOURCE', true);
+        userConsole.showPointMarker('SOURCE', true);
+    }
+    
+    else if (this.PATH_STATE === 'DRAG TARGET') {
+        
+        if (this.dragTile) {
+            this.pointmarker.target.tile = this.dragTile;           
+            userConsole.setLocationTile('TARGET', 4);
+        }
+        
+        userConsole.enablePointMarker('TARGET', true);
+        userConsole.showPointMarker('TARGET', true);
+    }    
+    
+    this.userConsole.log('DRAG MODE HAS ENDED');
+    this.PATH_STATE = 'OFF';
+    
+};
+
+
+Pathfinder.prototype.drawDrag = function() {
+  
+  var canvas = null;
+  if (this.PATH_STATE === 'DRAG SOURCE') {
+      canvas = this.pointmarker.source.canvas;
+  }
+  else if (this.PATH_STATE === 'DRAG TARGET') {
+      canvas = this.pointmarker.target.canvas;
+  }
+  
+  if (canvas && this.dragTile) {
+      //this.game.drawShape('circle', this.dragTile);
+      let dof = this.dragTile.dof;
+      this.game.drawImageToScreen(canvas, 'tile', this.dragTile.floor.id, dof, this.dragTile, 2);
+  }
+    
+};
+
+
+
+
+Pathfinder.prototype.startMarkMode = function(state) {
+    
+    var userConsole = this.userConsole;
     
     // Cannot switch from these states to SELECT state    
     if (this.PATH_STATE === 'FRONTIER' ||
@@ -385,120 +457,129 @@ Pathfinder.prototype.startMarker = function(state) {
     // Just clicked 'MARK SOURCE'
     if (state === 'MARK SOURCE') {
         
-        // 'MARK SOURCE' --> 'MARK SOURCE' : deactivate
+        // Was already 'MARK SOURCE' --> 'MARK SOURCE' : deactivate
         if (this.PATH_STATE === 'MARK SOURCE') {
-            this.pathMarker.source.tile = this.source;
-            this.pathMarker.source.show = true;
-
-            // this.flagSource.tile = this.source;
-            // this.flagSource.show = true;
+            
+            // Revert to original value
+            this.pointmarker.source.tile = this.source;
+            userConsole.showPointMarker('SOURCE', true);
             this.PATH_STATE = 'OFF';
-            return;     
+            return;  
+            
         }
         
-        // 'MARK TARGET' --> 'MARK SOURCE' : switch
+        // Was already 'MARK TARGET' --> 'MARK SOURCE' : switch
         if (this.PATH_STATE === 'MARK TARGET') {
+            
             // If clicking while other SELECT is active, switch
-            this.pathMarker.target.tile = this.target;
-            this.pathMarker.target.show = true;
-            // this.flagTarget.tile = this.target;
-            // this.flagTarget.show = true;
+            this.pointmarker.target.tile = this.target;
+            userConsole.showPointMarker('TARGET', true);
+
         }
         
-        // 'OFF' or 'MARK TARGET' --> 'MARK SOURCE' : activate
-        this.pathMarker.source.show = false;
+        // Was 'OFF' or 'MARK TARGET' --> 'MARK SOURCE' : activate
+        userConsole.showPointMarker('SOURCE', false);
         this.PATH_STATE = 'MARK SOURCE';
         return;
         
     }
 
-
+    // Just clicked 'MARK TARGET'
     if (state === 'MARK TARGET') {
-               
+            
+         // Was already 'MARK TARGET' --> 'MARK TARGET' : deactivate    
         if (this.PATH_STATE === 'MARK TARGET') {
-            this.pathMarker.target.tile = this.target;
-            this.pathMarker.target.show = true;
+            this.pointmarker.target.tile = this.target;
+            userConsole.showPointMarker('TARGET', true);
             this.PATH_STATE = 'OFF';
             return;
         } 
         
         // 'MARK SOURCE' --> 'MARK TARGET ' : switch
-        if (this.PATH_STATE === 'MARK SOURCE') {
-            this.pathMarker.source.tile = this.source;
-            this.pathMarker.source.show = true;
+        if (this.PATH_STATE === 'MARK SOURCE') {        
+            this.pointmarker.source.tile = this.source;
+            userConsole.showPointMarker('SOURCE', true);
         }
         
         // 'OFF' or 'MARK SOURCE' --> 'MARK TARGET' : activate
-        this.pathMarker.target.show = false;
+        userConsole.showPointMarker('TARGET', false);
         this.PATH_STATE = 'MARK TARGET';
         return;
+        
     }
     
 };
 
 
 
-Pathfinder.prototype.updateMarker = function() {
+Pathfinder.prototype.updateMarkMode = function() {
     
     var game = this.game;
+    var userConsole = this.userConsole;
 
     if (game.CLICKED) {
         
         let marker;
         if (this.PATH_STATE === 'MARK SOURCE') {
-            marker = this.pathMarker.source;
-            if (marker.show) {
-                // Update source marker
+            marker = this.pointmarker.source;
+            if (marker.valid) {
+                // Update source to marker
                 this.source = marker.tile;
                 
-                // Update user console view
-                game.setUserConsoleSourceLocation(4);
+                // Update source location to 'Current Marker' on User Cosole
+                userConsole.setLocationTile('SOURCE', 4);
             }
             else {
+                // Revert marker to its original location
                 marker.tile = this.source;
-                marker.show = true;
+                userConsole.showPointMarker('SOURCE', true);
             }
         }
         else if (this.PATH_STATE === 'MARK TARGET') {
-            marker = this.pathMarker.target;
-            if (marker.show) {
+            marker = this.pointmarker.target;
+            if (marker.valid) {
+                // Update target to  marker
                 this.target = marker.tile;
                 
-                // Update user console view
-                game.setUserConsoleTargetLocation(4);
+                // Update target location to 'Current Marker' on User Conole
+                userConsole.setLocationTile('TARGET', 4);
             }
             else {
                 marker.tile = this.target;
-                marker.show = true;
+                userConsole.showPointMarker('TARGET', true);
             }
         }
         
-        //flag.selecting = false;
         this.PATH_STATE = 'OFF';
         game.CLICKED = false;
-        return;    
+        return;   
         
     };
     
     var tile = game.getTileFromMonitorPointer();
     
     // Get flag based on what you're selecting
-    var marker = this.PATH_STATE === 'MARK SOURCE' ? this.pathMarker.source : this.pathMarker.target;
+    var marker = this.PATH_STATE === 'MARK SOURCE' ? this.pointmarker.source : this.pointmarker.target;
+    var point = this.PATH_STATE === 'MARK SOURCE' ? 'SOURCE' : 'TARGET';
 
     // If pointer is over a valid tile
     if (tile && tile.type !== 'ROCK') {
         
         marker.tile = tile;
-        marker.show = true;
+        marker.valid = true;
+        userConsole.showPointMarker(point, true);
         
-    } else { marker.show = false; }
+    } else {
+        marker.valid = false;
+        userConsole.showPointMarker(point, false);  
+    }
    
 };
 
 
 Pathfinder.prototype.startFrontierPather = function(state) {
     
-    var console = this.userConsole;
+    var userConsole = this.userConsole;
      
     // Cannot switch SELECT states to Frontier or Pather   
     if (this.PATH_STATE === 'MARK SOURCE' ||
@@ -509,16 +590,20 @@ Pathfinder.prototype.startFrontierPather = function(state) {
     var userConsole = this.game.userConsole;
     
     // Get source and target from console
-    this.source = game.getUserConsoleLocationTile('SOURCE');
-    this.target = game.getUserConsoleLocationTile('TARGET');
+    this.source = userConsole.getLocationTile('SOURCE');
+    this.target = userConsole.getLocationTile('TARGET');
     //this.target = this.game.map.keyTiles[2].tile;
     
     // Update path markers
-    this.pathMarker.source.tile = this.source;
-    this.pathMarker.target.tile = this.target;
+    this.pointmarker.source.tile = this.source;
+    this.pointmarker.target.tile = this.target;
     if (this.target === 'ALL') {
-        this.pathMarker.target.tile.show = false;
+        userConsole.enablePointMarker('TARGET', false);
+        //this.pointmarker.target.tile.show = false;
     }
+    
+    this.userConsole.showPointMarker('SOURCE', true);
+    this.userConsole.showPointMarker('TARGET', true);
     
     //userConsole.log("I'm doing it!");
     
@@ -552,6 +637,7 @@ Pathfinder.prototype.startFrontierPather = function(state) {
     // Turn on pathfinder state
     this.LAYER = state;
     this.userConsole.activatePathfinderLayer(state, true);
+    
     //this.game.userConsole.activatePathFrontierButton(this.LAYER);
     //this.game.userConsole.togglePathFrontierLayers(this.LAYER, 'ON');
     this.PATH_STATE = state;
@@ -563,6 +649,8 @@ Pathfinder.prototype.startFrontierPather = function(state) {
         this.completeAlgorithm();
         this.constructPath();
     }
+    
+    
 
     
     
@@ -575,7 +663,7 @@ Pathfinder.prototype.startFrontierPather = function(state) {
     // Make player face down
     game.setPlayerFacing('DOWN');
     
-    console.vcr.COMMAND = 'PLAY';
+    userConsole.vcr.COMMAND = 'PLAY';
     
 };
  
@@ -931,7 +1019,7 @@ Pathfinder.prototype.runAlgorithm = function(state) {
 Pathfinder.prototype.createMarkers = function() {
 
     // Create source visual marker
-    var marker = this.pathMarker.source;
+    var marker = this.pointmarker.source;
     var marker_size = marker.canvas.width;
 
     marker.ctx.shadowBlur = marker_size;
@@ -949,7 +1037,7 @@ Pathfinder.prototype.createMarkers = function() {
 
 
     // Create target visual marker
-    marker = this.pathMarker.target;
+    marker = this.pointmarker.target;
     var marker_size = marker.canvas.width;
 
 
@@ -1004,29 +1092,39 @@ Pathfinder.prototype.createMarkers = function() {
 
 
 // Draw markers to frame
-Pathfinder.prototype.drawMarkers = function(floor, dof) {
+Pathfinder.prototype.drawMarkers = function() {
     
     var game = this.game;
+    var userConsole = this.userConsole; 
     
-    if (this.pathMarker.source.show) {
-        let tile = this.pathMarker.source.tile;
-
-        // If on current floor and DOF
-        if (tile.floor.id === floor.id && tile.dof === dof) {
-            floor.drawImageToFrame(this.pathMarker.source.canvas, tile, 2);
-        }
+    if (userConsole.isPointMarkerVisible('SOURCE')) {
+        
+        let tile = this.pointmarker.source.tile;
+        let floorId = tile.floor.id;
+        let dof = tile.dof;
+        game.drawImageToScreen(this.pointmarker.source.canvas, 'tile', floorId, dof, tile, 2);        
+        
+    }
+    
+    
+    if (userConsole.isPointMarkerVisible('TARGET')) {
+        
+        let tile = this.pointmarker.target.tile;
+        let floorId = tile.floor.id;
+        let dof = tile.dof;
+        game.drawImageToScreen(this.pointmarker.target.canvas, 'tile', floorId, dof, tile, 2);
 
     }
 
-    if (this.pathMarker.target.show) {
-        let tile = this.pathMarker.target.tile;
-
-        // If on current floor and DOF
-        if (tile.floor.id === floor.id && tile.dof === dof) {
-            floor.drawImageToFrame(this.pathMarker.target.canvas, tile, 2);
-        }
-
-    }
+//    if (this.pointMarker.target.show) {
+//        let tile = this.pointMarker.target.tile;
+//
+//        // If on current floor and DOF
+//        if (tile.floor.id === floor.id && tile.dof === dof) {
+//            floor.drawImageToFrame(this.pointMarker.target.canvas, tile, 2);
+//        }
+//
+//    }
 
     // if (this.flagSource.show &&
     //         (game.getPlayerTile().id !== this.flagSource.tile.id)) {
@@ -1046,13 +1144,13 @@ Pathfinder.prototype.drawMarkers = function(floor, dof) {
     
 };
 
-Pathfinder.prototype.drawFrontier = function(floor, dof) {
+Pathfinder.prototype.drawFrontier = function(floorId, dof) {
 
     var userConsole = this.userConsole;
     
     var game = this.game;
     var map = this.game.map;
-    var f = floor.id;
+    //var f = floor.id;
 
     //var activeLayers = game.getMapLayers();
     
@@ -1060,38 +1158,34 @@ Pathfinder.prototype.drawFrontier = function(floor, dof) {
      
         let layer;
         if (dof === 'BACKGROUND') {
-            layer = this.floors[f].frontierlayer.background;
+            layer = this.floors[floorId].frontierlayer.background;
         }
         else if (dof === 'FOREGROUND') {
-            layer = this.floors[f].frontierlayer.foreground;
+            layer = this.floors[floorId].frontierlayer.foreground;
         }
         
-        floor.drawImageToFrame(layer.canvas);      
+        game.drawImageToScreen(layer.canvas, 'floor', floorId, dof);      
     }
 
 };
 
-Pathfinder.prototype.drawPath = function(floor, dof) {
+Pathfinder.prototype.drawPath = function(floorId, dof) {
  
     var game = this.game;
     var userConsole = this.userConsole;
-    var map = this.game.map;
-    var f = floor.id;
-
-    var activeLayers = game.getMapLayers();
     
     //activeLayers.PATHFINDER
     if (userConsole.pathfinder.layer.path.on) {
      
         let layer;
         if (dof === 'BACKGROUND') {
-            layer = this.floors[f].pathlayer.background;
+            layer = this.floors[floorId].pathlayer.background;
         }
         else if (dof === 'FOREGROUND') {
-            layer = this.floors[f].pathlayer.foreground;
+            layer = this.floors[floorId].pathlayer.foreground;
         }
         
-        floor.drawImageToFrame(layer.canvas);
+        game.drawImageToScreen(layer.canvas, 'floor', floorId, dof); 
         
     }
  
@@ -1118,6 +1212,11 @@ Pathfinder.prototype.drawTests = function() {
 
 
 Pathfinder.prototype.drawArrow = function(tile, type) {
+    
+    if (tile.id === this.source.id ||
+            tile.id === this.target.id) {
+        return;
+    }
     
     var game = this.game;
     
@@ -1189,9 +1288,6 @@ Pathfinder.prototype.drawArrow = function(tile, type) {
         color = this.hexPath;
     }
 
-
-
-
     arrow.ctx.translate( -arrow.canvas.width/2, -arrow.canvas.height/2 );
     arrow.ctx.clearRect(0, 0, arrow_size, arrow_size);
     arrow.ctx.fillStyle = color;
@@ -1215,7 +1311,7 @@ Pathfinder.prototype.drawArrow = function(tile, type) {
     layer.ctx.drawImage(arrow.canvas, x, y, tile_size, tile_size);
 
 
-    this.drawTests();
+    //this.drawTests();
 };
 
 
@@ -2153,3 +2249,34 @@ Pathfinder.prototype.handleVCRCommand = function(COMMAND) {
 };
 
 
+
+
+
+//
+//Pathfinder.prototype.initMewtwo = function() {
+//    //    
+//    //    var game = this.game;
+//    //    var mewtwo = {};
+//    //    
+//        
+//    //    
+//    //    mewtwo.tile = this.game.getKeyTile(1); 
+//    //    mewtwo.tile.occupied = true;
+//    //    
+//    //    game.removeEdgesToNeighbors(mewtwo.tile);
+//    //    
+//    //    this.mewtwo = mewtwo;
+//    //    
+//    //this.inaccessible.add(mewtwo.tile.id);
+//    
+//    
+//    
+//    //game.addOccipiedTileToGraph();        
+//};
+//
+//
+//Pathfinder.prototype.drawMewtwo = function() {
+//    
+//    this.game.drawSprite(this.mewtwo.spriteOptions, this.mewtwo.tile);  
+//    
+//};
