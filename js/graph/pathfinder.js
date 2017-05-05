@@ -37,6 +37,15 @@ var Pathfinder = function(game, userConsole, graph) {
         tile: null
     };
 
+
+    this.layer = {
+        path: {
+            exists: false
+        },
+        frontier: {
+            exists: false
+        }
+    };
     
     this.PATH_STATE = 'OFF';
     
@@ -44,14 +53,18 @@ var Pathfinder = function(game, userConsole, graph) {
     this.augment= null;
     this.DATA = null;
     
-    this.pointmarker = {
-        source: null,
-        target: null
-    };
-    
+    this.pointmarker = {};
     
     this.dragTile;
     
+    
+    this.source = {
+        tile: null,
+    };
+    this.target = {
+        tile: null,
+        all: false
+    };
     
     // Game level tile size
     this.tile_size = game.getTileSize();
@@ -70,8 +83,18 @@ Pathfinder.prototype.obstacles = function() {
 
 Pathfinder.prototype.init = function() {
     
-    this.source = this.game.getPlayerTile();
-    this.target = this.game.map.keyTiles[2].tile;
+    this.source.tile = this.game.getPlayerTile();
+    this.target.tile = this.game.map.keyTiles[1].tile;
+    this.target.all = false;
+    
+    // If target is an obstacle, move target to one of its neighbors
+    if (this.target.tile.obstacle) {
+        var neighbors = this.game.graph.getAdj(this.target.tile.id);
+        var tileId = neighbors[0].to();
+        this.target.tile = this.game.getTileFromId(tileId);
+    } 
+    
+    
     
     //    this.flagSource.tile = this.source;
     //    this.flagTarget.tile = this.target;
@@ -98,12 +121,12 @@ Pathfinder.prototype.init = function() {
     
     this.pointmarker = {
         source: {
-            tile: this.source,
+            tile: this.source.tile,
             canvas: source.canvas,
             ctx: source.ctx
         },
         target:  {
-            tile: this.target,
+            tile: this.target.tile,
             canvas: target.canvas,
             ctx: target.ctx
         }       
@@ -223,6 +246,15 @@ Pathfinder.prototype.createPathfinderFloorLayers = function() {
 
 Pathfinder.prototype._________UTILITIES_________ = function() {};
 
+Pathfinder.prototype.hasLayer = function(layer) {
+  
+    if (layer === 'PATH') {
+        return this.layer.path.exists;
+    } else if (layer === 'FRONTIER') {
+        return this.layer.frontier.exists;
+    }
+    
+};
 
 
 /***********************************************/
@@ -266,8 +298,8 @@ Pathfinder.prototype.updatePathfinder = function() {
         this.updateDragMode();
     }
     
-    if (console.vcr.COMMAND === 'PLAY' ||
-            console.vcr.COMMAND === 'STEP') {
+    if (console.vcr.command === 'PLAY' ||
+            console.vcr.command === 'STEP') {
         
         if (this.PATH_STATE === 'FRONTIER') {
             this.updateFrontier();
@@ -277,14 +309,14 @@ Pathfinder.prototype.updatePathfinder = function() {
             this.updatePath();
         } 
         
-        if (console.vcr.COMMAND === 'STEP') {
-            console.vcr.COMMAND = 'PAUSE';
+        if (console.vcr.command === 'STEP') {
+            console.vcr.command = 'PAUSE';
             return;
         }
         
     }
     
-    if (console.vcr.COMMAND === 'PAUSE') {
+    if (console.vcr.command === 'PAUSE') {
         this.game.KEYPRESS = null;
         return;
     }  
@@ -294,15 +326,15 @@ Pathfinder.prototype.updatePathfinder = function() {
 
 Pathfinder.prototype.clearPathfinder = function() {
     
-    var console = this.userConsole;
+    var userConsole = this.userConsole;
     
     if (this.PATH_STATE === 'MARK SOURCE' ||
             this.PATH_STATE === 'MARK TARGET') {
         
-        this.flagTarget.tile = this.target;
+        this.flagTarget.tile = this.target.tile;
         this.flagTarget.show = true;
         
-        this.flagSource.tile = this.source;
+        this.flagSource.tile = this.source.tile;
         this.flagSource.show = true;
         
     }
@@ -329,11 +361,21 @@ Pathfinder.prototype.clearPathfinder = function() {
    
     console.log('clear this up');
     this.PATH_STATE = 'OFF';
-    this.LAYER = null;
-    this.game.toggleMapPathfinderLayer(null);
+    
+    this.target.all = false;
+    
+    // Remove both pathfinder layers
+    this.layer.path.exists = false;
+    this.layer.frontier.exists = false;
+    
+    userConsole.showPathfinderLayer('PATH', false);
+    userConsole.showPathfinderLayer('FRONTIER', false);
+    
+    
+    //this.game.toggleMapPathfinderLayer(null);
     //this.game.setPlayerMoveState("STILL");
     this.game.KEYPRESS = null;
-    console.vcr.COMMAND = null;
+    userConsole.setVCRCommand(null);
     
 };
 
@@ -342,6 +384,8 @@ Pathfinder.prototype.startDragMode = function($event) {
     
     var game = this.game;
     var userConsole = this.userConsole;
+
+    console.log('entering drag mode');
 
     if (game.getPlayerMoveState() === 'STILL' &&
             this.PATH_STATE === 'OFF') {
@@ -355,7 +399,7 @@ Pathfinder.prototype.startDragMode = function($event) {
             
             // Hide and disable point marker
             userConsole.showPointMarker('SOURCE', false);
-            userConsole.enablePointMarker('SOURCE', false);
+            //userConsole.enablePointMarker('SOURCE', false);
             this.userConsole.log('DRAG TARGET MODE HAS BEGUN');
         }    
         
@@ -365,12 +409,10 @@ Pathfinder.prototype.startDragMode = function($event) {
             
             // Hide and disable point marker
             userConsole.showPointMarker('TARGET', false);
-            userConsole.enablePointMarker('TARGET', false);
+            //userConsole.enablePointMarker('TARGET', false);
             this.userConsole.log('DRAG TARGET MODE HAS BEGUN');
         }
-        
     }
-    
 };
 
 
@@ -379,7 +421,9 @@ Pathfinder.prototype.updateDragMode = function($event) {
     var game = this.game;   
     var tile = game.getTileFromMonitorPointer();
  
-    if (tile && tile.type !== "ROCK") {       
+    if (tile 
+            && tile.type !== "ROCK"
+            && !tile.obstacle) {       
         this.dragTile = tile;       
     }
     else {
@@ -392,6 +436,13 @@ Pathfinder.prototype.updateDragMode = function($event) {
 Pathfinder.prototype.endDragMode = function() {
     
     var userConsole = this.userConsole;
+    
+    if (this.PATH_STATE !== 'DRAG SOURCE' &&
+            this.PATH_STATE !== 'DRAG TARGET' ) {
+        console.log('NOT IT DRAG MODE');
+        return;
+    }
+    
     
     
     if (this.PATH_STATE === 'DRAG SOURCE') {
@@ -461,8 +512,12 @@ Pathfinder.prototype.startMarkMode = function(state) {
         if (this.PATH_STATE === 'MARK SOURCE') {
             
             // Revert to original value
-            this.pointmarker.source.tile = this.source;
+            this.pointmarker.source.tile = this.source.tile;
+            
             userConsole.showPointMarker('SOURCE', true);
+//            userConsole.activatePointMarkerButton('SOURCE', true);
+//            userConsole.disablePointMarkerCheckbox('SOURCE', true);
+            
             this.PATH_STATE = 'OFF';
             return;  
             
@@ -472,13 +527,15 @@ Pathfinder.prototype.startMarkMode = function(state) {
         if (this.PATH_STATE === 'MARK TARGET') {
             
             // If clicking while other SELECT is active, switch
-            this.pointmarker.target.tile = this.target;
+            this.pointmarker.target.tile = this.target.tile;
             userConsole.showPointMarker('TARGET', true);
 
         }
         
+        this.game.CLICKED = false;
         // Was 'OFF' or 'MARK TARGET' --> 'MARK SOURCE' : activate
         userConsole.showPointMarker('SOURCE', false);
+        //userConsole.enablePointMarker('SOURCE', false);
         this.PATH_STATE = 'MARK SOURCE';
         return;
         
@@ -489,7 +546,7 @@ Pathfinder.prototype.startMarkMode = function(state) {
             
          // Was already 'MARK TARGET' --> 'MARK TARGET' : deactivate    
         if (this.PATH_STATE === 'MARK TARGET') {
-            this.pointmarker.target.tile = this.target;
+            this.pointmarker.target.tile = this.target.tile;
             userConsole.showPointMarker('TARGET', true);
             this.PATH_STATE = 'OFF';
             return;
@@ -497,7 +554,7 @@ Pathfinder.prototype.startMarkMode = function(state) {
         
         // 'MARK SOURCE' --> 'MARK TARGET ' : switch
         if (this.PATH_STATE === 'MARK SOURCE') {        
-            this.pointmarker.source.tile = this.source;
+            this.pointmarker.source.tile = this.source.tile;
             userConsole.showPointMarker('SOURCE', true);
         }
         
@@ -517,43 +574,9 @@ Pathfinder.prototype.updateMarkMode = function() {
     var game = this.game;
     var userConsole = this.userConsole;
 
-    if (game.CLICKED) {
-        
-        let marker;
-        if (this.PATH_STATE === 'MARK SOURCE') {
-            marker = this.pointmarker.source;
-            if (marker.valid) {
-                // Update source to marker
-                this.source = marker.tile;
-                
-                // Update source location to 'Current Marker' on User Cosole
-                userConsole.setLocationTile('SOURCE', 4);
-            }
-            else {
-                // Revert marker to its original location
-                marker.tile = this.source;
-                userConsole.showPointMarker('SOURCE', true);
-            }
-        }
-        else if (this.PATH_STATE === 'MARK TARGET') {
-            marker = this.pointmarker.target;
-            if (marker.valid) {
-                // Update target to  marker
-                this.target = marker.tile;
-                
-                // Update target location to 'Current Marker' on User Conole
-                userConsole.setLocationTile('TARGET', 4);
-            }
-            else {
-                marker.tile = this.target;
-                userConsole.showPointMarker('TARGET', true);
-            }
-        }
-        
-        this.PATH_STATE = 'OFF';
-        game.CLICKED = false;
-        return;   
-        
+    if (game.CLICKED) { 
+        this.endMarkMode(); 
+        return;
     };
     
     var tile = game.getTileFromMonitorPointer();
@@ -563,17 +586,66 @@ Pathfinder.prototype.updateMarkMode = function() {
     var point = this.PATH_STATE === 'MARK SOURCE' ? 'SOURCE' : 'TARGET';
 
     // If pointer is over a valid tile
-    if (tile && tile.type !== 'ROCK') {
+    if (tile 
+            && tile.type !== 'ROCK'
+            && !tile.obstacle) {
+        console.log('I\'m over a valid tile');
         
         marker.tile = tile;
         marker.valid = true;
         userConsole.showPointMarker(point, true);
         
     } else {
+        console.log("I'm not over a valid tile.");
         marker.valid = false;
         userConsole.showPointMarker(point, false);  
     }
    
+};
+
+Pathfinder.prototype.endMarkMode = function() {
+    
+    var game = this.game;
+    var userConsole = this.userConsole;
+    
+    let marker;
+    if (this.PATH_STATE === 'MARK SOURCE') {
+        marker = this.pointmarker.source;
+        if (marker.valid) {
+            // Update source to marker
+            this.source.tile = marker.tile;
+            userConsole.showPointMarker('SOURCE', true);
+            
+            // Update source location to 'Current Marker' on User Cosole
+            userConsole.setLocationTile('SOURCE', 4);
+        }
+        else {
+            // Revert marker to its original location
+            marker.tile = this.source.tile;
+            userConsole.showPointMarker('SOURCE', true);
+        }
+    }
+    else if (this.PATH_STATE === 'MARK TARGET') {
+        marker = this.pointmarker.target;
+        if (marker.valid) {
+            // Update target to  marker
+            this.target.tile = marker.tile;
+            
+            userConsole.showPointMarker('TARGET', true);
+            
+            // Update target location to 'Current Marker' on User Conole
+            userConsole.setLocationTile('TARGET', 4);
+        }
+        else {
+            marker.tile = this.target.tile;
+            userConsole.showPointMarker('TARGET', true);
+        }
+    }
+    
+    this.PATH_STATE = 'OFF';
+    game.CLICKED = false;
+    return;   
+    
 };
 
 
@@ -583,32 +655,73 @@ Pathfinder.prototype.startFrontierPather = function(state) {
      
     // Cannot switch SELECT states to Frontier or Pather   
     if (this.PATH_STATE === 'MARK SOURCE' ||
-            this.PATH_STATE === 'MARK TARGET') { return; }
+            this.PATH_STATE === 'MARK TARGET') { 
+        
+        this.endMarkMode();
+        return; 
+    
+    }
    
    
     var game = this.game;
     var userConsole = this.game.userConsole;
     
+    // Turn off pathfinder, if in progress
+    this.clearPathfinder();
+   
+   // Get algorithm
+    this.algorithm = userConsole.getSelectedAlgorithm();
+    
+    
+    
     // Get source and target from console
-    this.source = userConsole.getLocationTile('SOURCE');
-    this.target = userConsole.getLocationTile('TARGET');
+    this.source.tile = userConsole.getLocationTile('SOURCE');
+    this.target.tile = userConsole.getLocationTile('TARGET');
     //this.target = this.game.map.keyTiles[2].tile;
     
-    // Update path markers
-    this.pointmarker.source.tile = this.source;
-    this.pointmarker.target.tile = this.target;
-    if (this.target === 'ALL') {
-        userConsole.enablePointMarker('TARGET', false);
-        //this.pointmarker.target.tile.show = false;
+    
+    // Check if target is 'All Tiles')
+    if (userConsole.targetTileIsAll()) {
+        
+        // Boolean flag indicated target tile is 'All Tiles')
+        this.target.all = true;
+    }
+   
+    
+    // If target is an obstacle, move target to one of its neighbors
+    if (this.target.tile.obstacle) {
+        var neighbors = this.game.graph.getAdj(this.target.tile.id);
+        var tileId = neighbors[0].to();
+        this.target.tile = game.getTileFromId(tileId);
+    } 
+    
+    // If "all tiles" is target tile
+    if (this.target.all) {
+        
+        // Path mode not allowed, so cancel
+        if (this.PATH_STATE === 'PATH') { return; }     
+        
+        // Update only source point marker
+        this.pointmarker.source.tile = this.source.tile;
+        
+        // Show only source point marker
+        userConsole.showPointMarker('SOURCE', true);
+        userConsole.showPointMarker('TARGET', false);
+        
+    }
+    else {
+        
+        // Update point markers
+        this.pointmarker.source.tile = this.source.tile;       
+        this.pointmarker.target.tile = this.target.tile;
+        
+        this.userConsole.showPointMarker('SOURCE', true);
+        this.userConsole.showPointMarker('TARGET', true);
     }
     
-    this.userConsole.showPointMarker('SOURCE', true);
-    this.userConsole.showPointMarker('TARGET', true);
     
-    //userConsole.log("I'm doing it!");
     
-    // Get algorithm
-    this.algorithm = userConsole.getSelectedAlgorithm();
+    
     
 
     // Declare data structures
@@ -631,12 +744,12 @@ Pathfinder.prototype.startFrontierPather = function(state) {
     this.complete = false;
 
     
-    // Turn off pathfinder, if in progress
-    this.clearPathfinder();
+    
     
     // Turn on pathfinder state
-    this.LAYER = state;
-    this.userConsole.activatePathfinderLayer(state, true);
+    
+
+    
     
     //this.game.userConsole.activatePathFrontierButton(this.LAYER);
     //this.game.userConsole.togglePathFrontierLayers(this.LAYER, 'ON');
@@ -650,20 +763,33 @@ Pathfinder.prototype.startFrontierPather = function(state) {
         this.constructPath();
     }
     
+    if (state === 'PATH' && this.found) {
+        // Make the path exist
+        this.layer.path.exists = true;
+        
+        // Show pathfinder layer
+        this.userConsole.togglePathfinderLayerButton('click', 'PATH');
+        //this.userConsole.showPathfinderLayer(state, true);
+    }
+    else if (state === 'FRONTIER') {
+        // Make the path exist
+        this.layer.frontier.exists = true;
+        
+        // Show pathfinder layer
+        this.userConsole.togglePathfinderLayerButton('click', 'FRONTIER');
+    }
     
 
-    
-    
     // Move player to source tile
     game.setPlayerMoveState('STILL');
-    game.setPlayerTile(this.source);
-    
-    
+    game.setPlayerTile(this.source.tile);
+ 
     
     // Make player face down
     game.setPlayerFacing('DOWN');
     
-    userConsole.vcr.COMMAND = 'PLAY';
+    // Press PLAY on VCR
+    userConsole.vcr.command = 'PLAY';
     
 };
  
@@ -721,6 +847,7 @@ Pathfinder.prototype.updateFrontier = function() {
         return;
     }
     else {
+        
         this.PATH_STATE = 'OFF';
         this.PLAY_STATE = 'OFF';
         return;
@@ -1096,6 +1223,13 @@ Pathfinder.prototype.drawMarkers = function() {
     
     var game = this.game;
     var userConsole = this.userConsole; 
+    var pathfinderlayer = userConsole.getPathfinderLayer();
+    
+    if (game.getView() === 'gameboy' &&
+            !pathfinderlayer.path.show &&
+            !pathfinderlayer.frontier.show) {
+        return;
+    }
     
     if (userConsole.isPointMarkerVisible('SOURCE')) {
         
@@ -1154,7 +1288,7 @@ Pathfinder.prototype.drawFrontier = function(floorId, dof) {
 
     //var activeLayers = game.getMapLayers();
     
-    if (userConsole.pathfinder.layer.frontier.on) {
+    if (userConsole.isPathfinderLayerVisible('FRONTIER')) {
      
         let layer;
         if (dof === 'BACKGROUND') {
@@ -1175,7 +1309,7 @@ Pathfinder.prototype.drawPath = function(floorId, dof) {
     var userConsole = this.userConsole;
     
     //activeLayers.PATHFINDER
-    if (userConsole.pathfinder.layer.path.on) {
+    if (userConsole.isPathfinderLayerVisible('PATH')) {
      
         let layer;
         if (dof === 'BACKGROUND') {
@@ -1213,8 +1347,8 @@ Pathfinder.prototype.drawTests = function() {
 
 Pathfinder.prototype.drawArrow = function(tile, type) {
     
-    if (tile.id === this.source.id ||
-            tile.id === this.target.id) {
+    if (tile.id === this.source.tile.id ||
+            tile.id === this.target.tile.id) {
         return;
     }
     
@@ -1463,6 +1597,7 @@ Pathfinder.prototype.simulateKeyPress = function() {
     
 
     if (path.length <= 0 || (index + 1) >= path.length) {
+        
         this.PATH_STATE = 'OFF';
         game.KEYPRESS = null;
         
@@ -1474,12 +1609,11 @@ Pathfinder.prototype.simulateKeyPress = function() {
     var startTile = path[index];
     var stopTile = path[index + 1];
     
-
-    
     //    console.log(game.index);
     //    if (game.index === 129) {
     //        console.log('WAIT');
     //    }
+    
     console.info(startTile, stopTile);
     
     startTile = game.getTileFromId(startTile);
@@ -1529,6 +1663,7 @@ Pathfinder.prototype.simulateKeyPress = function() {
 
 
 Pathfinder.prototype._________PATHFINDING_ALGORITHMS_________ = function() {};
+
 
 // Follow parent pointer to construct path
 Pathfinder.prototype.makePath = function(node) {
@@ -1649,8 +1784,8 @@ Pathfinder.prototype.bfs_setup = function() {
     // Pathfining structures
     var parent = this.parent;
     var visited = this.visited;
-    var source = this.source.id;
-    var target = this.target.id;
+    var source = this.source.tile.id;
+    var target = this.target.tile.id;
 
     // Setup algorithm
     parent[source] = null;
@@ -1684,8 +1819,11 @@ Pathfinder.prototype.bfs_step = function() {
     // Pathfining structures
     var parent = this.parent;
     var visited = this.visited;
-    var source = this.source.id;
-    var target = this.target.id;
+    var source = this.source.tile.id;
+    var target = this.target.tile.id;
+    
+    var alltiles = this.target.all;
+    
 
     vNode = q.shift();
     closed.add(vNode);
@@ -1693,7 +1831,7 @@ Pathfinder.prototype.bfs_step = function() {
     deltaFrontier.closed.push(vNode);
 
     
-    if (vNode === target) {
+    if (!alltiles && vNode === target) {
         console.log('Target found');
         this.makePath(vNode);
         this.found = true;
@@ -1745,8 +1883,8 @@ Pathfinder.prototype.dfs_setup = function() {
     // Pathfining structures
     var parent = this.parent;
     var visited = this.visited;
-    var source = this.source.id;
-    var target = this.target.id;
+    var source = this.source.tile.id;
+    var target = this.target.tile.id;
 
     // Setup algorithm
     parent[source] = null;
@@ -1784,8 +1922,9 @@ Pathfinder.prototype.dfs_step = function() {
     // Pathfining structures
     var parent = this.parent;
     var visited = this.visited;
-    var source = this.source.id;
-    var target = this.target.id;
+    var source = this.source.tile.id;
+    var target = this.target.tile.id;
+    var alltiles = this.target.all;
 
     var vNode = stack.pop();
     closed.add(vNode);
@@ -1793,7 +1932,7 @@ Pathfinder.prototype.dfs_step = function() {
     deltaFrontier.closed.push(vNode);
 
     
-    if (vNode === target) {
+    if (!alltiles && vNode === target) {
         game.logToUserConsole('Target found!');
         this.makePath(vNode);
         this.found = true;
@@ -1844,8 +1983,9 @@ Pathfinder.prototype.dijkstra_setup = function() {
     // Pathfining structures
     var parent = this.parent;
     var visited = this.visited;
-    var source = this.source.id;
-    var target = this.target.id;
+    var source = this.source.tile.id;
+    var target = this.target.tile.id;
+    var alltiles = this.target.all;
 
     // Setup algorithm
     parent[source] = null;
@@ -1878,8 +2018,9 @@ Pathfinder.prototype.dijkstra_step = function() {
     // Pathfining structures
     var parent = this.parent;
     var visited = this.visited;
-    var source = this.source.id;
-    var target = this.target.id;   
+    var source = this.source.tile.id;
+    var target = this.target.tile.id;  
+    var alltiles = this.target.all;
     
     this.game.logToUserConsole(pq.size());
     
@@ -1897,7 +2038,7 @@ Pathfinder.prototype.dijkstra_step = function() {
     deltaFrontier.closed.push(vNode);
     //console.timeEnd('pop node');
     
-    if (vNode === target) {
+    if (!alltiles && vNode === target) {
         this.game.logToUserConsole('Target found!');
         this.makePath(vNode);
         this.found = true;
@@ -1951,8 +2092,14 @@ Pathfinder.prototype.astar_setup = function() {
     // Pathfining structures
     var parent = this.parent;
     var visited = this.visited;
-    var source = this.source.id;
-    var target = this.target.id;
+    var source = this.source.tile.id;
+    var target = this.target.tile.id;
+    var alltiles = this.target.all;
+    
+    // Cannot run A* is destination is all tiles
+    if (alltiles) {
+        return;
+    }
 
     // Setup algorithm
     parent[source] = null;
@@ -1987,8 +2134,8 @@ Pathfinder.prototype.astar_step = function() {
     // Pathfining structures
     var parent = this.parent;
     var visited = this.visited;
-    var source = this.source.id;
-    var target = this.target.id;   
+    var source = this.source.tile.id;
+    var target = this.target.tile.id;   
     
     this.game.logToUserConsole(pq.size());
     
@@ -2128,8 +2275,8 @@ Pathfinder.prototype.astar = function() {
     //alert(pq);
     
     var game = this.game;
-    var source = this.source.id;
-    var target = this.target.id;
+    var source = this.source.tile.id;
+    var target = this.target.tile.id;
     var stepbystep = this.stepbystep;
     var parent = this.parent;
     var graph = this.graph;

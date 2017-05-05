@@ -1,5 +1,4 @@
-pokemonApp.controller('indexController', function($scope, $log, pokeGame, $window) {  
-    
+pokemonApp.controller('indexController', function($scope, $log, $location, $window, pokeGame) {  
     
     $scope.panel = {
         open: false
@@ -7,7 +6,19 @@ pokemonApp.controller('indexController', function($scope, $log, pokeGame, $windo
     
     $scope.about = {
         visible: false
-    }
+    };
+    
+    $scope.includeDesktopTemplate = false;
+    $scope.includeMobileTemplate = false; 
+    
+    
+    $scope.breakpoints = {
+        sm: 768,
+        md: 992,
+        lg: 1200
+    };
+    
+    
     
     
     
@@ -23,34 +34,24 @@ pokemonApp.controller('indexController', function($scope, $log, pokeGame, $windo
         var status = $scope.about.visible;
         $scope.about.visible = !status;
         
+        $('html, body').toggleClass('no-scroll');
+        
     };
     
-//    $scope.sidePanelWidth = function() {
-//        var width = 
-//        return width;
-//    };
-//    
+    //    $scope.sidePanelWidth = function() {
+    //        var width = 
+    //        return width;
+    //    };
+    //    
     $scope.cssSidePanel = function() {
         return { 
             'panel-open': $scope.panel.open,
             'panel-closed': !$scope.panel.open  
         };
-    };
-    
-    
-    
-    
+    }; 
     
     $('.side-bar').toggleClass('console-open');
-            $('.side-bar').toggleClass('console-closed');
-    
-    
-    
-    
-});
-
-pokemonApp.controller('viewSwitcher', function($scope, $log, $location, pokeGame) {
-
+    $('.side-bar').toggleClass('console-closed'); 
     
     //$scope.view;
     var path = $location.path();
@@ -86,6 +87,41 @@ pokemonApp.controller('viewSwitcher', function($scope, $log, $location, pokeGame
         pokeGame.setView(newValue);        
     });
     
+    var appWindow = angular.element($window);
+    
+    $scope.viewswitcher = {
+        visible: true
+    };
+    
+    appWindow.bind('resize', function () {
+        
+        $scope.view;
+        var path = $location.path();
+	
+        var screenWidth = $window.innerWidth;
+        
+        if (screenWidth < $scope.breakpoints.sm) {
+            $scope.hideMonitor = true;
+            if ($scope.view !== 'gameboy') {
+                $scope.view = 'gameboy';
+                $scope.switchViews();
+                $scope.$apply();  
+            } 
+            
+            $scope.viewswitcher.visible = false;
+        } else {
+            $scope.viewswitcher.visible = true;
+        }
+        
+    });
+    
+    
+});
+
+pokemonApp.controller('viewSwitcher', function($scope, $log, $location, pokeGame) {
+    
+    
+    
 });
 
 
@@ -105,14 +141,14 @@ pokemonApp.controller('monitorController', function($scope, $log, $window, pokeG
     });
     
     
-//    //game.initMonitor();
-//    game.monitor.initCanvas();
-//    game.monitor.createMonitorBackground();
-//    game.monitor.createGrid();
-//    game.monitor.drawMonitor();
+    //    //game.initMonitor();
+    //    game.monitor.initCanvas();
+    //    game.monitor.createMonitorBackground();
+    //    game.monitor.createGrid();
+    //    game.monitor.drawMonitor();
     
     $scope.startDrag = function($event) {
- 
+        
         //alert('started dragging');
         
         game.startPlayerDrag($event);
@@ -121,14 +157,17 @@ pokemonApp.controller('monitorController', function($scope, $log, $window, pokeG
     };
     
     $scope.endDrag = function($event) {
+        console.log("At first, pathfinder state was: " + game.pathfinder.PATH_STATE);
         
-        //alert('finished dragging');
+        console.log('finished dragging');
         game.endPlayerDrag();
         game.endPointMarkerDrag();
         
+        console.log("Now it's: " + game.pathfinder.PATH_STATE);
+        
     };
-
-
+    
+    
     $scope.movePointer = function(event) {
         
         game.setMonitorPointer(event);    
@@ -136,7 +175,7 @@ pokemonApp.controller('monitorController', function($scope, $log, $window, pokeG
     };
     
     $scope.clickPointer = function() { 
-        console.log('clicked');
+        console.log('I just clicked the monitor');
         game.CLICKED = true; 
     };     
     
@@ -149,48 +188,178 @@ pokemonApp.controller('gameboyController', function($scope, $log, $window, $docu
     
     
     angular.element(document).ready(function () {
-             
+        
         var game = pokeGame.game;
         var gameboy = game.gameboy;
-
+        
         gameboy.init();
         gameboy.resize();
-
+        
         var appWindow = angular.element($window);
-
+        
         appWindow.bind('resize', function () {
             console.log('resizing');
             gameboy.resize();
         });
-
-         pokeGame.viewLoaded = true;
+        
+        pokeGame.viewLoaded = true;
         
     });
     
-
+    
+    $scope.touched = false;
+    
+    $scope.touchStartDpad = function(direction) {
+        console.log('touch me');
+        $scope.touched = true;
+        $scope.pressdpad(direction);
+    };
+    
+    $scope.touchdEndDpad = function(direction) {
+        console.log("don't touch me");
+        $scope.touched = false;
+        $scope.releasedpad(direction);
+    };
+    
+    $scope.dpad = {
+        up: false,
+        down: false,
+        left: false,
+        right: false
+    };
+    
+    $scope.pressdpad = function(direction) {
+        
+        var dpad = $scope.dpad;
+        
+        if (direction === 'LEFT') {
+            dpad.left = true;
+            pokeGame.game.KEYPRESS = 'LEFT';
+        }
+        
+        else if (direction === 'RIGHT') {
+            dpad.right = true;
+            pokeGame.game.KEYPRESS = 'RIGHT';
+        }
+        
+        else if (direction === 'UP') {
+            dpad.up = true;
+            pokeGame.game.KEYPRESS = 'UP';
+        }
+        
+        else if (direction === 'DOWN') {
+            dpad.down = true;
+            pokeGame.game.KEYPRESS = 'DOWN';
+        }
+        
+        
+        
+        //        console.log('pressing dpad');
+        //        $scope.dpad.down = true;
+        
+    };
+    
+    $scope.releasedpad = function(direction) {
+        
+        var dpad = $scope.dpad;
+        
+        if (direction === 'LEFT') {
+            dpad.left = false;
+        }
+        
+        else if (direction === 'RIGHT') {
+            dpad.right = false;
+        }
+        else if (direction === 'UP') {
+            dpad.up = false;
+        }
+        else if (direction === 'DOWN') {
+            dpad.down = false;
+        }
+        
+        pokeGame.game.KEYPRESS = null;
+        
+    };
+    
+    $scope.cssdpad = function(direction) {
+        
+        var dpad = $scope.dpad;
+        
+        var css = {
+            'press-left': dpad.left,
+            'press-right': dpad.right,
+            'press-up': dpad.up,
+            'press-down': dpad.down
+        };
+        
+        return css;
+    };
+    
+    $scope.ab = {
+        a: false,
+        b: false
+    };
+    
+    $scope.touchStartAB = function(button) {
+        $scope.touched = true;
+        $scope.pressAB(button);
+    };
+    
+    $scope.touchEndAB = function(button) {
+        $scope.touched = false;
+        $scope.releaseAB(button);
+    };
     
     
- 
-//    
-//    
-//    
-//    // Controller (re-)initializes the canvas  
-//    gameboy.initCanvas();
-//    gameboy.createGameboyBackground();
-//    gameboy.createGrid();
-
+    $scope.pressAB = function(button) {
+        if (button === 'A') {
+            //game.setSpeed('')
+            $scope.ab.a = true;
+        }
+        
+        if (button === 'B') {
+            //game.setSpeed('')
+            $scope.ab.b = true;
+        }
+    };
+    
+    $scope.releaseAB = function(button) {
+        if (button === 'A') {
+            //game.setSpeed('')
+            $scope.ab.a = false;
+        }
+        
+        if (button === 'B') {
+            //game.setSpeed('')
+            $scope.ab.b = false;
+        }
+    };
+    
+    
+    
+    
+    
+    
+    //    
+    //    
+    //    
+    //    // Controller (re-)initializes the canvas  
+    //    gameboy.initCanvas();
+    //    gameboy.createGameboyBackground();
+    //    gameboy.createGrid();
+    
 });
 
 pokemonApp.controller('aboutController', function($scope, $log, pokeGame) { 
     
-
-
+    
+    
 });
 
 
 
 pokemonApp.controller('userController', function($scope, $log, pokeGame) { 
-   
+    
     var game = pokeGame.game;
     $scope.game = game;
     
@@ -280,12 +449,12 @@ pokemonApp.controller('userController', function($scope, $log, pokeGame) {
         
     });
     
-//    $scope.dropdownSourceTarget = function() {
-//        
-//        alert($scope.soureTile);
-//        alert($scope.targetTile);
-//        
-//    };
+    //    $scope.dropdownSourceTarget = function() {
+    //        
+    //        alert($scope.soureTile);
+    //        alert($scope.targetTile);
+    //        
+    //    };
     
     
     
@@ -302,12 +471,12 @@ pokemonApp.controller('userController', function($scope, $log, pokeGame) {
     $scope.pressedSourceTarget = null;
     
     $scope.sourceTarget = 
-    
-    
-    $scope.cssScopeTarget = function(sourceTarget) {
-        
-        var css = {
-            active: false,
+            
+            
+            $scope.cssScopeTarget = function(sourceTarget) {
+                
+                var css = {
+                    active: false,
             disabled: false
         };
         
@@ -327,7 +496,7 @@ pokemonApp.controller('userController', function($scope, $log, pokeGame) {
         }
         
         return css;
-      
+        
     };
     
     
@@ -351,23 +520,23 @@ pokemonApp.controller('userController', function($scope, $log, pokeGame) {
     
     //$scope.sourceTarget = game.hoverTile.type;
     
-//    $scope.$watch(function(){
-//        
-//        var sourceTarget;
-//        var state = game.getPathfinderState();
-//        if (state === 'SELECT SOURCE') {
-//            sourceTarget = 'SOURCE';
-//        }
-//        else if (state === 'SELECT TARGET') {
-//            sourceTarget = 'TARGET';
-//        }
-//        return $scope.sourceTarget;
-//        
-//    }, function() {
-//        $log.info('elephant is');
-//        $log.log($scope.elephant);
-//        
-//    });
+    //    $scope.$watch(function(){
+    //        
+    //        var sourceTarget;
+    //        var state = game.getPathfinderState();
+    //        if (state === 'SELECT SOURCE') {
+    //            sourceTarget = 'SOURCE';
+    //        }
+    //        else if (state === 'SELECT TARGET') {
+    //            sourceTarget = 'TARGET';
+    //        }
+    //        return $scope.sourceTarget;
+    //        
+    //    }, function() {
+    //        $log.info('elephant is');
+    //        $log.log($scope.elephant);
+    //        
+    //    });
     
     
     $scope.clickSourceTarget = function(sourceTarget) {
@@ -376,8 +545,8 @@ pokemonApp.controller('userController', function($scope, $log, pokeGame) {
         game.startPathfinder(state);
         
     }; 
-
-        
+    
+    
     /********* -- Start/Cancel Pathfindind -- ************/
     
     $scope.startPathfinder = function(state) {
@@ -387,12 +556,12 @@ pokemonApp.controller('userController', function($scope, $log, pokeGame) {
     };
     
     $scope.clearPathfinder = function() {
-      
+        
         game.clearPathfinder();
         
     };
     
-        
+    
     
     /********* -- Turn Layers on and off -- ************/
     
@@ -408,7 +577,7 @@ pokemonApp.controller('userController', function($scope, $log, pokeGame) {
     $scope.leaveLayer = function(LAYER) { $scope.LAYER.hover = null; };
     
     $scope.clickLayer = function(LAYER) { $scope.LAYER.click = LAYER; };
-
+    
     // Update active view as necessary
     $scope.$watch('LAYER', function() { 
         
@@ -472,14 +641,14 @@ pokemonApp.controller('userController', function($scope, $log, pokeGame) {
     };
     
     $scope.enterSpeed = function(speed) { $scope.speed.hover = speed; };
-        
+    
     $scope.leaveSpeed = function(speed) { $scope.speed.hover = null; }; 
     
     $scope.clickSpeed = function(speed) { $scope.speed.click = speed; };
     
     // Update sprite speed
     $scope.$watch('speed', function() {
-    
+        
         var speed = $scope.speed;
         
         if (speed.hover) {
@@ -525,17 +694,17 @@ pokemonApp.controller('userController', function($scope, $log, pokeGame) {
 });
 
 /*
- 
+
 pokemonApp.controller('oldMainController', function($scope, $log, pokeMap, pokeGraph, pokeGame) {
-        
-    
+
+
     $scope.onGridView = function() {
         $scope.gridview = false;        
     }
-    
-    
+
+
     $scope.algorithms = {
-        
+
         availableOptions: [
             {
               id: 1,
@@ -554,53 +723,53 @@ pokemonApp.controller('oldMainController', function($scope, $log, pokeMap, pokeG
               name: 'A*',
             },
         ],
-        
+
         selectedAlgo: { id: 1, name: 'Breadth-First Search' }  
     };
-        
-    
-    
+
+
+
     $scope.keyTiles = {
-        
+
         availableOptions: pokeGame.keyTiles,
         startTile: pokeGame.keyTiles[0],
         endTile: pokeGame.keyTiles[1]
-        
+
     };
-    
+
     $scope.findPath = function() {
-        
+
         var graph = pokeGraph.graph;
         var algoId = $scope.algorithms.selectedAlgo.id;
         var source = $scope.keyTiles.startTile.tile;
         var target = $scope.keyTiles.endTile.tile;
         var path = null;
-            
+
         switch(algoId) {
-                
+
             case 1:
                 path = pathfinding.bfs(graph, source, target);
                 break;
             case 2:
                 pathfinding.dfs(graph, source, target);
                 break;
-                
+
                 }
-        
+
         if (path) {
             pokeGame.drawPath(path);
             //setInterval(pokemonApp._1F.drawPath.bind(pokemonApp._1F, path), 10);
         }
 
-        
+
     }
-        
-    
-           
+
+
+
 });
 
 pokemonApp.controller('gameboyController', function($scope, $log, pokeGraph, pokeGame) {
-    
+
     //var gameboyCanvas = $('canvas#gameboy');
 //    
 //    var gbCanvas = document.createElement('canvas');
@@ -675,13 +844,13 @@ pokemonApp.controller('gameboyController', function($scope, $log, pokeGraph, pok
 //        }
 //        
 //    } 
-    
+
 });
 
-*/
+ */
 
 
- 
+
 //    $scope.getPointerXY = function(event) {
 //        
 //        

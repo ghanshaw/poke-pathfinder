@@ -42,7 +42,7 @@ var map_data = (function() {
             id: 1,
             name: 'Mewtwo',
             floor: 'BF1',
-            tile: ['BF1', 13, 7]
+            tile: ['BF1', 12, 7]
             
         },
         { 

@@ -4,6 +4,7 @@
         <title>Poke-Path Finder</title>
         <meta http-equiv="X-UA-Compatible" content="IE=Edge">
         <meta charset="UTF-8">
+	<meta content="width=device-width, initial-scale=1, user-scalable=no" name="viewport">
             
         <!-- Bootstrap -->
         <!-- Latest compiled and minified CSS -->
@@ -57,7 +58,7 @@
             
         <link rel="stylesheet" href="css/style.css">
         <link rel="stylesheet" href="css/gameboy.css">
-        <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,700" rel="stylesheet">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
             
             
@@ -97,7 +98,8 @@
                     <div class="bar4"></div>
                 </div>
                 <div class="navbar-header">
-                    <a class="navbar-brand" href="#">Poke Pathfinder</a>
+                    <a class="navbar-brand" href="#"><img class="header logo" src="images/logo-poke-pathfinder.png" alt=""/></a>
+                    
                 </div>
                     
                 <ul class="pull-right">
@@ -148,7 +150,8 @@
                 
                 <div class="row main">
                     <div class="col-xs-12" set-class-when-at-top="col-sm-offet-3">        
-                        <div class="view-switch-wrapper" ng-controller="viewSwitcher">
+                        <div class="view-switch-wrapper"
+                             ng-show="viewswitcher.visible">
                             <span 
                                 class="view-name"
                                 ng-class="{ active: view === 'gameboy' }">Gameboy</span>

@@ -250,7 +250,9 @@ Player.prototype.setupMove = function() {
     //    }        
     //    
     // If tile is reachable
-    if (stopTile && game.hasEdge(startTile, stopTile)) {
+    if (stopTile 
+            && game.hasEdge(startTile, stopTile) 
+            && !stopTile.obstacle) {
         
         // Movement is admissable, begin interpolation 
         this.changeDirection(KEYPRESS);
@@ -291,7 +293,8 @@ Player.prototype.setupMove = function() {
     
     // ----- 2b. Walking into walls ----- //
     // Animate walking against wall
-    else if (stopTile && !game.hasEdge(startTile, stopTile)) {
+    else if (stopTile 
+            && (!game.hasEdge(startTile, stopTile) || stopTile.obstacle)) {
         
         // Only animate walking into walls on land
         if(startTile.type === 'LAND') {
@@ -833,7 +836,9 @@ Player.prototype.updateDrag = function() {
     
     var tile = game.getTileFromMonitorPointer();
  
-    if (tile && tile.type !== "ROCK") {
+    if (tile 
+            && tile.type !== "ROCK"
+            && !tile.obstacle) {
         
         this.dragTile = tile;
         

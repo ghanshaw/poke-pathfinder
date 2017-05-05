@@ -17,61 +17,61 @@
                                 for option 
                                 in algorithms.options 
                                 track by option.id" 
-                        ng-model="algorithms.selected"></select>
+                            ng-model="algorithms.selected"></select>
                                 
                     </div>  
-                       
+                        
                     <section 
                         class="edge-weight-sliders ng-hide"
                         ng-show="showEdgeWeightSliders()">
-                    <div class="col-xs-12">
-                        <h5 class="text-center weight-header">Change Edge Weights</h5>
-                        
-                        <h5 class="text-center">Background Tiles</h5>
-                        <div class="row row-slider">
-                            <div class="col-xs-2 text-center">
-                                {{ edgeWeight.background }}
-                            </div>
-                            <div class="col-xs-10">
-                                <input type="range" 
-                                       name="range" 
-                                       ng-model="edgeWeight.background" 
-                                       min="{{ edgeWeight.min }}"  
-                                       max="{{ edgeWeight.max }}">
-                            </div>
-                        </div>
-                    </div>
-                        
-                    <div class="col-xs-12">
-                        <h5 class="text-center">Foreground Tiles</h5>
-                        <div class="row row-slider">
-                            <div class="col-xs-2 text-center">
-                                {{ edgeWeight.foreground }}
-                            </div>
-                            <div class="col-xs-10">
-                                <input type="range" 
-                                       name="range" 
-                                       ng-model="edgeWeight.foreground" 
-                                       min="{{ edgeWeight.min }}"  
-                                       max="{{ edgeWeight.max }}">
+                        <div class="col-xs-12">
+                            <h5 class="text-center weight-header">Change Edge Weights</h5>
+                                
+                            <h5 class="text-center">Background Tiles</h5>
+                            <div class="row row-slider">
+                                <div class="col-xs-2 text-center">
+                                    {{ edgeWeight.background }}
+                                </div>
+                                <div class="col-xs-10">
+                                    <input type="range" 
+                                           name="range" 
+                                           ng-model="edgeWeight.background" 
+                                           min="{{ edgeWeight.min }}"  
+                                           max="{{ edgeWeight.max }}">
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="col-xs-12">
-                        <h5 class="text-center">Water</h5>
-                        <div class="row row-slider">
-                            <div class="col-xs-2 text-center">
-                                {{ edgeWeight.water }}
-                            </div>
-                            <div class="col-xs-10">
-                                <input type="range" 
-                                       name="range" 
-                                       ng-model="edgeWeight.water" 
-                                       min="{{ edgeWeight.min }}"  
-                                       max="{{ edgeWeight.max }}">
+                            
+                        <div class="col-xs-12">
+                            <h5 class="text-center">Foreground Tiles</h5>
+                            <div class="row row-slider">
+                                <div class="col-xs-2 text-center">
+                                    {{ edgeWeight.foreground }}
+                                </div>
+                                <div class="col-xs-10">
+                                    <input type="range" 
+                                           name="range" 
+                                           ng-model="edgeWeight.foreground" 
+                                           min="{{ edgeWeight.min }}"  
+                                           max="{{ edgeWeight.max }}">
+                                </div>
                             </div>
                         </div>
-                    </div>
+                        <div class="col-xs-12">
+                            <h5 class="text-center">Water</h5>
+                            <div class="row row-slider">
+                                <div class="col-xs-2 text-center">
+                                    {{ edgeWeight.water }}
+                                </div>
+                                <div class="col-xs-10">
+                                    <input type="range" 
+                                           name="range" 
+                                           ng-model="edgeWeight.water" 
+                                           min="{{ edgeWeight.min }}"  
+                                           max="{{ edgeWeight.max }}">
+                                </div>
+                            </div>
+                        </div>
                     </section>
                 </div>
             </section>
@@ -90,77 +90,84 @@
                                 track by option.id">
                         </select>
                     </div>
-                                       
-                    <div class="col-xs-12"><p class="or">-or-</p></div>
-                    <div class="col-xs-12">   
-                        <div class="row marker-buttons">
-                            <div class="col-xs-10">                   
-                                <button 
-                                    class="button-flat normal-border-width"
-                                    ng-click="clickSourceTarget('SOURCE')"
-                                    ng-class="cssSourceTarget('SOURCE')">Move Source Tile</button>
+                        
+                    <div 
+                        class="move-pointmarker-container"
+                        ng-show="view === 'monitor'">
+                        <div class="col-xs-12"><p class="or">-or-</p></div>
+                        <div class="col-xs-12">   
+                            <div class="row marker-buttons">
+                                <div class="col-xs-10">                   
+                                    <button 
+                                        class="button-flat normal-border-width"
+                                        ng-click="clickPointMarkerButton('SOURCE')"
+                                        ng-class="pointmarker.source.button">Move Source Tile</button>
+                                </div>
+                                <div class="col-xs-2">   
+                                    <button
+                                        class="button-flat"
+                                        ng-class="pointmarker.source.checkbox"
+                                        ng-click="clickPointMarkerCheckbox('SOURCE')">
+                                        <i class="fa fa-square-o marker-icon" 
+                                           aria-hidden="true" 
+                                           ng-show="pointmarker.source.checkbox.active === false"></i>
+                                        <i class="fa fa-check-square-o marker-icon" 
+                                           aria-hidden="true"
+                                           ng-show="pointmarker.source.checkbox.active === true"></i>
+                                    </button>
+                                    <label>{{ labelPointMarkerCheckbox('SOURCE') }}</label>
+                                </div>
                             </div>
-                            <div class="col-xs-2">   
-                                <button
-                                    class="button-flat"
-                                    ng-class="cssPointMarkerCheckbox('SOURCE')"
-                                    ng-click="clickPointMarkerCheckbox('SOURCE')">
-                                    <i class="fa fa-square-o marker-icon" 
-                                       aria-hidden="true" 
-                                       ng-show="pointMarkerCheckbox.source.active === false"></i>
-                                    <i class="fa fa-check-square-o marker-icon" 
-                                       aria-hidden="true"
-                                       ng-show="pointMarkerCheckbox.source.active === true"></i>
-                                </button>
-                                <label>{{ pointMarkerCheckbox.source.label }}</label>
-                            </div>
-                        </div>
-                    </div> 
+                        </div> 
+                    </div>
                 </div>
             </section>
                 
             <hr> 
                 
             <section>
-                <h4>Step 3: Choose End Location</h4>
+                <h4 class="section-heading">Step 3: Choose End Location</h4>
                 <div class="row">
                     <div class="col-xs-12">         
                         <div class="dropdow">
                             <select 
                                 class="button-flat"
-                                
                                 ng-model="locations.target" 
                                 ng-options="option.label 
                                     disable when disableAllTiles(option.id) 
                                     for option 
                                     in locations.options
-                                    track by option.id " ></select>
+                                    track by option.id"></select>
                         </div>
                     </div>
                         
-                    <div class="col-xs-12"><p class="or">-or-</p></div>
-                    <div class="col-xs-12">   
-                        <div class="row marker-buttons">
-                            <div class="col-xs-10">                   
-                                <button
-                                    class="button-flat normal-border-width"
-                                    ng-click="clickSourceTarget('TARGET')"
-                                    ng-class="cssSourceTarget('TARGET')">Move Target Tile</button>
-                            </div>
-                            <div class="col-xs-2">   
+                    <div 
+                        class="move-pointmarker-container"
+                        ng-show="view === 'monitor'">
+                        <div class="col-xs-12"><p class="or">-or-</p></div>
+                        <div class="col-xs-12">   
+                            <div class="row marker-buttons">
+                                <div class="col-xs-10">                   
+                                    <button
+                                        class="button-flat normal-border-width"
+                                        ng-click="clickPointMarkerButton('TARGET')"
+                                        ng-class="pointmarker.target.button">Move Target Tile</button>
+                                </div>
+                                <div class="col-xs-2">   
                                     <button
                                         class="button-flat"
-                                        ng-class="cssPointMarkerCheckbox('TARGET')"
+                                        ng-class="pointmarker.target.checkbox"
                                         ng-click="clickPointMarkerCheckbox('TARGET')">
                                         <i class="fa fa-square-o marker-icon" 
                                            aria-hidden="true" 
-                                           ng-show="pointMarkerCheckbox.target.active === false"></i>
+                                           ng-show="pointmarker.target.checkbox.active === false"></i>
                                         <i class="fa fa-check-square-o marker-icon" 
                                            aria-hidden="true"
-                                           ng-show="pointMarkerCheckbox.target.active === true"></i>
+                                           ng-show="pointmarker.target.checkbox.active === true"></i>
                                     </button>
-                                    <label>{{ pointMarkerCheckbox.target.label }}</label>
-                           </div>
+                                    <label>{{ labelPointMarkerCheckbox('TARGET') }}</label>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div> 
@@ -175,8 +182,7 @@
                         <button 
                             class="button-flat full-width" 
                             ng-click="startPathfinder('PATH')"
-                        ng-class="cssPathFrontierButtons('PATH')">Follow Path</button>
-                                
+                            ng-class="pathfindertask.path.button">Follow Path</button>               
                     </div>
                         
                     <div class="col-xs-12"><p class="or">-or-</p></div>
@@ -185,31 +191,31 @@
                         <button 
                             class="button-flat"
                             ng-click="startPathfinder('FRONTIER')"
-                            ng-class="cssPathFrontierButtons('FRONTIER')">Generate Frontier</button>
+                            ng-class="pathfindertask.frontier.button">Generate Frontier</button>
                     </div>
-                    
-                    
-                    
+                        
+                        
+                        
                     <div class="col-xs-12">
                         <div class="vcr">
                             <div class="row">
                                 <div class="col-xs-4">
                                     <button class="button-flat normal-border-width"
-                                            ng-class="cssVCR('PLAY')"
+                                            ng-class="vcr.button.play"
                                             ng-mousedown="pressVCR($event, 'PLAY')">
                                         <i class="fa fa-play" aria-hidden="true"></i>
                                     </button>
                                 </div>
                                 <div class="col-xs-4">
                                     <button class="button-flat"
-                                            ng-class="cssVCR('PAUSE')"
+                                            ng-class="vcr.button.pause"
                                             ng-mousedown="pressVCR($event, 'PAUSE')">
                                         <i class="fa fa-pause" aria-hidden="true"></i>
                                     </button>
                                 </div>
                                 <div class="col-xs-4">
                                     <button class="button-flat"
-                                            ng-class="cssVCR('STEP')"
+                                            ng-class="vcr.button.step"
                                             ng-mousedown="pressVCR($event, 'STEP')">
                                         <i class="fa fa-chevron-right" aria-hidden="true"></i>
                                     </button>
@@ -217,26 +223,26 @@
                             </div>
                         </div>
                     </div>
-                    
+                        
                     <div class="col-xs-12">
                         <button 
                             class="button-flat full-width"
                             ng-click="clearPathfinder()">Cancel</button>
                     </div>
-                    
+                        
                     <div class="col-xs-12">
                         <div class="row">
-                        <div class="col-xs-12">
-                            <h5>Activity Log:</h5>
-                            <div class="log">                                
-                                <span ng-repeat="line in message.log track by $index">{{ line }}<br></span>
-                                
+                            <div class="col-xs-12">
+                                <h5>Activity Log:</h5>
+                                <div class="log">                                
+                                    <span ng-repeat="line in message.log track by $index">{{ line }}<br></span>
+                                        
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-                    
-                    
+                        
+                        
                 </div>
             </section>
                 
@@ -250,7 +256,7 @@
                                 ng-mouseenter="enterMapStateButton('BITMAP')" 
                                 ng-mouseleave="leaveMapStateButton('BITMAP')"
                                 ng-click="clickMapStateButton('BITMAP')"
-                        ng-class="{ active: mapStateButton.click === 'BITMAP' }" >Bitmap</button>
+                                ng-class="{ active: mapStateButton.click === 'BITMAP' }" >Bitmap</button>
                                     
                     </div>
                     <div class="col-xs-6">    
@@ -274,7 +280,7 @@
                                 ng-mouseenter="enterPathfinderLayerButton('PATH')"
                                 ng-click="clickPathfinderLayerButton('PATH')" 
                                 ng-mouseleave="leavePathfinderLayerButton('PATH')" 
-                                ng-class="cssPathfinderLayerButton('PATH')">Path</button>
+                                ng-class="pathfinderlayer.path.button">Path</button>
                     </div>
                         
                     <div class="col-xs-6">   
@@ -282,7 +288,7 @@
                                 ng-mouseenter="enterPathfinderLayerButton('FRONTIER')"
                                 ng-click="clickPathfinderLayerButton('FRONTIER')" 
                                 ng-mouseleave="leavePathfinderLayerButton('FRONTIER')" 
-                                ng-class="cssPathfinderLayerButton('FRONTIER')">Frontier</button>
+                                ng-class="pathfinderlayer.frontier.button">Frontier</button>
                     </div>
                 </div>      
             </section>
@@ -292,7 +298,7 @@
             <section>
                 <h4 class="section-heading">Step 6: Choose Speed</h4>
                 <div class="row">
-                    <div class="col-xs-3"> 
+                    <div class="col-xs-4 "> 
                         <button class="button-flat"
                                 ng-click="clickSpeed(1)"
                                 ng-mouseenter="enterSpeed(1)" 
@@ -300,7 +306,7 @@
                                 ng-class="{ active: speed.click === 1 }" >1x</button>
                     </div>
                         
-                    <div class="col-xs-3"> 
+                    <div class="col-xs-4"> 
                         <button class="button-flat"
                                 ng-click="clickSpeed(2)"
                                 ng-mouseenter="enterSpeed(2)" 
@@ -308,7 +314,7 @@
                                 ng-class="{ active: speed.click === 2 }" >2x</button>
                     </div>
                         
-                    <div class="col-xs-3"> 
+                    <div class="col-xs-4"> 
                         <button class="button-flat"
                                 ng-click="clickSpeed(3)"
                                 ng-mouseenter="enterSpeed(3)" 
@@ -323,14 +329,14 @@
             <section>
                 <h4 class="section-heading">Step 7: Choose Gender</h4>
                 <div class="row">
-                    <div class="col-xs-4"> 
+                    <div class="col-xs-6 col-sm-4"> 
                         <button class="button-flat"
                                 ng-click="clickGender('BOY')"
                                 ng-mouseenter="enterGender('BOY')" 
                                 ng-mouseleave="leaveGender('BOY')"
                                 ng-class="{ active: GENDER.click === 'BOY' }" >Male</button>
                     </div>
-                    <div class="col-xs-4"> 
+                    <div class="col-xs-6 col-sm-4"> 
                         <button class="button-flat"
                                 ng-click="clickGender('GIRL')"
                                 ng-mouseenter="enterGender('GIRL')" 
@@ -341,7 +347,7 @@
             </section>
                 
             <div class="div-padding"></div>
-            
+                
                 
         </div>
     </div>

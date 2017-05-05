@@ -166,13 +166,17 @@ Map.prototype.addMapData = function() {
         var tileId = ob.tile.toString();
         ob.tile = this.getTileFromId(tileId);   
         
-        // Turn tile into obscle
-        ob.tile.obstacle = ob.type;
-        ob.tile.obstacleId = ob.id;
+        if (ob.active) {
+            // Turn tile into obstacle
+            ob.tile.obstacle = true;
+            ob.tile.obstacleId = ob.id;
+        }
         
     }
     
+    console.log(this.obstacles);
     this.map_data = map_data;
+    
     
 };
 
@@ -218,6 +222,7 @@ Map.prototype.addMapToGraph = function(graph) {
     for (let ob of this.obstacles.tiles) {
         // Mewtwo is the only active obstacle
         if (ob.active) {
+        
             //this.game.removeEdgesToNeighbors(ob.tile);   
         }
     }
@@ -872,10 +877,15 @@ Map.prototype.updateMapLayers = function() {
     
 };
 
-Map.prototype.drawFloorLayer = function(f, state) {
+Map.prototype.drawFloorLayer = function(state) {
+    
     
     if (state === 'GRAPHIC') {
-        this.floors[f].drawFloorLayer();
+        
+        for (let f in this.floors) {
+            this.floors[f].drawFloorLayer();
+        }
+        
     }
     
 };

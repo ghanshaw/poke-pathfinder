@@ -10,20 +10,20 @@ html {
 }
 
 body {
-/*    margin: 0;
-    padding: 0;
-    background: #ffffff;
-    background: -moz-linear-gradient(top, #ffffff 0%, #C9C9C9 100%);
-    background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#ffffff), color-stop(100%,#e5e5e5));
-    background: -webkit-linear-gradient(top, #ffffff 0%,#C9C9C9 100%); 
-    background: -o-linear-gradient(top, #ffffff 0%,#C9C9C9 100%);
-    background: -ms-linear-gradient(top, #ffffff 0%,#C9C9C9 100%);
-    background: linear-gradient(to bottom, #ffffff 0%,#C9C9C9 100%);
-    height: 100vh;
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;*/
+    /*    margin: 0;
+        padding: 0;
+        background: #ffffff;
+        background: -moz-linear-gradient(top, #ffffff 0%, #C9C9C9 100%);
+        background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#ffffff), color-stop(100%,#e5e5e5));
+        background: -webkit-linear-gradient(top, #ffffff 0%,#C9C9C9 100%); 
+        background: -o-linear-gradient(top, #ffffff 0%,#C9C9C9 100%);
+        background: -ms-linear-gradient(top, #ffffff 0%,#C9C9C9 100%);
+        background: linear-gradient(to bottom, #ffffff 0%,#C9C9C9 100%);
+        height: 100vh;
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;*/
     
     .system-container#gbasp {
         width: 40.0rem;
@@ -84,11 +84,11 @@ body {
             text-align: center;
             padding-top: 5%;
             img {
-/*                position: absolute;
-                left: 11.2rem;
-                bottom: 3.6rem;
-                opacity: .8;
-                width: 17.5rem;*/
+                /*                position: absolute;
+                                left: 11.2rem;
+                                bottom: 3.6rem;
+                                opacity: .8;
+                                width: 17.5rem;*/
             }
         }
         .gameboy-screen {
@@ -169,6 +169,7 @@ body {
             -moz-box-shadow: inset .0rem -2.0rem .8rem .0rem rgba(0,0,0,.4);
             box-shadow: inset .0rem -2.0rem .8rem .0rem rgba(0,0,0,.4);
             border-top: .2rem solid lighten($cobalt, 5%);
+            z-index: 15;
             &:before {
                 content: '';
                 width: 18.0rem;
@@ -214,7 +215,7 @@ body {
             border: .3rem solid darken($cobalt, 15%);
             border-right-color: lighten($cobalt, 20%);
             border-top-color: lighten($cobalt, 10%);
-            z-index: -1;
+            z-index: 10;
             top: -2.8rem;
         }
         
@@ -230,6 +231,40 @@ body {
             border-left-color: lighten($cobalt, 10%);
             border-bottom-color: lighten($cobalt, 5%);
             box-sizing: content-box;
+        }
+        
+        .d-pad .left {
+            width: 8rem;
+            height: 3rem;
+            position: absolute;
+            /* content: ''; */
+            /* background-color: #333; */
+            left: -8rem;
+            top: 2.6rem;
+        }
+        
+        .d-pad .right {
+            width: 8rem;
+            height: 3rem;
+            position: absolute;
+            left: 2.4rem;
+            top: 2.6rem;
+        }
+        
+        .d-pad .up {
+            width: 3.0rem;
+            height: 8rem;
+            position: absolute;
+            top: -5.5rem;
+            left: -.2rem;
+        }
+        
+        .d-pad .down {
+            width: 3.0rem;
+            height: 8rem;
+            position: absolute;
+            top: 5.5rem;
+            left: -.2rem;
         }
         
         .d-pad {
@@ -248,7 +283,7 @@ body {
                 position: absolute;
                 content: '';
                 background-color: $darkgrey;
-                left: -3.0rem;
+                left: -2.8rem;
                 top: 2.6rem;
                 border-bottom: .2rem solid darken($darkgrey, 20%);
                 border-left: .2rem solid darken($darkgrey, 20%);
@@ -263,7 +298,7 @@ body {
                 position: absolute;
                 content: '';
                 background-color: $darkgrey;
-                left: 2.4rem;
+                left: 2.3rem;
                 top: 2.6rem;
                 border-top: .2rem solid lighten($darkgrey, 20%);
                 border-right: .2rem solid lighten($darkgrey, 20%);
@@ -427,7 +462,7 @@ body {
 
 @media (min-width: 480px){
     html {
-        font-size: 2vw;
+        font-size: 2.5vw;
     }
 }
 

@@ -291,14 +291,16 @@ Game.prototype.updateMap = function() {
     // Start rendering
     /////////////////////
     
+     // Draw floor layer (if in graphic mode)
+    map.drawFloorLayer(MAP_STATE);
+    
     // Draw point markers
     pathfinder.drawMarkers();
     
     
     for (let f in floors) {
         
-        // Draw floor layer (if in graphic mode)
-        map.drawFloorLayer(f, MAP_STATE);
+       
         
         // Draw background layers
         
@@ -1246,7 +1248,7 @@ Game.prototype.interpolateColor = function(color1, color2, alpha, percent) {
 
 Game.prototype.getEdgeWeights = function() {
 
-return this.userConsole.edgeWeight;
+return this.userConsole.edgeweight;
 
 };
 
@@ -1288,4 +1290,19 @@ Game.prototype.getObstacle = function(id) {
 
 Game.prototype.getTileSize = function() {
     return this.tile_size;
-}
+};
+
+Game.prototype.hasPathfinderLayer = function(layer) {
+    return this.pathfinder.hasLayer(layer);
+};
+
+Game.prototype.getPointMarkerTile = function(sourceTarget) {
+  
+    if (sourceTarget === 'SOURCE') {
+        return this.pathfinder.pointmarker.source.tile;
+    } else if (sourceTarget === 'TARGET') {
+        return this.pathfinder.pointmarker.target.tile;
+    }
+    
+};
+

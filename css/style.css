@@ -7,6 +7,10 @@ body {
     background-color: #eee;
 }
 
+ul {
+    padding: 0;
+}
+
 header {
     z-index: 10;
     position: relative;
@@ -132,7 +136,7 @@ select:focus {
 }
 
 
-@media all and (max-width: 960px) { 
+/*@media all and (max-width: 960px) { 
     button {
         font-size: 30px
     }
@@ -151,7 +155,7 @@ select:focus {
         margin: 0 10px 20px 10px;
         font-size: 16px;
     }
-}
+}*/
 
 hr {
     margin-top: 40px;
@@ -170,8 +174,16 @@ select {
 }
 
 section .section-heading {
-    margin-bottom: 25px;   
+    margin-bottom: 25px; 
+    font-size: 1.1em;
 }
+
+@media all and (max-width: 768px) { 
+    section .section-heading {
+        font-size: .8em;
+    }
+}
+
 
 section {
     margin: 20px 0px 20px 0px;   
@@ -273,8 +285,8 @@ footer .row {
     width: 100%;
     margin: .5rem 0em;
     height: 40px;
-    font-size: 14px;
-    
+    font-size: .85em;
+    position: relative;
 }
 
 .button-flat.hover, .button-flat:hover {
@@ -287,6 +299,12 @@ footer .row {
     border-color: #cb2d3e;
     color: #cb2d3e;
     transform: translate(0px, 2px);
+}
+
+@media all and (max-width: 768px) { 
+    .button-flat {
+        font-size: .8em;
+    }
 }
 
 .disabled, .disabled:active, .disabled:hover {
@@ -393,7 +411,7 @@ div.div-padding {
     border-radius: 3.75em;
     background-color: #333;
     margin: 2rem auto;
-    width: 85%;
+    width: 100%;
     text-align: center;
 }
 
@@ -458,9 +476,7 @@ div.div-padding {
     padding: 0;
 }
 
-.marker-buttons i {
-    font-size: 20px;
-}
+
 
 .marker-buttons .button-flat {
     border-left-width: 1px;
@@ -494,90 +510,6 @@ div.div-padding {
 .log span {
     font-family: monospace;
 }
-
-/* Button */
-/*.button, input[type=button], input[type=submit], button {
-        text-decoration: none;
-        border-color:#888;
-        border-color:rgba(0, 0, 0, 0.56);
-        cursor: pointer;
-        outline: none;
-        color:#111;
-        font-family:"Lucida Grande","Lucida Sans","Lucida Sans Unicode","Segoe UI",Verdana,sans-serif;
-        display:inline-block;
-        vertical-align:top;
-        position:relative;
-        font-size:12px;
-        font-weight:bold;
-        text-align:center;
-        background-color:#aaa;
-        background-image:url(gradient.png);
-        background-image: -moz-linear-gradient(top, rgba(255,255,255,.75), rgba(255,255,255,0));
-        background-image: -o-linear-gradient(top, rgba(255,255,255,.75), rgba(255,255,255,0));
-        background-image: -webkit-gradient(linear, 0% 0%, 0% 100%, from(rgba(255,255,255,.75)), to(rgba(255,255,255,0)));
-        background-image: linear-gradient(top, rgba(255,255,255,.75), rgba(255,255,255,0));
-        background-repeat:repeat-x;
-        text-shadow:1px 1px 0 rgba(255,255,255,.67);
-        line-height:2;
-        margin:0 0 2em 1em;
-        padding:0 1em;
-        height:2em;
-        -moz-box-shadow:1px 1px 0 rgba(255,255,255,.5) inset, -1px -1px 0 rgba(255,255,255,.5) inset;
-        -webkit-box-shadow:1px 1px 0 rgba(255,255,255,.5) inset, -1px -1px 0 rgba(255,255,255,.5) inset;
-        box-shadow:1px 1px 0 rgba(255,255,255,.5) inset, -1px -1px 0 rgba(255,255,255,.5) inset;
-        -webkit-transition: background .185s linear;
-        -moz-transition: all .185s linear;
-        -o-transition: all .185s linear;
-        transition: all .185s linear;
-        * Make the text unselectable *
-        -moz-user-select: none;
-        -webkit-user-select: none;
-}
-.button, .button:after, button, button:after, input[type=submit], input[type=button] {
-        -moz-border-radius:4px;
-        -webkit-border-radius:4px;
-        border-radius:4px;
-        border-width:1px;
-        border-style:solid;
-
-}
-.button:after, button:after{
-        display:block;
-        position:absolute;
-        content:' ';
-        width:100%;
-        height:100%;
-        border-color: transparent transparent #ccc;
-        border-color: transparent transparent rgba(255, 255, 255, 0.67);
-        bottom:-2px;
-        left:-1px;
-}
-.button:hover, .button:focus, button:hover, button:focus, input[type=button]:hover, input[type=button]:focus, input[type=submit]:hover, input[type=submit]:focus {
-        background-color:#a8c0cb;
-}
-.button:active, button:active, input[type=submit]:active, input[type=button]:active {
-        line-height:2.2;
-        -moz-box-shadow
-                :0 .33em 1em rgba(0,0,0,.67) inset,
-                1px 1px 0 rgba(255,255,255,.25) inset, 
-                -1px -1px 0 rgba(255,255,255,.25) inset;
-        -webkit-box-shadow:
-                0 .33em 2em rgba(0,0,0,.67) inset,
-                1px 1px 0 rgba(255,255,255,.25) inset, 
-                -1px -1px 0 rgba(255,255,255,.25) inset;
-        box-shadow:
-                0 .33em 2em rgba(0,0,0,.67) inset,
-                1px 1px 0 rgba(255,255,255,.25) inset, 
-                -1px -1px 0 rgba(255,255,255,.25) inset;
-                -webkit-transition: line-height .1s linear;
-                -moz-transition: all .1s linear;
-                -o-transition: all .1s linear;
-                transition: all .1s linear;
-}
-.button.bg, .button.bg:hover, .button.bg:focus {
-        background-image: -moz-linear-gradient(top, rgba(255,255,255,.75), rgba(255,255,255,0));
-        background-image: -webkit-gradient(linear, 0% 0%, 0% 100%, from(rgba(255,255,255,.75)), to(rgba(255,255,255,0)));
-}*/
 
 
 /* The switch - the box around the slider */
@@ -741,6 +673,12 @@ canvas.background {
     opacity: 0;
 }
 
+.gameboy.screen #transition {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+}
+
 
 /***
 --------------------
@@ -754,7 +692,7 @@ Breakpoints Overlay (for design purposes)
     height: 100%;
     width: 100%;
     z-index: 100;
-    display: none 
+    display: none; 
 }
 
 .breakpoints div {
@@ -876,7 +814,7 @@ User Console
     display: inline-block;
     cursor: pointer;
     position: relative;
-    height: 20px;
+    height: 16px;
     width: 50px;
     float: left;
     top: 10px;
@@ -953,6 +891,7 @@ User Console
         overflow: hidden;
     /*position: fixed;*/
     z-index: 100;
+    font-size: 16px;
 }
 
 .console-closed {
@@ -1004,7 +943,7 @@ footer {
 @media (max-width: 992px) {
     
     .row.main {
-        margin-left: 0px;
+        margin-left: -15px;
     }
     
     
@@ -1041,7 +980,7 @@ footer {
     width: 75%
   }
   .row.main {
-    margin-left: 0px;
+    margin-left: -15px;
   }
   
      .side-panel.panel-closed {
@@ -1066,7 +1005,7 @@ footer {
 
 .navbar a:hover {
      color: #cb2d3e;
-    font-weight: 700;   
+    font-weight: bold;   
     text-decoration: none;
 }
 
@@ -1102,4 +1041,110 @@ footer {
 .about-container.ng-hide-add,
 .about-container.ng-hide-remove {
   transition: opacity linear 0.3s;
+}
+
+.no-scroll {
+    overflow: hidden;
+}
+
+
+i.marker-icon {
+    font-size: 20px;
+    opacity: 1;
+    opacity: 1;
+    position: absolute;
+    top: 9px;
+    left: 40%;
+}
+
+.marker-icon.ng-hide {
+  opacity: 0;
+}
+
+.marker-icon.ng-hide-add,
+.marker-icon.ng-hide-remove {
+  transition: all linear 0.1s;
+}
+
+.move-pointmarker-container {
+    display: inline-block;
+    height: 120px;
+    overflow: hidden;
+    width: 100%;
+}
+
+.move-pointmarker-container.ng-hide {
+  height: 0;
+}
+
+.move-pointmarker-container.ng-hide-add,
+.move-pointmarker-container.ng-hide-remove {
+  transition: height linear 0.5s;
+}
+
+.logo-container {
+    position: absolute;
+    bottom: 14%;
+    width: 100%;
+    left: 0px;
+}
+
+.gameboy.logo {
+    width: 35%; 
+    margin: 0 auto
+}
+
+
+.d-pad-perspective-container {
+    perspective-origin: center;
+    perspective: 400px;
+}
+
+.d-pad.press-right {
+    transform: rotateY(15deg);
+}
+
+.d-pad.press-left {
+    transform: rotateY(-15deg);
+}
+
+.d-pad.press-up {
+    transform: rotateX(30deg);
+}
+
+.d-pad.press-down {
+    transform: rotateX(-30deg);
+}
+
+.system-container#gbasp {
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.d-pad,
+.d-pad-perspective-container,
+.d-pad .up,
+.d-pad .down,
+.d-pad .left,
+.d-pad .right {
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.header.logo {
+    width: 250px;
+    image-rendering: auto;
+    margin: 10px;
+}
+
+@media all and (max-width: 768px) { 
+    .header.logo {
+    width: 150px;
+    }
+}
+
+.b-button.active,
+.a-button.active {
+    top: 1.3rem !important;
 }
