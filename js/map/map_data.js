@@ -20,8 +20,8 @@ var map_data = (function() {
             'waterlayer-6',
             'waterlayer-7'
         ],
-        rows: 30,
-        cols: 60
+        rows: 22.5,
+        cols: 39.5
     };
     
     var transition = {
@@ -34,9 +34,9 @@ var map_data = (function() {
             id: 0,
             name: 'Entrance',
             floor: 'F1',
-            //tile: ['F1', 13, 24],
+            tile: ['F1', 13, 24],
             //tile: ['F1', 2, 33]
-            tile: ['F1', 21, 33]
+            //tile: ['F1', 21, 33]
         },
         { 
             id: 1,

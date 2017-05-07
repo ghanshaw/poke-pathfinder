@@ -140,9 +140,9 @@ Player.prototype.updatePlayer = function() {
         this.interpolateMove();
     } 
     
-    if (game.getPathfinderState() === 'PATHER') {
-        game.KEYPRESS = null;
-    }
+//    if (game.getPathfinderState() === 'PATHER') {
+//        game.KEYPRESS = null;
+//    }
     this.updateSpriteOptions();
     
 };
@@ -188,7 +188,9 @@ Player.prototype.setupMove = function() {
         this.stopTile = game.getTileOtherEndLadder(startTile);
         
         //this.map.resetPath()
-        this.game.pathfinder.index += 1;
+        //
+        // Throw out keypress unneccessary keypress
+        this.game.pathfinder.keypressList.shift();
         
         
         var speed = this.getSpeed();
@@ -232,7 +234,7 @@ Player.prototype.setupMove = function() {
     if (this.MOVE_STATE === 'WALL WALK') {
         
         if (KEYPRESS === this.playerOptions.FACING) {
-            this.interpolateMove();
+            //this.interpolateMove();
             return;
         }
         
@@ -463,8 +465,13 @@ Player.prototype.interpolateMove = function() {
 //        }
  
         this.setTile(this.stopTile); 
+        
+        
+        
         this.MOVE_STATE = 'STILL';
-        //console.log('I stopped moving');
+        this.game.updatePathfinder();
+        this.updatePlayer();
+        console.log('I stopped moving');
          
         return;
     }    
@@ -659,7 +666,7 @@ Player.prototype.updateSpriteOptions = function() {
         pokemonOptions.SHOW = false;
         
         if (this.MOVE_STATE === 'STILL') {
-            
+                     
             playerOptions.ACTIVITY = 'WALK'; 
             playerOptions.ORIENTATION = 'STRAIGHT';
             
@@ -670,6 +677,10 @@ Player.prototype.updateSpriteOptions = function() {
                 this.MOVE_STATE === 'TURN') {
             
             playerOptions.ACTIVITY = 'WALK';
+            
+            if (this.MOVE_STATE === 'WALK' && this.factorSpeed > 1) {
+                playerOptions.ACTIVITY = 'RUN';
+            }
             
             // Orientation is based on progress through move
             if (this.time.percent < .5) {
@@ -706,6 +717,8 @@ Player.prototype.updateSpriteOptions = function() {
         this.surfTicks %= 120;
     
     };
+    
+    
     
 };
 
@@ -819,7 +832,7 @@ Player.prototype.startDrag = function($event) {
     if (this.MOVE_STATE === 'STILL' &&
             game.getPathfinderState() === 'OFF') {
         
-        game.setMonitorPointer($event);
+        //game.setMonitorPointer($event);
         let pointerTile = game.getTileFromMonitorPointer();
         
         

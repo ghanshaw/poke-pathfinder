@@ -68,6 +68,8 @@ pokemonApp.service('pokeGame', function($log, $document, $location, $timeout, $i
     var game = new Game();
     game.initGame();
     
+    this.userConsole = game.userConsole;
+    
     // Attach game object to pokeGame service
         this.game = game;
     
@@ -91,7 +93,7 @@ pokemonApp.service('pokeGame', function($log, $document, $location, $timeout, $i
         
         
         
-        var userConsoleScope = angular.element('.consoleWrapper').scope();
+        var userConsoleScope = angular.element('.user-console-wrapper').scope();
         
         console.log('User Console Scope is...')
         console.log(userConsoleScope);
@@ -182,7 +184,7 @@ pokemonApp.service('pokeGame', function($log, $document, $location, $timeout, $i
                 }
                 //        $log.log(time);
                 //$log.log('Loop Time: ' +  time.total_time);
-                console.log(game.pathfinder.PATH_STATE);
+                //console.log(game.pathfinder.PATH_STATE);
             }
             
             window.requestAnimationFrame(gameLoop);

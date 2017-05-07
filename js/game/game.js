@@ -518,17 +518,28 @@ Game.prototype.getSpriteSize = function() {
 };
 
 
-Game.prototype.setMonitorPointer = function(event) {
+Game.prototype.setMonitorPointer = function(event, action) {
     
-    var offsetX = event.offsetX;
-    var offsetY = event.offsetY;
+    if (action === 'CLICK') {    
+        var offsetX = event.offsetX;
+        var offsetY = event.offsetY;
+    }
+    else if (action === 'TOUCH') {
+        
+        var monitor_offset = $('.monitor.foreground').offset();
+        
+        var offsetX = event.pageX - monitor_offset.left;
+        var offsetY = event.pageY - monitor_offset.top;
+       
+    }
     
     var monitor = this.monitor;
     
     monitor.pointer = {
         x: offsetX,
         y: offsetY,
-        target: event.target
+        target: event.target,
+        action: action
     };
     
 };
@@ -1098,6 +1109,11 @@ Game.prototype.getFloors = function() {
 
 
 Game.prototype.getKeypress = function() {
+    
+//    if (this.pathfinder.PATH_STATE === 'PATH') {
+//        return this.pathfinder.keypressList.shift();
+//    }
+    
     return this.KEYPRESS;
 };
 
@@ -1306,3 +1322,13 @@ Game.prototype.getPointMarkerTile = function(sourceTarget) {
     
 };
 
+
+Game.prototype.floorHasWater = function(floorId) {
+    
+    return this.map.floors[floorId].hasWater();
+    
+};
+
+Game.prototype.getMonitorAnchors = function() {
+    return this.monitor.anchors;
+};

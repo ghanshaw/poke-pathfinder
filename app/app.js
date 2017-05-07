@@ -1,4 +1,4 @@
-var pokemonApp = angular.module('pokemonApp', ['ngRoute', 'ngResource', 'ngMessages', 'ngAnimate']);
+var pokemonApp = angular.module('pokemonApp', ['ngRoute', 'ngResource', 'ngMessages', 'ngAnimate', 'ngTouch', 'ngSanitize']);
 
 pokemonApp.config(function ($routeProvider, $locationProvider) {
     

@@ -209,6 +209,29 @@ var UserConsole = function(game) {
         max: 30
     };
     
+        // Settings
+    this.speed = {
+        button: {
+            click: 1,
+            hold: null,
+        }
+    };
+    
+    this.interface = {
+        gameboy: {
+            locked: false
+        },
+        monitor: {}
+    }
+    
+    this.gender = {
+        button: {
+            click: 'BOY',
+            hold: null,
+        }
+    };
+    
+    
 //    
 //    this.pathfinder = {
 //        state: null,
@@ -313,7 +336,7 @@ UserConsole.prototype.updateSettings = function() {
         this.pointmarker.target.button.acive = false;
         this.pointmarker.target.button.disabled = true;      
         
-    }else {
+    } else {
         // Button is enabled, but inactive
         this.pointmarker.target.button.disabled = false; 
         this.pointmarker.target.button.active = false;
@@ -393,6 +416,23 @@ UserConsole.prototype.updateSettings = function() {
     }
     
     
+    // Speed settings
+    if (this.speed.button.hold) {
+        this.game.setPlayerSpeed(this.speed.button.hold);
+    }
+    else {
+        this.game.setPlayerSpeed(this.speed.button.click);
+    }
+    
+    // Gender settings
+    if (this.gender.button.hold) {
+        this.game.setPlayerGender(this.gender.button.hold);
+    }
+    else {
+        this.game.setPlayerGender(this.gender.button.click);
+    }
+    
+    
             
 //    
 //    
@@ -437,6 +477,9 @@ UserConsole.prototype.updateSettings = function() {
         };
  
     }
+ 
+    
+    
     
     // Map settings
     
@@ -825,30 +868,7 @@ UserConsole.prototype.getPathfinderTask = function(selection) {
 //
 
 
-UserConsole.prototype.togglePathfinderLayerButton = function(action, selection) {
-    
-    if (selection === 'FRONTIER') {
-        layer = this.pathfinder.layer.frontier;        
-    } else if (selection === 'PATH') {      
-        layer = this.pathfinder.layer.path;
-    }
-    
-    if (!this.game.hasPathfinderLayer(selection)) { 
-        return; 
-    }
-    
-    else if (action === 'hover') {
-        layer.button.hover = true;
-    }   
-    else if (action === 'click') {
-        layer.button.click = !layer.button.click;
-    }      
-    else {
-        layer.button.hover = false;
-        layer.button.click = false;
-    }
 
-};
 
 
 
@@ -892,18 +912,44 @@ UserConsole.prototype.activatePathfinderLayerButton = function(selection, bool) 
 };
 
 
-UserConsole.prototype.activatePathfinderLayerButton = function(selection, bool) {
+UserConsole.prototype.togglePathfinderLayerButton = function(action, selection) {
     
-    var layer;
     if (selection === 'FRONTIER') {
         layer = this.pathfinder.layer.frontier;        
     } else if (selection === 'PATH') {      
         layer = this.pathfinder.layer.path;
     }
     
-    layer.button.disabled = !bool;
-    layer.button.active = bool;
+    if (!this.game.hasPathfinderLayer(selection)) { 
+        return; 
+    }
+    
+    else if (action === 'hover') {
+        layer.button.hover = true;
+    }   
+    else if (action === 'click') {
+        layer.button.click = !layer.button.click;
+    }      
+    else {
+        layer.button.hover = false;
+        layer.button.click = false;
+    }
+
 };
+
+//
+//UserConsole.prototype.activatePathfinderLayerButton = function(selection, bool) {
+//    
+//    var layer;
+//    if (selection === 'FRONTIER') {
+//        layer = this.pathfinder.layer.frontier;        
+//    } else if (selection === 'PATH') {      
+//        layer = this.pathfinder.layer.path;
+//    }
+//    
+//    layer.button.disabled = !bool;
+//    layer.button.active = bool;
+//};
 
 
 UserConsole.prototype.showPathfinderLayer = function(selection, bool) {
@@ -925,10 +971,7 @@ UserConsole.prototype.setPlayerSpeed = function(speed) {
     this.speed = speed;
 };
 
-UserConsole.prototype.setPlayerGender = function(gender) {
-    this.game.setPlayerGender(gender);
-    this.gender = gender;
-};
+
 
 
 
@@ -1176,9 +1219,9 @@ UserConsole.prototype.log = function(text) {
     
     var log = this.message.log;
     
-    if (log.length === 5) {
-        log.shift();
-    }
+//    if (log.length === 5) {
+//        log.shift();
+//    }
     
     
     log.push(text);
@@ -1229,4 +1272,41 @@ UserConsole.prototype.toggleFrontierPathLayers = function(button, action) {
 UserConsole.prototype.targetTileIsAll = function() {
     // Return true if target location is set to 'All Tiles'
     return this.locations.target.id === 5;   
+};
+
+UserConsole.prototype.holdSpeedButton = function(speed) {   
+    this.speed.button.hold = speed;
+};
+
+
+UserConsole.prototype.clickSpeedButton = function(speed) {   
+    this.speed.button.click = speed; 
+};
+
+
+UserConsole.prototype.getSpeedButton = function() {
+    return this.speed.button;
+};
+
+UserConsole.prototype.clickGenderButton = function(gender) {
+    this.gender.button.click = gender;
+};
+
+UserConsole.prototype.holdGenderButton = function(gender) {
+    this.gender.button.hold = gender;
+};
+
+
+UserConsole.prototype.toggleGender = function() {
+    
+    if (this.gender.button.click === 'BOY') {
+        this.gender.button.click = 'GIRL';
+    } else {
+        this.gender.button.click = 'BOY';
+    }
+    
+};
+
+UserConsole.prototype.getGenderButton = function() {
+    return this.gender.button;   
 };

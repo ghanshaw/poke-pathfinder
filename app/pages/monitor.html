@@ -2,25 +2,23 @@
     
     <div class="momintor-container">
         <div class="monitor-frame">
-            <span class="floor-label">F1</span>
+            <span class="floor-label">{{ currentFloor }}</span>
             <div class="monitor screen">
                 <canvas 
                     id="foreground"
                     class="monitor foreground"
-                    ng-mousemove="movePointer($event)" 
-                    ng-mousedown="clickPointer(); startDrag($event);" 
+                    ng-mousemove="movePointer($event, 'CLICK')" 
+                    ng-mousedown="clickPointer(); startDrag($event, 'CLICK');" 
                     ng-mouseup="endDrag($event);"
-                    ng-mouseleave="endDrag($event);"></canvas>
+                    ng-mouseleave="endDrag($event);"
+                    touch-start-directive="touchStartMonitor()" 
+                    touch-move-directive="touchMoveMonitor()"
+                    touch-end-directive="touchEndMonitor()"></canvas>
                 <canvas 
                     id="background"
                     class="monitor background"></canvas>
             </div>           
         </div>
-        
-        <canvas id="test1"></canvas>
-        <canvas id="test2"></canvas>
-        <canvas id="test3"></canvas>
-        <canvas id="test4"></canvas>
     </div>
 </div>
 

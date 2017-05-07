@@ -1,9 +1,16 @@
 <div ng-keydown="changeDirection($event)">
     
-    <div>
-        
-    </div>
-    <div class="system-container" id="gbasp">
+    <div 
+        class="gameboy lock"
+        style="display: none"
+        ng-click="toggleLock()">
+        <i class="fa fa-lock" aria-hidden="true">
+            Is the screen locked? : {{ gameboy.locked }}
+        </i></div>
+    <div 
+        class="system-container" 
+        id="gbasp"
+        ng-class="{ 'no-scroll': gameboy.locked }">
         <div class="screen-body">
             <div class="screen-bumper" id="bumper-ul"></div>
             <div class="screen-bumper" id="bumper-ur"></div>
@@ -35,30 +42,42 @@
                 
             
             <div class="pad-container">
+                <div class="touch-target"
+                             ng-mousedown="pressdpad('UP')"
+                             ng-mouseup="releasedpad('UP')"
+                             touch-start-directive="touchStartDpad()" 
+                             touch-move-directive="touchMoveDpad()"
+                             touch-end-directive="touchEndDpad()"></div>
                 <div 
                     class="d-pad-perspective-container">                      
                     <div 
                         class="d-pad"
                         ng-class="cssdpad()">
+                        
+                        
                         <div class="d-pad-target up"
                              ng-mousedown="pressdpad('UP')"
                              ng-mouseup="releasedpad('UP')"
                              touch-start-directive="touchStartDpad('UP')" 
+                             touch-move-directive="touchMoveDpad()"
                              touch-end-directive="touchEndDpad('UP')"></div>
                         <div class="d-pad-target down"
                              ng-mousedown="pressdpad('DOWN')"
                              ng-mouseup="releasedpad('DOWN')"
                              touch-start-directive="touchStartDpad('DOWN')" 
+                             touch-move-directive="touchMoveDpad()"
                              touch-end-directive="touchEndDpad('DOWN')"></div>
                         <div class="d-pad-target left"
                              ng-mousedown="pressdpad('LEFT')"
                              ng-mouseup="releasedpad('LEFT')"
                              touch-start-directive="touchStartDpad('LEFT')" 
+                             touch-move-directive="touchMoveDpad()"
                              touch-end-directive="touchEndDpad('LEFT')"></div>
                         <div class="d-pad-target right"
                              ng-mousedown="pressdpad('RIGHT')"
                              ng-mouseup="releasedpad('RIGHT')"
                              touch-start-directive="touchStartDpad('RIGHT')" 
+                             touch-move-directive="touchMoveDpad()"
                              touch-end-directive="touchEndDpad('RIGHT')"></div>
                     </div>
                 </div>

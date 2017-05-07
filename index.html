@@ -4,7 +4,7 @@
         <title>Poke-Path Finder</title>
         <meta http-equiv="X-UA-Compatible" content="IE=Edge">
         <meta charset="UTF-8">
-	<meta content="width=device-width, initial-scale=1, user-scalable=no" name="viewport">
+	<meta content="width=device-width, height=device-height, initial-scale=1, user-scalable=no" name="viewport">
             
         <!-- Bootstrap -->
         <!-- Latest compiled and minified CSS -->
@@ -22,7 +22,8 @@
         <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.3/angular-route.min.js"></script> 
         <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.3/angular-resource.min.js"></script> 
         <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.3/angular-animate.min.js"></script> 
-            
+        <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.3/angular-touch.min.js"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.3/angular-sanitize.min.js"></script> 
             
         
         <!-- <script src="js/jquery-ui/jquery-ui.min.js" type="text/javascript"></script> -->
@@ -30,7 +31,9 @@
             
             
         <script src="js/graph/graph.js"></script>
-        <script src="js/graph/pathfinder.js"></script>
+        <script src="js/graph/priority-queue.js"></script>
+        
+        <script src="js/pathfinder/pathfinder.js"></script>
             
         <script src="js/game/game.js"></script>
             
@@ -48,23 +51,32 @@
         <script src="js/monitor/monitor.js"></script>
         <script src="js/gameboy/gameboy.js"></script>
         
-        <script src="js/userconsole/userconsole.js"></script>
+        <script src="js/user-console/user-console.js"></script>
             
         <script src="app/app.js"></script> 
         <script src="app/services/services.js"></script> 
-        <script src="app/controllers/controllers.js"></script> 
+        <script src="app/controllers/controllers.js"></script>
+        <script src="app/controllers/user-console-controller.js"></script> 
+        <script src="app/controllers/gameboy-controller.js"></script> 
+        <script src="app/controllers/monitor-controller.js"></script> 
+        <script src="app/controllers/index-controller.js"></script> 
         <script src="app/directives/directives.js"></script> 
-        <script src="app/directives/user_console_panel.js"></script>
             
         <link rel="stylesheet" href="css/style.css">
         <link rel="stylesheet" href="css/gameboy.css">
         <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,700" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css?family=Montserrat:300,400,700,900" rel="stylesheet">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
             
             
     </head>
         
-    <body ng-app="pokemonApp" ng-controller="indexController">
+    <body 
+        ng-app="pokemonApp" 
+        ng-controller="indexController">
+        <div 
+            class="body-container"
+            ng-class="{ 'no-scroll': interface.gameboy.locked }">
         <!-- 
             /* (GH) Extra extra small devices (portrait) (phones, less than 480px) */
                 
@@ -91,7 +103,7 @@
             <div class="container-fluid">
                 <div class="hamburger-container" 
                      ng-class="{ 'clicked' : panel.open }"
-                     ng-click="togglePanel()" >
+                     ng-click="toggleSidePanel()" >
                     <div class="bar1"></div>
                     <div class="bar2"></div>
                     <div class="bar3"></div>
@@ -102,7 +114,7 @@
                     
                 </div>
                     
-                <ul class="pull-right">
+                <ul class="links pull-right">
                     <li 
                         class="active"
                         ng-click="toggleAbout()"><a href="">About</a></li>
@@ -140,17 +152,21 @@
                     ng-include 
                     ng-show="about.visible" 
                     src="'app/pages/about.html'"></div>
-                <div class="row is-fle side-panel panel-closed" ng-class="cssSidePanel()" set-class-when-at-top="fix-to-top">
-                    <div col="col-xs-12">
-                        <div class="no-padding user-console-wrapper" >
-                            <div user-console-panel></div>      
+                <div class="side-panel panel-closed" ng-class="cssSidePanel()" set-class-when-at-top="fix-to-top">
+                    <div class="row">
+                        <div col="col-xs-12">
+                                <div user-console></div>      
                         </div>
                     </div>
                 </div>
+                <div 
+                    class="overlay ng-hide" 
+                    ng-show="panel.open"
+                    ng-click="openSidePanel(false)"></div>
                 
-                <div class="row main">
+                <div class="row page-content">
                     <div class="col-xs-12" set-class-when-at-top="col-sm-offet-3">        
-                        <div class="view-switch-wrapper"
+                        <div class="view-switch-wrapper ng-hide"
                              ng-show="viewswitcher.visible">
                             <span 
                                 class="view-name"
@@ -197,7 +213,7 @@
             
             
             
-            
+        </div>
     </body>    
     
     <script>

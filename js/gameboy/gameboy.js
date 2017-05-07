@@ -179,13 +179,11 @@ Gameboy.prototype.drawTransition = function() {
 };
 
 
-Gameboy.prototype.drawGrid = function(offset_top, offset_left) {
+Gameboy.prototype.drawGrid = function(camera) {
     if (this.game.isGridVisible()) {
-        
-        
-        let width = this.screen.width;
-        let height = this.screen.height;
-        this.screen.foreground.ctx.drawImage(this.grid.canvas, offset_left, offset_top, width, height, 0, 0, this.screen.width, this.screen.height);
+        let width = camera.width;
+        let height = camera.height;
+        this.screen.foreground.ctx.drawImage(this.grid.canvas, camera.offset_left, camera.offset_top, width, height, 0, 0, width, height);
     }
 };
 
@@ -434,11 +432,11 @@ Gameboy.prototype.resizeRocklayer = function() {
 
 Gameboy.prototype.resizeWaterlayer = function() {
   
-    var width = this.tile_size * this.waterlayer.cols;
+    var width = this.tile_size * (this.waterlayer.cols - .5);
     
     for (let img of this.waterlayer.img) {
         img.css('width', width);
-        img.css('display', 'none');
+        //img.css('display', 'none');
     };
     
 };
@@ -621,23 +619,98 @@ Gameboy.prototype.drawImageToScreen = function(img, options) {
             ctx = screen.foreground.ctx;
         }
         
-        // Get subtriangle dimensions
+        // Get subrectangle dimensions
         var floor = this.floors[floorId];
         var source_tile_size = img.width / floor.cols;
         
         let origin = this.getOrigin(pTile);
-        let sx = origin.col * source_tile_size;
-        let sy = origin.row * source_tile_size;
-        let sWidth = this.cols * source_tile_size;
-        let sHeight = this.rows* source_tile_size;
         
+        let sRow = origin.row;
+        let sCol = origin.col;
+        
+        // Source width and heigh is size of gameboy screen
+        let sWidth = this.cols;
+        let sHeight = this.rows;
+        
+        // Source width and heigh is size of gameboy screen
+        let dWidth = this.cols;
+        let dHeight = this.rows;
+        
+        // Destination coordinates is the upper right corner of gboy screen
+        let dRow = 0;
+        let dCol = 0;
+        
+        
+        // If source does not completely fill destination area
+        
+        // Space to right
+         if ((sCol + sWidth) > floor.cols) {
+            sWidth = floor.cols - sCol;
+            dWidth = sWidth;
+        } 
+        // Space to left
+        else if (sCol < 0) {
+            sWidth = this.cols + sCol;
+            dWidth = sWidth;
+            dCol = dCol - sCol;
+            sCol = 0;
+        }
+        
+         if ((sRow + sWidth) > floor.rows) {
+            sHeight = floor.rows - sRow;
+            dHeight = sHeight;
+        } else if (sRow < 0) {
+            sHeight = this.rows + sRow;
+            dHeight = sHeight;
+            dRow = dRow - sRow;
+            sRow = 0;
+        }
+        
+        
+        
+        let sx = sCol * source_tile_size;
+        let sy = sRow * source_tile_size;
+        
+        sWidth *= source_tile_size;
+        sHeight *= source_tile_size;
+        
+        dWidth *= this.tile_size;
+        dHeight *= this.tile_size;
+        
+        let dx = dCol * this.tile_size;
+        let dy = dRow * this.tile_size; 
+        
+        
+//        let sx = origin.col * source_tile_size;
+//        let sy = origin.row * source_tile_size;
+//        let sWidth = this.cols * source_tile_size;
+//        let sHeight = this.rows * source_tile_size;
+//        
+//        let sourceWidth = floor.cols * source_tile_size;
+//        let sourceHeight = floor.row * source_tile_size;
+//        
+//        if ((sx + sWidth) > sourceWidth) {
+//            sWidth = sourceWidth - sx;
+//            dWidth = sWidth;
+//        } else if (sx < 0) {
+//            sx = 0;
+//        }
+//        
+//        
+//        if ((sy + sHeight) > sourceHeight) {
+//            sHeight = sourceHeight - sy;
+//        } else if (sy < 0) {
+//            sy = 0;
+//        }
+//        
         
         if (alpha !== 1) {
             console.log(alpha);
             ctx.globalAlpha = 1 - alpha;
         }
         
-        ctx.drawImage(img, sx, sy, sWidth, sHeight, 0, 0, this.screen.width, this.screen.height);
+        ctx.drawImage(img, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight);
+//        ctx.drawImage(img, sx, sy, sWidth, sHeight, 0, 0, this.screen.width, this.screen.height);
         //ctx.drawImage(img, floor.left, floor.top, floor.width, floor.height);
         ctx.globalAlpha = 1;
 
@@ -690,6 +763,7 @@ Gameboy.prototype.getOffsets = function(tile) {
     //var layer.canavs;
     
     var sWidth = this.cols * source.tile_size;
+    var sHeight = this.rows * source.tile_size;
     
     
 //    var sx = origin.col * this.tile_size;
@@ -730,136 +804,159 @@ Gameboy.prototype.drawGameboy = function() {
     
     var game = this.game;
     
+    var camera = {};
+    var c = camera;
+    
+    
     
 
     // Get camera offset used by various drawing methods
     var pTile = game.getPlayerCurrentTile();
+    c.floorId = pTile.floor.id;
     
-    var offset_top = (pTile.row + .5) % 1;
-    var offset_left = pTile.col % 1;
+    c.offset_top = (pTile.row + .5) % 1;
+    c.offset_left = pTile.col % 1;
     
-    offset_top *= this.tile_size;
-    offset_left *= this.tile_size;
+    c.offset_top *= this.tile_size;
+    c.offset_left *= this.tile_size;
     
-    var width = this.screen.background.canvas.width;
-    var height = this.screen.background.canvas.height;  
+    c.width = this.screen.width;
+    c.height = this.screen.height;  
    
     // Origin is the top, left corner of the gameboy
     var origin = this.getOrigin(pTile);
     
-    var sx = origin.col * this.tile_size;
-    var sy = origin.row * this.tile_size;    
+    c.sx = origin.col * this.tile_size;
+    c.sy = origin.row * this.tile_size;    
     
-    // Width and height of camera (gameboy)
-    var sWidth = this.cols * this.tile_size;
-    var sHeight = this.rows * this.tile_size;
-
-    var floor = pTile.floor;
-    
-    var f = floor.id;
-    var background = this.floors[f].background;
-    var foreground = this.floors[f].foreground;
-    
+//    // Width and height of camera (gameboy)
+//    var sWidth = this.cols * this.tile_size;
+//    var sHeight = this.rows * this.tile_size;
+//
+//    var floor = pTile.floor;
+//    
+//    var f = floor.id;
+//    var background = this.floors[f].background;
+//    var foreground = this.floors[f].foreground;
+//    
     // Actual width and height of portion of visible floor
     // (in case img does not fully cover camera)
-    var imgWidth = background.img.width() - sx;
-    var imgHeight = background.img.height() - sy;
+//    var imgWidth = background.img.width() - sx;
+//    var imgHeight = background.img.height() - sy;
     
     
     
-    this.drawRocklayer(offset_top, offset_left, width, height);
-    this.drawWaterlayer(offset_top, offset_left, width, height, sx, sy, imgWidth, imgHeight);
-    this.drawFloor();  
-    this.drawGrid(offset_top, offset_left);
+    this.drawRocklayer(camera);
+    this.drawWaterlayer(camera);
+    this.drawFloor(camera);  
+    this.drawGrid(camera);
     this.drawTransition();
     
 };
 
-Gameboy.prototype.drawRocklayer = function(offset_top, offset_left, width, height) {
+Gameboy.prototype.drawRocklayer = function(camera) {
     
     var game = this.game;
 
-    this.rocklayer.img.css('top', -offset_top);
-    this.rocklayer.img.css('left', -offset_left);
+    this.rocklayer.img.css('top', -camera.offset_top);
+    this.rocklayer.img.css('left', -camera.offset_left);
     
     //this.ctx.drawImage(this.gameboybackground.canvas, offset_left, offset_top, width, height, 0, 0, width, height);
     
 };
 
-Gameboy.prototype.drawWaterlayer = function(offset_top, offset_left, width, height, sx, sy, imgWidth, imgHeight) {
+Gameboy.prototype.drawWaterlayer = function(camera) {
     
     this.updateWaterlayer();
     
     var img = this.waterlayer.img[this.currentLayer];
+    
+    if (!this.game.floorHasWater(camera.floorId)) { 
+        img.hide(0);
+        return;
+    } 
+
+    img.show(0);
+
+    img.css('top', -camera.sy);
+    img.css('left', -camera.sx);
+    
+    
+    
     //var img = this.waterlayer.img[0];
             
-    // Offset layer based on current position of player        
-    img.css('top', -sy);
-    img.css('left', -sx);
-
-    
-    // Clip extra water layer
-    var tile_size = this.tile_size;
-    var waterWidth = this.waterlayer.cols * tile_size;
-    var waterHeight = this.waterlayer.rows * tile_size;
-    var fromTop = 0;
-    var fromRight = waterWidth - offset_left - imgWidth;
-    var fromBottom = waterHeight - offset_top - imgHeight;
-    
-    // A little buffer
-    fromRight += tile_size/2;
-    fromBottom += tile_size/2;
-    //var fromBottom = 900;
-    var fromLeft = 0;
-    var clipPath = 'inset(' + fromTop + 'px ' + fromRight + 'px ' + fromBottom + 'px ' + fromLeft + 'px )';
-    
-    console.log(clipPath);
-    
-    img.css('clip-path', clipPath);
-    img.css('-moz-clip-path', clipPath);
-     
+//    // Offset layer based on current position of player        
+//    img.css('top', -sy);
+//    img.css('left', -sx);
+//
+//    
+//    // Clip extra water layer
+//    var tile_size = this.tile_size;
+//    var waterWidth = this.waterlayer.cols * tile_size;
+//    var waterHeight = this.waterlayer.rows * tile_size;
+//    var fromTop = 0;
+//    var fromRight = waterWidth - offset_left - imgWidth;
+//    var fromBottom = waterHeight - offset_top - imgHeight;
+//    
+//    // A little buffer
+//    fromRight += tile_size/2;
+//    fromBottom += tile_size/2;
+//    //var fromBottom = 900;
+//    var fromLeft = 0;
+//    var clipPath = 'inset(' + fromTop + 'px ' + fromRight + 'px ' + fromBottom + 'px ' + fromLeft + 'px )';
+//    
+//    console.log(clipPath);
+//    
+//    img.css('clip-path', clipPath);
+//    img.css('-moz-clip-path', clipPath);
+//     
 };
 
 
-Gameboy.prototype.drawFloor = function() {
+Gameboy.prototype.drawFloor = function(camera) {
     
    
-    var game = this.game;
+//    var game = this.game;
 
-    var pTile = game.getPlayerCurrentTile();    
-    var floor = pTile.floor;
-   
-    // Origin is the top, left corner of the gameboy
-    var origin = this.getOrigin(pTile);
+//    var pTile = game.getPlayerCurrentTile();    
+//    var floor = pTile.floor;
+//   
+//    // Origin is the top, left corner of the gameboy
+//    var origin = this.getOrigin(pTile);
+//    
+//    var sx = origin.col * this.tile_size;
+//    var sy = origin.row * this.tile_size;    
+//    
+//    
+//    var sWidth = this.cols * this.tile_size;
+//    var sHeight = this.rows * this.tile_size;
     
-    var sx = origin.col * this.tile_size;
-    var sy = origin.row * this.tile_size;    
-    
-    
-    var sWidth = this.cols * this.tile_size;
-    var sHeight = this.rows * this.tile_size;
-    
-    var f = floor.id;
+    var f = camera.floorId;
     var background = this.floors[f].background;
     var foreground = this.floors[f].foreground;
     
-    background.img.css('top', -sy);
-    background.img.css('left', -sx);
+    background.img.css('top', -camera.sy);
+    background.img.css('left', -camera.sx);
     
-    foreground.img.css('top', -sy);
-    foreground.img.css('left', -sx);
+    foreground.img.css('top', -camera.sy);
+    foreground.img.css('left', -camera.sx);
     
     
-    
+
+    // If floor has changed
     if (this.activeFloor !== f) {
         
-        let prevFloor = this.floors[this.activeFloor];
+        // Hide all the floors
+        for (let floorId in this.floors) {
+            let floor = this.floors[floorId];
+            floor.background.img.hide(0);
+            floor.foreground.img.hide(0);
+        }
         
-        prevFloor.background.img.hide(0);
-        prevFloor.foreground.img.hide(0);
-        
-        background.img.show(0);
-        foreground.img.show(0);
+        // Show the correct floor
+        let floor = this.floors[f];
+        floor.background.img.show(0);
+        floor.foreground.img.show(0);    
         
         this.activeFloor = f;
     };
@@ -867,10 +964,10 @@ Gameboy.prototype.drawFloor = function() {
     //this.ctx.fillStyle = 'blue';
     //this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
     
-    sx = origin.col * floor.tile_size;
-    sy = origin.row * floor.tile_size;
-    sWidth = this.cols * floor.tile_size;
-    sHeight = this.rows * floor.tile_size;
+//    sx = origin.col * floor.tile_size;
+//    sy = origin.row * floor.tile_size;
+//    sWidth = this.cols * floor.tile_size;
+//    sHeight = this.rows * floor.tile_size;
     
     
     //this.ctx.drawImage(floor.frame.canvas, sx, sy, sWidth, sHeight, 0, 0, this.canvas.width, this.canvas.height);

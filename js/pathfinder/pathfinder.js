@@ -390,7 +390,7 @@ Pathfinder.prototype.startDragMode = function($event) {
     if (game.getPlayerMoveState() === 'STILL' &&
             this.PATH_STATE === 'OFF') {
         
-        game.setMonitorPointer($event);
+        //game.setMonitorPointer($event);
         let pointerTile = game.getTileFromMonitorPointer();
         
         if (pointerTile.id === this.pointmarker.source.tile.id &&
@@ -499,6 +499,7 @@ Pathfinder.prototype.drawDrag = function() {
 Pathfinder.prototype.startMarkMode = function(state) {
     
     var userConsole = this.userConsole;
+    var game = this.game;
     
     // Cannot switch from these states to SELECT state    
     if (this.PATH_STATE === 'FRONTIER' ||
@@ -533,7 +534,7 @@ Pathfinder.prototype.startMarkMode = function(state) {
         }
         
         this.game.CLICKED = false;
-        // Was 'OFF' or 'MARK TARGET' --> 'MARK SOURCE' : activate
+        // Was 'OFF' or 'MARK TARGET' --> 'MARK SOURCE' : activate     
         userConsole.showPointMarker('SOURCE', false);
         //userConsole.enablePointMarker('SOURCE', false);
         this.PATH_STATE = 'MARK SOURCE';
@@ -557,6 +558,7 @@ Pathfinder.prototype.startMarkMode = function(state) {
             this.pointmarker.source.tile = this.source.tile;
             userConsole.showPointMarker('SOURCE', true);
         }
+        this.game.CLICKED = false;
         
         // 'OFF' or 'MARK SOURCE' --> 'MARK TARGET' : activate
         userConsole.showPointMarker('TARGET', false);
@@ -574,10 +576,7 @@ Pathfinder.prototype.updateMarkMode = function() {
     var game = this.game;
     var userConsole = this.userConsole;
 
-    if (game.CLICKED) { 
-        this.endMarkMode(); 
-        return;
-    };
+    
     
     var tile = game.getTileFromMonitorPointer();
     
@@ -600,6 +599,11 @@ Pathfinder.prototype.updateMarkMode = function() {
         marker.valid = false;
         userConsole.showPointMarker(point, false);  
     }
+    
+    if (game.CLICKED) { 
+        this.endMarkMode(); 
+        return;
+    };
    
 };
 
@@ -662,7 +666,6 @@ Pathfinder.prototype.startFrontierPather = function(state) {
     
     }
    
-   
     var game = this.game;
     var userConsole = this.game.userConsole;
     
@@ -672,8 +675,7 @@ Pathfinder.prototype.startFrontierPather = function(state) {
    // Get algorithm
     this.algorithm = userConsole.getSelectedAlgorithm();
     
-    
-    
+
     // Get source and target from console
     this.source.tile = userConsole.getLocationTile('SOURCE');
     this.target.tile = userConsole.getLocationTile('TARGET');
@@ -742,8 +744,12 @@ Pathfinder.prototype.startFrontierPather = function(state) {
     this.path = [];
     this.index = 0;
     this.complete = false;
-
-    
+    this.length = 0;
+    this.results = {
+        length: 0,
+        weight: 0,
+        printed: false  
+    };
     
     
     // Turn on pathfinder state
@@ -761,6 +767,7 @@ Pathfinder.prototype.startFrontierPather = function(state) {
     if (state === 'PATH') {
         this.completeAlgorithm();
         this.constructPath();
+        this.createKeypressList();
     }
     
     if (state === 'PATH' && this.found) {
@@ -768,15 +775,15 @@ Pathfinder.prototype.startFrontierPather = function(state) {
         this.layer.path.exists = true;
         
         // Show pathfinder layer
-        this.userConsole.togglePathfinderLayerButton('click', 'PATH');
-        //this.userConsole.showPathfinderLayer(state, true);
+        this.userConsole.activatePathfinderLayerButton('PATH', true);
+
     }
     else if (state === 'FRONTIER') {
         // Make the path exist
         this.layer.frontier.exists = true;
         
         // Show pathfinder layer
-        this.userConsole.togglePathfinderLayerButton('click', 'FRONTIER');
+        this.userConsole.activatePathfinderLayerButton('FRONTIER', true);
     }
     
 
@@ -827,11 +834,15 @@ Pathfinder.prototype.updateFrontier = function() {
             let tile = game.getTileFromId(t);
             this.drawArrow(tile, 'CLOSED');
         }
-        console.timeEnd('draw arrows');
-
+        //console.timeEnd('draw arrows');
     }
-
-    else if (this.complete && this.found) {    
+   
+    else if (this.complete && this.found) {        
+        
+        if (!this.results.printed) {
+            this.logResults();
+            this.results.printed = true;
+        }
         
         let i = this.index;
         if (i < this.path.length) { 
@@ -852,6 +863,15 @@ Pathfinder.prototype.updateFrontier = function() {
         this.PLAY_STATE = 'OFF';
         return;
     }
+    
+};
+
+
+Pathfinder.prototype.logResults = function() {
+    
+    this.game.logToUserConsole("<span class='success'>Target was successfully found!</span>");
+    this.game.logToUserConsole("Total Length of Path: <span class='results'>" + this.results.length + ' tiles!</span>');
+    this.game.logToUserConsole("Total Weight: <span class='results'>" + this.results.weight + "!</span>");
     
 };
 
@@ -1019,8 +1039,36 @@ Pathfinder.prototype.appendPath = function() {
 
 Pathfinder.prototype.updatePath = function() {
     
+    //console.log(this.keypressList);
+    
+    if (this.game.getPlayerMoveState() !== 'STILL' || this.PATH_STATE === 'OFF') {
+        // Player is already in the middle of moving
+        // or Pathfinder has been cancelled, so return
+        return;
+    }
+    
+    // The update player method will take care of following the path
+    
+    // Turn off the pathinder is keypress list is exhausted
+    else if (this.keypressList.length === 0) {
+        this.PATH_STATE = 'OFF';
+        this.game.KEYPRESS = null;
+        return;
+    } 
+    
+    this.game.KEYPRESS = this.keypressList.shift();
+    
+    
+    
     //this.constructPath();
-    this.simulateKeyPress();
+//    this.createKeypressList();
+//    console.log(this.keypressList);
+//    
+//    this.simulateKeyPress();
+//    
+//    
+
+    
     
 //    if (this.LAYER === 'PATH') {
 //        
@@ -1231,22 +1279,40 @@ Pathfinder.prototype.drawMarkers = function() {
         return;
     }
     
+    // If on mobile, don't show point markers
+    // during Mark Mode
+    var pointer = game.getMonitorPointer();
+    var mobile = pointer && pointer.action === 'TOUCH';
+    
+    
     if (userConsole.isPointMarkerVisible('SOURCE')) {
         
-        let tile = this.pointmarker.source.tile;
-        let floorId = tile.floor.id;
-        let dof = tile.dof;
-        game.drawImageToScreen(this.pointmarker.source.canvas, 'tile', floorId, dof, tile, 2);        
+        // Don't draw the source during Mark Mode on mobile devices
+        let skip = this.PATH_STATE === 'MARK SOURCE' && mobile;
+        
+        if (!skip) {
+        
+            let tile = this.pointmarker.source.tile;
+            let floorId = tile.floor.id;
+            let dof = tile.dof;
+            game.drawImageToScreen(this.pointmarker.source.canvas, 'tile', floorId, dof, tile, 2);        
+
+        }
         
     }
     
     
     if (userConsole.isPointMarkerVisible('TARGET')) {
         
-        let tile = this.pointmarker.target.tile;
-        let floorId = tile.floor.id;
-        let dof = tile.dof;
-        game.drawImageToScreen(this.pointmarker.target.canvas, 'tile', floorId, dof, tile, 2);
+        // Don't draw the source during Mark Mode on mobile devices
+        let skip = this.PATH_STATE === 'MARK TARGET' && mobile;
+        
+        if (!skip) {          
+            let tile = this.pointmarker.target.tile;
+            let floorId = tile.floor.id;
+            let dof = tile.dof;
+            game.drawImageToScreen(this.pointmarker.target.canvas, 'tile', floorId, dof, tile, 2);
+        }
 
     }
 
@@ -1579,7 +1645,68 @@ Pathfinder.prototype.drawSpriteToFrontierLayer = function(tileId, interpolate) {
 
 Pathfinder.prototype._________PATH_METHODS_________ = function() {};
 
+Pathfinder.prototype.createKeypressList = function() {
+    
+    var path = this.path;
+    var game = this.game;
+    this.keypressList = [];
+    
+    for (let i = 0; i < path.length - 1; i++) {
+        
+        var startTile = path[i];
+        var stopTile = path[i + 1];
 
+        //    console.log(game.index);
+        //    if (game.index === 129) {
+        //        console.log('WAIT');
+        //    }
+
+        //console.info(startTile, stopTile);
+
+        startTile = game.getTileFromId(startTile);
+        stopTile = game.getTileFromId(stopTile);
+
+//        if (game.getPlayerTile().id !== startTile.id) {
+//            let pTile = game.getPlayerTile().id;
+//            let sTile = startTile.id;
+//            console.error('Tile mismatch! Player Tile: ' + pTile + ' / Start Tile: ' + sTile);
+//        }
+
+        
+        // Determine displacement from startTile to stopTile
+        var displacement = {
+            row: 0,
+            col: 0
+        };
+
+        displacement.row = stopTile.row - startTile.row;
+        displacement.col = stopTile.col - startTile.col;
+
+        var KEYPRESS = 'UP';    
+        // Use displacement to determine direction
+        if (displacement.row === -1) {
+            KEYPRESS = 'UP';
+        }
+        else if (displacement.row === +1) {
+            KEYPRESS = 'DOWN';
+        }
+        else if (displacement.col === -1) {
+            KEYPRESS = 'LEFT';
+        }
+        else if (displacement.col === +1) {
+            KEYPRESS = 'RIGHT';
+        }
+
+        
+        this.keypressList.push(KEYPRESS);
+        // Simulate KEYPRESS in game
+        //game.KEYPRESS = KEYPRESS;
+        //this.index += 1;
+    }
+    
+    
+    
+};
 
 
 Pathfinder.prototype.simulateKeyPress = function() {
@@ -1672,6 +1799,9 @@ Pathfinder.prototype.makePath = function(node) {
     var parent = this.parent;
 
     while (node) {
+        
+        this.results.weight += this.getWeight(node);
+        
         if (this.PATH_STATE === 'PATH') {
             path.unshift(node);
         } else if (this.PATH_STATE === 'FRONTIER') {
@@ -1680,6 +1810,10 @@ Pathfinder.prototype.makePath = function(node) {
         
         node = parent[node];
     }   
+    
+    this.results.length += path.length;
+    
+    console.log(this.results);
     return path;
     
 };
@@ -1691,7 +1825,7 @@ Pathfinder.prototype.setupAlgorithm = function() {
     var algorithm = this.algorithm;
     
     this.game.logToUserConsole('----------------------------');
-    game.logToUserConsole('Running ' + this.algorithm.label + '...');
+    game.logToUserConsole('Running <span class="algorithm">' + this.algorithm.label + '</span> ...');
     
     
     if (algorithm.id === 0) {
@@ -1725,12 +1859,11 @@ Pathfinder.prototype.completeAlgorithm = function() {
         this.stepAlgorithm();        
     }
     
-    if (this.found) {
-        this.game.logToUserConsole('Target was successfully found!');
-        this.game.logToUserConsole('Total Length of Path: ' + this.path.length + ' tiles.')
-        this.game.logToUserConsole('Total Weight: ');
+    if (this.found) { 
+        this.logResults(); 
+        this.results.printed = true;
     }
-    
+
 };
 
 
@@ -1832,7 +1965,6 @@ Pathfinder.prototype.bfs_step = function() {
 
     
     if (!alltiles && vNode === target) {
-        console.log('Target found');
         this.makePath(vNode);
         this.found = true;
         this.complete = true;
@@ -1933,7 +2065,6 @@ Pathfinder.prototype.dfs_step = function() {
 
     
     if (!alltiles && vNode === target) {
-        game.logToUserConsole('Target found!');
         this.makePath(vNode);
         this.found = true;
         this.complete = true;
@@ -1969,9 +2100,13 @@ Pathfinder.prototype.dfs_step = function() {
 
 Pathfinder.prototype.dijkstra_setup = function() {
     
-    // Stack for iterative implementation
-    this.pq = new BinaryHeap(function(x){return x[1];});
+//    // Stack for iterative implementation
+//    this.pq = new BinaryHeap(function(x){return x[1];});
+//    var pq = this.pq;
+    
+    this.pq = new PriorityQueue();
     var pq = this.pq;
+    
 
     // Frontier structures
     var open = this.open;
@@ -1996,7 +2131,8 @@ Pathfinder.prototype.dijkstra_setup = function() {
     }
     
     cost[source] = 0;
-    pq.push([source, 0]);
+    pq.insert([source, 0]);
+    //pq.push([source, 0]);
     visited.add(source);
     open.add(source);
     
@@ -2022,24 +2158,23 @@ Pathfinder.prototype.dijkstra_step = function() {
     var target = this.target.tile.id;  
     var alltiles = this.target.all;
     
-    this.game.logToUserConsole(pq.size());
+    //this.game.logToUserConsole(pq.size());
     
     // Return if queue is empty
-    if (pq.size() <= 0) { 
+    if (pq.getSize() <= 0) { 
         console.log('Target not found');
         this.complete = true;
         return; 
     }  
     
     //console.time('pop node');
-    var vNode = pq.pop()[0];
+    var vNode = pq.deleteMin()[0];
     closed.add(vNode);
     open.delete(vNode);
     deltaFrontier.closed.push(vNode);
     //console.timeEnd('pop node');
     
     if (!alltiles && vNode === target) {
-        this.game.logToUserConsole('Target found!');
         this.makePath(vNode);
         this.found = true;
         this.complete = true;
@@ -2055,7 +2190,7 @@ Pathfinder.prototype.dijkstra_step = function() {
         if (relax < cost[uNode]) {
             cost[uNode] = relax;
             parent[uNode] = vNode;
-            pq.push([uNode, relax]);
+            pq.insert([uNode, relax]);
             
             open.add(uNode);  
             deltaFrontier.open.push(uNode);
@@ -2074,7 +2209,10 @@ Pathfinder.prototype.dijkstra_step = function() {
 Pathfinder.prototype.astar_setup = function() {
     
     // Stack for iterative implementation
-    this.pq = new BinaryHeap(function(x){return x[1];});
+//    this.pq = new BinaryHeap(function(x){return x[1];});
+//    var pq = this.pq;
+    
+    this.pq = new PriorityQueue();
     var pq = this.pq;
 
     // Frontier structures
@@ -2111,7 +2249,7 @@ Pathfinder.prototype.astar_setup = function() {
     
     gCost[source] = 0;
     fCost[source] = 0;
-    pq.push([source, fCost[source]]);
+    pq.insert([source, fCost[source]]);
     visited.add(source);
     open.add(source);
     
@@ -2137,24 +2275,23 @@ Pathfinder.prototype.astar_step = function() {
     var source = this.source.tile.id;
     var target = this.target.tile.id;   
     
-    this.game.logToUserConsole(pq.size());
+    //this.game.logToUserConsole(pq.size());
     
     // Return if queue is empty
-    if (pq.size() <= 0) { 
+    if (pq.getSize() <= 0) { 
         console.log('Target not found');
         this.complete = true;
         return; 
     }  
     
     //console.time('pop node');
-    var vNode = pq.pop()[0];
+    var vNode = pq.deleteMin()[0];
     closed.add(vNode);
     open.delete(vNode);
     deltaFrontier.closed.push(vNode);
     //console.timeEnd('pop node');
     
     if (vNode === target) {
-        this.game.logToUserConsole('Target found!');
         this.makePath(vNode);
         this.found = true;
         this.complete = true;
@@ -2176,7 +2313,7 @@ Pathfinder.prototype.astar_step = function() {
             
             fCost[uNode] = gCost[uNode] + hCost;
             
-            pq.push([uNode, fCost[uNode]]);
+            pq.insert([uNode, fCost[uNode]]);
             open.add(uNode);  
             deltaFrontier.open.push(uNode);
         }    

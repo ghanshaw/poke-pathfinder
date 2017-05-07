@@ -30,39 +30,62 @@ var spritesheet_data = (function() {
                     STRAIGHT: [0, 10],
                     RIGHT: [0, 11],
                 },
-            },   
+            }, 
+            
+            RUN: {
+                DOWN: {
+                    LEFT: [1, 0],
+                    STRAIGHT: [1, 1],
+                    RIGHT: [1, 2],
+                },
+                UP: {
+                    LEFT: [1, 3],
+                    STRAIGHT: [1, 4],
+                    RIGHT: [1, 5],
+                },
+                LEFT: {
+                    LEFT: [1, 6],
+                    STRAIGHT: [1, 7],
+                    RIGHT: [1, 8],
+                },
+                RIGHT: {
+                    LEFT: [1, 9],
+                    STRAIGHT: [1, 10],
+                    RIGHT: [1, 11],
+                },
+            },  
             
             SURF: {
                 DOWN: {
-                    UP: [1, 0],
-                    DOWN: [1, 1],
+                    UP: [2, 0],
+                    DOWN: [2, 1],
                 },
                 UP: {
-                    UP: [1, 2],
-                    DOWN: [1, 3],
+                    UP: [2, 2],
+                    DOWN: [2, 3],
                 },
                 LEFT: {
-                    UP: [1, 4],
-                    DOWN: [1, 5],
+                    UP: [2, 4],
+                    DOWN: [2, 5],
                 },
                 RIGHT: {
-                    UP: [1, 6],
-                    DOWN: [1, 7],
+                    UP: [2, 6],
+                    DOWN: [2, 7],
                 },
             },
             
             JUMP: {
                 DOWN: {
-                    STRAIGHT: [1, 8],
+                    STRAIGHT: [2, 8],
                 },
                 UP: {
-                    STRAIGHT: [1, 9],
+                    STRAIGHT: [2, 9],
                 },
                 LEFT: {
-                    STRAIGHT: [1, 10],
+                    STRAIGHT: [2, 10],
                 },
                 RIGHT: {
-                    STRAIGHT: [1, 11],
+                    STRAIGHT: [2, 11],
                 },
             },
         },
@@ -70,58 +93,81 @@ var spritesheet_data = (function() {
         GIRL: {
             WALK: {
                 DOWN: {
-                    LEFT: [2, 0],
-                    STRAIGHT: [2, 1],
-                    RIGHT: [2, 2],
+                    LEFT: [3, 0],
+                    STRAIGHT: [3, 1],
+                    RIGHT: [3, 2],
                 },
                 UP: {
-                    LEFT: [2, 3],
-                    STRAIGHT: [2, 4],
-                    RIGHT: [2, 5],
+                    LEFT: [3, 3],
+                    STRAIGHT: [3, 4],
+                    RIGHT: [3, 5],
                 },
                 LEFT: {
-                    LEFT: [2, 6],
-                    STRAIGHT: [2, 7],
-                    RIGHT: [2, 8],
+                    LEFT: [3, 6],
+                    STRAIGHT: [3, 7],
+                    RIGHT: [3, 8],
                 },
                 RIGHT: {
-                    LEFT: [2, 9],
-                    STRAIGHT: [2, 10],
-                    RIGHT: [2, 11],
+                    LEFT: [3, 9],
+                    STRAIGHT: [3, 10],
+                    RIGHT: [3, 11],
+                },
+            }, 
+            
+            RUN: {
+                DOWN: {
+                    LEFT: [4, 0],
+                    STRAIGHT: [4, 1],
+                    RIGHT: [4, 2],
+                },
+                UP: {
+                    LEFT: [4, 3],
+                    STRAIGHT: [4, 4],
+                    RIGHT: [4, 5],
+                },
+                LEFT: {
+                    LEFT: [4, 6],
+                    STRAIGHT: [4, 7],
+                    RIGHT: [4, 8],
+                },
+                RIGHT: {
+                    LEFT: [4, 9],
+                    STRAIGHT: [4, 10],
+                    RIGHT: [4, 11],
                 },
             },   
             
             SURF: {
                 DOWN: {
-                    UP: [3, 0],
-                    DOWN: [3, 1],
+                    UP: [5, 0],
+                    DOWN: [5, 1],
                 },
                 UP: {
-                    UP: [3, 2],
-                    DOWN: [3, 3],
+                    UP: [5, 2],
+                    DOWN: [5, 3],
                 },
                 LEFT: {
-                    UP: [3, 4],
-                    DOWN: [3, 5],
+                    UP: [5, 4],
+                    DOWN: [5, 5],
                 },
                 RIGHT: {
-                    UP: [3, 6],
-                    DOWN: [3, 7],
+                    UP: [5, 6],
+                    DOWN: [5, 7],
                 },
             },
             
             JUMP: {
                 DOWN: {
-                    STRAIGHT: [3, 8],
+                    STRAIGHT: [5, 8],
                 },
                 UP: {
-                    STRAIGHT: [3, 9],
+                    STRAIGHT: [5, 9],
                 },
                 LEFT: {
-                    STRAIGHT: [3, 10],
+                    STRAIGHT: [5, 10],
                 },
                 RIGHT: {
-                    STRAIGHT: [3, 11],
+                    STRAIGHT: [5, 11],
                 },
             },
         }
@@ -130,72 +176,75 @@ var spritesheet_data = (function() {
     // Surfing pokemon
     var pokemon = {
         DOWN: {
-            UP: [4, 0],
-            DOWN: [4, 1]
+            UP: [6, 0],
+            DOWN: [6, 1]
         },
         UP: {
-            UP: [4, 2],
-            DOWN: [4, 3]
+            UP: [6, 2],
+            DOWN: [6, 3]
         },
         LEFT: {
-            UP: [4, 4],
-            DOWN: [4, 5]
+            UP: [6, 4],
+            DOWN: [6, 5]
         },
         RIGHT: {
-            UP: [4, 6],
-            DOWN: [4, 7]
+            UP: [6, 6],
+            DOWN: [6, 7]
         }
     };
     
     var dust = {
-        1: [4, 8],
-        2: [4, 9],
-        3: [4, 10]
+        1: [6, 8],
+        2: [6, 9],
+        3: [6, 10]
     };
-    
-    var obstacle = {
-        MEWTWO: [7, 0],
-        POKEBALL: [7, 1],
-        BOULDER: [7, 2]
-    };
+   
     
     // Head used for pathfinding
     var head = {
         BOY: {
-            DOWN: [5, 0],
-            UP: [5, 1],
-            LEFT: [5, 2],
-            RIGHT: [5, 3],
+            DOWN: [7, 0],
+            UP: [7, 1],
+            LEFT: [7, 2],
+            RIGHT: [7, 3],
         },
         GIRL: {
-            DOWN: [5, 4],
-            UP: [5, 5],
-            LEFT: [5, 6],
-            RIGHT: [5, 7],
+            DOWN: [7, 4],
+            UP: [7, 5],
+            LEFT: [7, 6],
+            RIGHT: [7, 7],
+        }
+    };
+    
+   var obstacle = {
+        MEWTWO: [8, 0],
+        POKEBALL: [8, 1],
+        BOULDER: [8, 2]
+    };
+    
+  
+    var tile = {
+        WATER: {
+            0: [9, 0], 
+            1: [9, 1], 
+            2: [9, 2], 
+            3: [9, 3], 
+            4: [9, 4], 
+            5: [9, 5], 
+            6: [9, 6], 
+            7: [9, 7] 
+        },
+        ROCK: {
+            0: [9, 8]
         }
     };
     
     // Flags used for designating source and target of pathfinder
     var flag = {
-        SOURCE: [6, 0],
-        TARGET: [6, 1]
+        SOURCE: [10, 0],
+        TARGET: [10, 1]
     };
 
-    var tile = {
-        WATER: {
-            0: [8, 0], 
-            1: [8, 1], 
-            2: [8, 2], 
-            3: [8, 3], 
-            4: [8, 4], 
-            5: [8, 5], 
-            6: [8, 6], 
-            7: [8, 7] 
-        },
-        ROCK: {
-            0: [8, 8]
-        }
-    };
 
     
     return {

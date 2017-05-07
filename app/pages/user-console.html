@@ -1,9 +1,6 @@
-<div class="consoleWrapper">
+<div class="user-console-wrapper container-fluid">
     <div class="row">
         <div class="col-sm-12"> 
-            
-            <button class="button-flat hide" ng-click="debugClick()">Debug Button</button>
-            <button class="button-flat hide" ng-click="debugClick2()">Debug Button 2</button>
                 
             <section>
                 <h4 class="section-heading">Step 1: Choose Algorithm</h4>
@@ -129,7 +126,7 @@
                 <h4 class="section-heading">Step 3: Choose End Location</h4>
                 <div class="row">
                     <div class="col-xs-12">         
-                        <div class="dropdow">
+                        <div>
                             <select 
                                 class="button-flat"
                                 ng-model="locations.target" 
@@ -181,7 +178,7 @@
                     <div class="col-xs-12">         
                         <button 
                             class="button-flat full-width" 
-                            ng-click="startPathfinder('PATH')"
+                            ng-click="startPathfinder('PATH'); openSidePanel(false)"
                             ng-class="pathfindertask.path.button">Follow Path</button>               
                     </div>
                         
@@ -190,7 +187,7 @@
                     <div class="col-xs-12">                   
                         <button 
                             class="button-flat"
-                            ng-click="startPathfinder('FRONTIER')"
+                            ng-click="startPathfinder('FRONTIER'); openSidePanel(false)"
                             ng-class="pathfindertask.frontier.button">Generate Frontier</button>
                     </div>
                         
@@ -227,16 +224,21 @@
                     <div class="col-xs-12">
                         <button 
                             class="button-flat full-width"
-                            ng-click="clearPathfinder()">Cancel</button>
+                            ng-click="clearPathfinder(); openSidePanel(false)">Cancel</button>
                     </div>
                         
                     <div class="col-xs-12">
                         <div class="row">
                             <div class="col-xs-12">
                                 <h5>Activity Log:</h5>
-                                <div class="log">                                
-                                    <span ng-repeat="line in message.log track by $index">{{ line }}<br></span>
-                                        
+                                <div class="activity-log">  
+                                    <div class="wrapper">
+                                        <div 
+                                            class="line" 
+                                            repeat-end="updateLogHeight()"
+                                            ng-bind-html="line"
+                                            ng-repeat="line in message.log track by $index">{{ line }}</div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -303,7 +305,7 @@
                                 ng-click="clickSpeed(1)"
                                 ng-mouseenter="enterSpeed(1)" 
                                 ng-mouseleave="leaveSpeed(1)"
-                                ng-class="{ active: speed.click === 1 }" >1x</button>
+                                ng-class="{ active: speed.button.click === 1 }" >1x</button>
                     </div>
                         
                     <div class="col-xs-4"> 
@@ -311,7 +313,7 @@
                                 ng-click="clickSpeed(2)"
                                 ng-mouseenter="enterSpeed(2)" 
                                 ng-mouseleave="leaveSpeed(2)"
-                                ng-class="{ active: speed.click === 2 }" >2x</button>
+                                ng-class="{ active: speed.button.click === 2 }" >2x</button>
                     </div>
                         
                     <div class="col-xs-4"> 
@@ -319,7 +321,7 @@
                                 ng-click="clickSpeed(3)"
                                 ng-mouseenter="enterSpeed(3)" 
                                 ng-mouseleave="leaveSpeed(3)"
-                                ng-class="{ active: speed.click === 3 }" >3x</button>
+                                ng-class="{ active: speed.button.click === 3 }" >3x</button>
                     </div>
                 </div>
             </section>
@@ -334,14 +336,14 @@
                                 ng-click="clickGender('BOY')"
                                 ng-mouseenter="enterGender('BOY')" 
                                 ng-mouseleave="leaveGender('BOY')"
-                                ng-class="{ active: GENDER.click === 'BOY' }" >Male</button>
+                                ng-class="{ active: gender.button.click === 'BOY' }" >Male</button>
                     </div>
                     <div class="col-xs-6 col-sm-4"> 
                         <button class="button-flat"
                                 ng-click="clickGender('GIRL')"
                                 ng-mouseenter="enterGender('GIRL')" 
                                 ng-mouseleave="leaveGender('GIRL')"
-                                ng-class="{ active: GENDER.click === 'GIRL' }" >Female</button>
+                                ng-class="{ active: gender.button.click === 'GIRL' }" >Female</button>
                     </div>
                 </div>
             </section>

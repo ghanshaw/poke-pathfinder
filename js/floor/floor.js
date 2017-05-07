@@ -1163,3 +1163,8 @@ Floor.prototype.drawShape = function(shape, tile, color) {
     }
     
 };
+
+Floor.prototype.hasWater = function() {
+    var water = this.floor_data.water();
+    return Object.keys(water).length !== 0;
+};

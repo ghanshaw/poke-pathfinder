@@ -53,6 +53,8 @@ var Monitor = function(game) {
     this.relativeOrder = [ 'F2', 'F1', 'BF1' ];
     
     this.rockGreen = '#4CAF50';
+    
+    this.anchors = {};
 };
 
 Monitor.prototype.init = function() {
@@ -374,15 +376,19 @@ Monitor.prototype.initFloors = function() {
         floor.foreground.img.addClass('layer');
 
         
-        let waterlayer = game.getWaterlayer();
-        for (let imgWater of waterlayer.img) {
-            let img = $(imgWater).clone();
-            img.addClass('layer');
-            img.css('z-index', this.zIndex.waterlayer);
-            floor.waterlayer.img.push(img);
-        }
-        floor.waterlayer.rows = waterlayer.rows;
-        floor.waterlayer.cols = waterlayer.cols;
+        if (game.floorHasWater(f)) {
+        
+            let waterlayer = game.getWaterlayer();
+            for (let imgWater of waterlayer.img) {
+                let img = $(imgWater).clone();
+                img.addClass('layer');
+                img.css('z-index', this.zIndex.waterlayer);
+                floor.waterlayer.img.push(img);
+            }
+            floor.waterlayer.rows = waterlayer.rows;
+            floor.waterlayer.cols = waterlayer.cols;
+            
+        };
         
         // Append all the elements to the monitor
         this.appendImgToDom(floor.background.img);
@@ -457,6 +463,9 @@ Monitor.prototype.resizeFloors = function() {
         var offset_left = (max_floor_cols - cols)/2 + this.floorborder.cols;
         offset_left *= this.tile_size;
         
+        floor.rows = rows;
+        floor.cols = cols;
+        
         floor.top = offset_top;
         floor.left = offset_left;
         
@@ -477,8 +486,8 @@ Monitor.prototype.resizeFloors = function() {
         $(background.img).css('left', floor.left);
         
         
-        let waterWidth = waterlayer.cols * this.tile_size;
-        let waterHeight = waterlayer.rows * this.tile_size;
+        let waterWidth = (floor.cols - .5) * this.tile_size;
+        let waterHeight = (floor.rows - .5) * this.tile_size;
         let fromTop = 0;
         let fromRight = waterWidth - width;
         let fromBottom = waterHeight - height;
@@ -493,6 +502,11 @@ Monitor.prototype.resizeFloors = function() {
             $(img).css('top', floor.top);
             $(img).css('left', floor.left);
             $(img).css('clip-path', clipPath);
+        };
+        
+        this.anchors[f] = {
+            top: prev_height,
+            bottom: prev_height + height + (this.floorborder.rows * this.tile_size)
         };
         
         // Store height for next floor
@@ -803,7 +817,11 @@ Monitor.prototype.updateWaterlayer = function() {
     if (i !== this.currentLayer) {   
         for (let f in this.floors) {
 
-            let floor = this.floors[f];         
+            let floor = this.floors[f];  
+            
+            // Skip floors without water
+            if (floor.waterlayer.img.length === 0) { continue; }
+            
             floor.waterlayer.img[this.currentLayer].hide(0);
             floor.waterlayer.img[i].show(0);
 
