@@ -1,11 +1,12 @@
 <!DOCTYPE html>
 <html lang="en-us">
     <head>
-        <title>Poke-Path Finder</title>
+        <title>Poke-PathFinder</title>
+        <link rel='shortcut icon' type='image/x-icon' href='/favicon.ico' />
         <meta http-equiv="X-UA-Compatible" content="IE=Edge">
         <meta charset="UTF-8">
 	<meta content="width=device-width, height=device-height, initial-scale=1, user-scalable=no" name="viewport">
-            
+        
         <!-- Bootstrap -->
         <!-- Latest compiled and minified CSS -->
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
@@ -61,11 +62,12 @@
         <script src="app/controllers/monitor-controller.js"></script> 
         <script src="app/controllers/index-controller.js"></script> 
         <script src="app/directives/directives.js"></script> 
-            
-        <link rel="stylesheet" href="css/style.css">
+        
         <link rel="stylesheet" href="css/gameboy.css">
+        <link rel="stylesheet" href="css/style.css">        
         <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,700" rel="stylesheet">
-        <link href="https://fonts.googleapis.com/css?family=Montserrat:300,400,700,900" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css?family=Montserrat:100,200,300,400,700,900" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css?family=Nunito+Sans" rel="stylesheet">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
             
             
@@ -99,9 +101,11 @@
             
         </header>
         
-        <nav class="navbar navbar-default">
+        <nav 
+            class="navbar navbar-default"
+            ng-class="{ 'centered' : !viewswitcher.visible }">
             <div class="container-fluid">
-                <div class="hamburger-container" 
+                <div class="menu-container" 
                      ng-class="{ 'clicked' : panel.open }"
                      ng-click="toggleSidePanel()" >
                     <div class="bar1"></div>
@@ -109,21 +113,22 @@
                     <div class="bar3"></div>
                     <div class="bar4"></div>
                 </div>
-                <div class="navbar-header">
+                <div class="brand-container">
                     <a class="navbar-brand" href="#"><img class="header logo" src="images/logo-poke-pathfinder.png" alt=""/></a>
-                    
+                        
                 </div>
-                    
-                <ul class="links pull-right">
-                    <li 
-                        class="active"
-                        ng-click="toggleAbout()"><a href="">About</a></li>
-                </ul>
+                <div class="links-container">
+                    <ul class="links pull-right">
+                        <li 
+                            class="active"
+                            ng-click="toggleAbout()"><a href="">About</a></li>
+                    </ul>
+                </div>
             </div>
         </nav>
             
             
-        <div class="map-files" style="display: none">
+        <div class="image-files" style="display: none">
             <img id="spritesheet-color" src="images/spritesheet_color.png" alt>
             <img id="spritesheet-bw" src="images/spritesheet_bw.png" alt>
             <img id="rocklayer" src="images/map/rocklayer.png" alt>
@@ -148,9 +153,8 @@
             
         <div class="content">
             <div class="container-fluid">
-                <div class="about-container ng-hide" 
-                    ng-include 
-                    ng-show="about.visible" 
+                <div ng-include
+                    onload="enableScrollEffect()"        
                     src="'app/pages/about.html'"></div>
                 <div class="side-panel panel-closed" ng-class="cssSidePanel()" set-class-when-at-top="fix-to-top">
                     <div class="row">
@@ -165,7 +169,20 @@
                     ng-click="openSidePanel(false)"></div>
                 
                 <div class="row page-content">
-                    <div class="col-xs-12" set-class-when-at-top="col-sm-offet-3">        
+                    <div class="col-xs-12" set-class-when-at-top="col-sm-offet-3">   
+                        <div class="info-box">
+                            <div class="button" ng-click="toggleHowTo()"><i class="fa fa-info" aria-hidden="true"></i></div>
+                            <div class="how-to-play ng-hide" ng-show="howto.show">
+                                <h3>How to Play!</h4>
+                                <ol>
+                                <li>Move by touching or clicking the directional pad, or using the d-pad on your keyboard. 
+                                    Hold B to run and press A to switch genders.</li>
+                                <li>See if you can find Mewtwo on your own, or use the side-panel to activate the pathfinder.</li>
+                                <li>Using the pathfinder, you can find a path from any two points in the cave.</li>
+                                <li>Have fun!</li>
+                                </ol>
+                            </div>  
+                        </div>
                         <div class="view-switch-wrapper ng-hide"
                              ng-show="viewswitcher.visible">
                             <span 
@@ -198,15 +215,24 @@
         </div>  
         
         <footer>
-            <div class="container">
-                <div class="row is-flex">
+            <div class="container-fluid">
+                <div class="row">
+                    
+                    <div class="col-xs-12 col-sm-3 col-md-3"><p class="">Poke-Pathfinder. 2017.</p></div>
+                    <div class="col-xs-12 col-sm-3 col-md-offset-2 col-md-3"><p class="">Designed and Developed by <a href="www.greerhanshaw.com">Greer Hanshaw</a></p></div>
+                    <div class="col-xs-offset-3 col-xs-3 col-sm-offset-0 col-sm-3 col-md-2"><p class=""><a href="https://www.linkedin.com/in/greer-hanshaw">LinkedIn</a></p></div>
+                        
+                        <div class="col-xs-3 col-sm-3 col-md-2"><p class=""><a href="https://github.com/ghanshaw">Github</a></p></div>
+                 
+                 
+                <!-- <div class="row">
                     <div class="col-md-6 text-center justify-content-center">
-                        <p class="">Poke-Pathfinder. © Copyright 2017 </p>
+                       
                     </div>
                     <div class="col-md-6 text-center justify-content-center">
-                        <p class="">greerhanshaw.com</p>
+                        
                     </div>
-                </div>
+                </div> -->
             </div>
             
         </footer>
@@ -215,15 +241,4 @@
             
         </div>
     </body>    
-    
-    <script>
-    
-//        function myFunction(x) {
-//            console.log('clicked menu button!');
-//            x.classList.toggle("change");
-//            $('.side-bar').toggleClass('console-open');
-//            $('.side-bar').toggleClass('console-closed');
-//        }
-    
-    </script>
 </html>

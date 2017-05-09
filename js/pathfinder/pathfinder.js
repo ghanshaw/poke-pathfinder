@@ -89,8 +89,8 @@ Pathfinder.prototype.init = function() {
     
     // If target is an obstacle, move target to one of its neighbors
     if (this.target.tile.obstacle) {
-        var neighbors = this.game.graph.getAdj(this.target.tile.id);
-        var tileId = neighbors[0].to();
+        var neighbors = this.game.graph.getNeighbors(this.target.tile.id);
+        var tileId = neighbors[0];
         this.target.tile = this.game.getTileFromId(tileId);
     } 
     
@@ -477,19 +477,19 @@ Pathfinder.prototype.endDragMode = function() {
 
 Pathfinder.prototype.drawDrag = function() {
   
-  var canvas = null;
-  if (this.PATH_STATE === 'DRAG SOURCE') {
-      canvas = this.pointmarker.source.canvas;
-  }
-  else if (this.PATH_STATE === 'DRAG TARGET') {
-      canvas = this.pointmarker.target.canvas;
-  }
+    var canvas = null;
+    if (this.PATH_STATE === 'DRAG SOURCE') {
+        canvas = this.pointmarker.source.canvas;
+    }
+    else if (this.PATH_STATE === 'DRAG TARGET') {
+        canvas = this.pointmarker.target.canvas;
+    }
   
-  if (canvas && this.dragTile) {
-      //this.game.drawShape('circle', this.dragTile);
-      let dof = this.dragTile.dof;
-      this.game.drawImageToScreen(canvas, 'tile', this.dragTile.floor.id, dof, this.dragTile, 2);
-  }
+    if (canvas && this.dragTile) {
+        //this.game.drawShape('circle', this.dragTile);
+        let dof = this.dragTile.dof;
+        this.game.drawImageToScreen(canvas, 'tile', this.dragTile.floor.id, dof, this.dragTile, 2);
+    }
     
 };
 
@@ -516,8 +516,8 @@ Pathfinder.prototype.startMarkMode = function(state) {
             this.pointmarker.source.tile = this.source.tile;
             
             userConsole.showPointMarker('SOURCE', true);
-//            userConsole.activatePointMarkerButton('SOURCE', true);
-//            userConsole.disablePointMarkerCheckbox('SOURCE', true);
+            //            userConsole.activatePointMarkerButton('SOURCE', true);
+            //            userConsole.disablePointMarkerCheckbox('SOURCE', true);
             
             this.PATH_STATE = 'OFF';
             return;  
@@ -545,7 +545,7 @@ Pathfinder.prototype.startMarkMode = function(state) {
     // Just clicked 'MARK TARGET'
     if (state === 'MARK TARGET') {
             
-         // Was already 'MARK TARGET' --> 'MARK TARGET' : deactivate    
+        // Was already 'MARK TARGET' --> 'MARK TARGET' : deactivate    
         if (this.PATH_STATE === 'MARK TARGET') {
             this.pointmarker.target.tile = this.target.tile;
             userConsole.showPointMarker('TARGET', true);
@@ -672,7 +672,7 @@ Pathfinder.prototype.startFrontierPather = function(state) {
     // Turn off pathfinder, if in progress
     this.clearPathfinder();
    
-   // Get algorithm
+    // Get algorithm
     this.algorithm = userConsole.getSelectedAlgorithm();
     
 
@@ -692,8 +692,8 @@ Pathfinder.prototype.startFrontierPather = function(state) {
     
     // If target is an obstacle, move target to one of its neighbors
     if (this.target.tile.obstacle) {
-        var neighbors = this.game.graph.getAdj(this.target.tile.id);
-        var tileId = neighbors[0].to();
+        var neighbors = this.game.graph.getNeighbors(this.target.tile.id);
+        var tileId = neighbors[0];
         this.target.tile = game.getTileFromId(tileId);
     } 
     
@@ -738,7 +738,10 @@ Pathfinder.prototype.startFrontierPather = function(state) {
     this.deltaFrontier = {
         open: [],
         closed: []
-    },
+    };
+    // List of ladders I will return to
+    this.ladderset = new Set();
+    this.laddertype = {};
     
     this.cost = {};
     this.path = [];
@@ -809,15 +812,15 @@ Pathfinder.prototype.updateFrontier = function() {
     if (!this.complete) {
 
         // Step through algorithm
-       console.time('step algorithm');
+        console.time('step algorithm');
         this.stepAlgorithm();
         console.timeEnd('step algorithm');
 
-//        console.log('Open List: ')
-//        console.log(this.deltaFrontier.open);
-//
-//        console.log('Closed List: ')
-//        console.log(this.deltaFrontier.closed);
+        //        console.log('Open List: ')
+        //        console.log(this.deltaFrontier.open);
+        //
+        //        console.log('Closed List: ')
+        //        console.log(this.deltaFrontier.closed);
 
         var open = this.deltaFrontier.open;
         var closed = this.deltaFrontier.closed;
@@ -938,7 +941,7 @@ Pathfinder.prototype.constructPath = function() {
         let tile_size = pathFloor.tile_size;
         
         var layer;
-         if (tile.dof === 'FOREGROUND') {
+        if (tile.dof === 'FOREGROUND') {
             layer = pathFloor.pathlayer.foreground;
         }
 
@@ -1061,24 +1064,24 @@ Pathfinder.prototype.updatePath = function() {
     
     
     //this.constructPath();
-//    this.createKeypressList();
-//    console.log(this.keypressList);
-//    
-//    this.simulateKeyPress();
-//    
-//    
+    //    this.createKeypressList();
+    //    console.log(this.keypressList);
+    //    
+    //    this.simulateKeyPress();
+    //    
+    //    
 
     
     
-//    if (this.LAYER === 'PATH') {
-//        
-//    }
-//    
-//    if (this.PATH_STATE !== 'OFF') {
-//        //this.game.updatePlayer();
-//        //this.appendPath();
-//        
-//    };
+    //    if (this.LAYER === 'PATH') {
+    //        
+    //    }
+    //    
+    //    if (this.PATH_STATE !== 'OFF') {
+    //        //this.game.updatePlayer();
+    //        //this.appendPath();
+    //        
+    //    };
     
 };
 
@@ -1166,25 +1169,25 @@ Pathfinder.prototype.setConsoleAlgorithm = function(algorithm) {
 
 Pathfinder.prototype.runAlgorithm = function(state) {
      
-//    var algorithm = this.console.algorithm;
-//     
-//    // Run BFS
-//    if (algorithm.id === 0) {
-//        this.bfs();
-//    }
-//    // Run DFS
-//    else if (algorithm.id === 1) {
-//        this.dfs();
-//    }  
-//    // Run Dijkstra's
-//    else if (algorithm.id === 2) {
-//        this.dijkstra();
-//    }
-//    // Run A*
-//    else if (algorithm.id === 3) {
-//        this.astar();   
-//    }
-//        
+    //    var algorithm = this.console.algorithm;
+    //     
+    //    // Run BFS
+    //    if (algorithm.id === 0) {
+    //        this.bfs();
+    //    }
+    //    // Run DFS
+    //    else if (algorithm.id === 1) {
+    //        this.dfs();
+    //    }  
+    //    // Run Dijkstra's
+    //    else if (algorithm.id === 2) {
+    //        this.dijkstra();
+    //    }
+    //    // Run A*
+    //    else if (algorithm.id === 3) {
+    //        this.astar();   
+    //    }
+    //        
 };
 
  
@@ -1316,15 +1319,15 @@ Pathfinder.prototype.drawMarkers = function() {
 
     }
 
-//    if (this.pointMarker.target.show) {
-//        let tile = this.pointMarker.target.tile;
-//
-//        // If on current floor and DOF
-//        if (tile.floor.id === floor.id && tile.dof === dof) {
-//            floor.drawImageToFrame(this.pointMarker.target.canvas, tile, 2);
-//        }
-//
-//    }
+    //    if (this.pointMarker.target.show) {
+    //        let tile = this.pointMarker.target.tile;
+    //
+    //        // If on current floor and DOF
+    //        if (tile.floor.id === floor.id && tile.dof === dof) {
+    //            floor.drawImageToFrame(this.pointMarker.target.canvas, tile, 2);
+    //        }
+    //
+    //    }
 
     // if (this.flagSource.show &&
     //         (game.getPlayerTile().id !== this.flagSource.tile.id)) {
@@ -1666,11 +1669,11 @@ Pathfinder.prototype.createKeypressList = function() {
         startTile = game.getTileFromId(startTile);
         stopTile = game.getTileFromId(stopTile);
 
-//        if (game.getPlayerTile().id !== startTile.id) {
-//            let pTile = game.getPlayerTile().id;
-//            let sTile = startTile.id;
-//            console.error('Tile mismatch! Player Tile: ' + pTile + ' / Start Tile: ' + sTile);
-//        }
+        //        if (game.getPlayerTile().id !== startTile.id) {
+        //            let pTile = game.getPlayerTile().id;
+        //            let sTile = startTile.id;
+        //            console.error('Tile mismatch! Player Tile: ' + pTile + ' / Start Tile: ' + sTile);
+        //        }
 
         
         // Determine displacement from startTile to stopTile
@@ -1797,19 +1800,53 @@ Pathfinder.prototype.makePath = function(node) {
     
     var path = this.path;
     var parent = this.parent;
-
+    var game = this.game;
+    
+    var i = 0;
     while (node) {
         
-        this.results.weight += this.getWeight(node);
+        var nTile = game.getTileFromId(node);
         
-        if (this.PATH_STATE === 'PATH') {
-            path.unshift(node);
-        } else if (this.PATH_STATE === 'FRONTIER') {
+        // If the first node is a ladder
+        if (i === -100) { 
+            // Do nothing 
+        } 
+        else {
+        
+            if (nTile.ladder) {
+
+                // Get other end
+                var otherEndTile = this.game.getTileOtherEndLadder(nTile);
+                var otherEnd = otherEndTile.id; 
+
+                path.push(otherEnd);
+
+            }
+
             path.push(node);
+
+            this.results.weight += this.getWeight(node);
+            
         }
         
+        
         node = parent[node];
+        i++;
     }   
+    
+    
+    if (this.source.tile.ladder) {
+        path.push(this.source.tile.id);
+    }
+    
+    if (this.target.tile.ladder) {
+        path.unshift(this.target.tile.id);
+    }
+    
+    if (this.PATH_STATE === 'PATH') {
+        path.reverse();
+    } 
+    
     
     this.results.length += path.length;
     
@@ -1913,12 +1950,22 @@ Pathfinder.prototype.bfs_setup = function() {
     var cost = this.cost;
 
     this.maxCost = game.getMapMaxDistance();
+    
+    
 
     // Pathfining structures
     var parent = this.parent;
     var visited = this.visited;
     var source = this.source.tile.id;
     var target = this.target.tile.id;
+
+    // Special case for ladders
+    if (this.source.tile.ladder) {
+        var neighbors = this.graph.getNeighbors(this.source.tile.id);
+        source = neighbors[0];
+    }
+    
+    
 
     // Setup algorithm
     parent[source] = null;
@@ -1952,17 +1999,27 @@ Pathfinder.prototype.bfs_step = function() {
     // Pathfining structures
     var parent = this.parent;
     var visited = this.visited;
-    var source = this.source.tile.id;
+    //var source = this.source.tile.id;
     var target = this.target.tile.id;
+    
+    // Special case for ladders
+    if (this.target.tile.ladder) {
+        var otherEndTile = this.game.getTileOtherEndLadder(this.target.tile);
+        var otherEnd = otherEndTile.id;
+        
+        var target = otherEnd;
+    }
     
     var alltiles = this.target.all;
     
 
-    vNode = q.shift();
+    var vNode = q.shift();
+    
     closed.add(vNode);
     open.delete(vNode);
     deltaFrontier.closed.push(vNode);
 
+    
     
     if (!alltiles && vNode === target) {
         this.makePath(vNode);
@@ -1973,11 +2030,20 @@ Pathfinder.prototype.bfs_step = function() {
         //return this.path;
     }
     
-    for (let edge of this.graph.getAdj(vNode)) {
+    var neighbors = this.getNeighbors(vNode, target);
+    
+    for (let neigh of neighbors) {
         
-        let uNode = edge.to();
+        let uNode = neigh;
+        
+        //console.log(vNode, uNode);        
         
         if (!visited.has(uNode)) {
+            
+            //            var consider = this.ladderCheck(vNode, uNode);
+            //            if (!consider) {
+            //                continue;
+            //            }
             
             visited.add(uNode);
             parent[uNode] = vNode;
@@ -1990,8 +2056,246 @@ Pathfinder.prototype.bfs_step = function() {
             let c = cost[vNode];
             cost[uNode] = c + 1;
         }
+         
     }
+    
+    //    // Add ladder to ladder set after visiting all of its neighbors (for the first time)
+    //    if (vTile.ladder) {
+    //        this.ladderset.add(vNode);
+    //    }
 };
+
+
+Pathfinder.prototype.getNeighbors = function(vNode, target) {
+    
+    var neighbors;
+    var vTile = this.game.getTileFromId(vNode);
+    
+    if (!vTile.ladder) {
+        
+        // Get your normal neighbors
+        neighbors = this.graph.getNeighbors(vNode);
+        
+    }
+    else {
+        
+        // Get other end
+        var otherEndTile = this.game.getTileOtherEndLadder(vTile);
+        var otherEnd = otherEndTile.id;
+        
+        neighbors = this.graph.getNeighbors(otherEnd);
+        
+//        if (otherEnd === target) {
+//            
+//            // Get your normal neighbors
+//            neighbors = this.graph.getNeighbors(vNode);
+//            
+//        } 
+//        else {
+//            // Treat other end's neighbors as adjacent tiles
+//            neighbors = this.graph.getNeighbors(otherEnd);
+//        }
+        
+    }
+    
+    return neighbors;
+};
+
+
+Pathfinder.prototype.ladderChec = function(vNode, uNode) {
+  
+    
+  
+    var game = this.game;
+    var vTile = game.getTileFromId(vNode);
+    
+    
+    // Get parent tile
+    var parent = this.parent[vNode];
+    var pTile = game.getTileFromId(parent);
+    
+    // Get neighbor tile
+    var uTile = game.getTileFromId(uNode);
+    
+    if (vTile.ladder) {
+        
+        // Get other end
+        var otherEndTile = game.getOtherEndLadderTile(vTile);
+        var otherEnd = otherEndTile.id;
+        
+        var neighbors = this.graph.getNeighbors(otherEnd);
+        
+        
+    }
+    
+    
+    
+    // Boolean indicates whether neighbor should be considered
+    var consider = true;
+    
+    // If current node is a ladder
+    if (vTile.ladder) {
+        
+        
+        // If node is in ladder set (already climbed)
+        if (this.ladderset.has(vNode)) {
+            
+            
+            // Cannot climb ladder from same direction twice
+            if (this.laddertype[vNode] === 'FROM') {
+                consider = false;
+                
+                // Remove from list of visited
+                this.visited.delete(vNode);
+            }
+            else {
+                consider = true;
+                
+                // Mark as visited
+            }
+                
+            //            // Get other end
+            //            var end = game.getOtherEndLadderTile(vTile);
+            //            
+            //            this.visited.delete(end.id)
+            //            
+            //            // If other end is also in ladder list
+            //            if (this.ladderset.has(end.id)) {
+            //                consider = true;
+            //            } else {
+            //                consider = false;
+            //            }
+            
+        }
+        // First time encountering this ladder
+        else {
+            
+            // If you don't have a parent (starting from the ladder)
+            if (!pTile) {
+                
+                // Only consider neighbors, ignor ladder's other end
+                if (uTile.ladder) {
+                    consider = false;
+                }
+                else {
+                    consider = true;
+                }
+                
+                // Mark as 'FROM' ladder
+                if (!this.laddertype.hasOwnProperty(vNode)) {
+                    this.laddertype[vNode] = 'FROM';
+                }
+                
+                // Remove from list of visited
+                this.visited.delete(vNode);
+            }
+            
+            // If parent is not a ladder
+            if (!pTile.ladder) {
+                
+                // Only consider ladder's other end, ignore other neighbors
+                if (uTile.ladder) {
+                    consider = true;
+                }
+                else {
+                    consider = false;
+                }    
+                
+                // Mark as 'FROM' ladder
+                if (!this.laddertype.hasOwnProperty(vNode)) {
+                    this.laddertype[vNode] = 'FROM';
+                }
+                
+                // Remove from list of visited
+                this.visited.delete(vNode);
+            }
+            // If parent is a ladder (you just climbed)
+            else if (pTile.ladder) {
+                
+                // Ignore ladder's other end
+                if (uTile.ladder) {
+                    consider = false;
+                }
+                else {
+                    consider = true;
+                } 
+                
+                //this.visited.delete(vNode);
+                
+                // First time seeing this ladder
+                if (!this.laddertype.hasOwnProperty(vNode)) {
+                    this.laddertype[vNode] = 'TO';
+                }
+                
+                // Remove from list of visited
+                this.visited.delete(vNode);
+                
+            }
+            
+            // Add node to ladder set
+            //this.ladderset.add(vNode);
+            
+            
+        }
+        
+    }
+    
+    return consider;
+        
+};
+        
+//        
+//        
+//        // Add ladder to ladder list
+//        this.ladders.push(vNode);
+//        
+//        
+//        
+//        
+//        vFloor = vTile.floor;
+//        
+//        // Check whether its neighbor is on the same floor as parent
+//        
+//        var uFloor = uTile.floor;
+//        
+//        if (vFloor.id === uFloor.id) {
+//            return;
+//        }
+//        
+//        
+//        var pFloor = pTile.floor;
+//        
+//        // If my parent is a ladder
+//        if (pTile.ladder) {
+//            
+//            // I'm allowed to check my neighbors
+//            return;
+//        }
+//        
+//        
+//        
+//        
+//        
+//        // If ladder and neighbor are on the same floor
+//        if (pTile && (uTile.floor.id === pTile.floor.id)) {
+//            
+//            
+//            // Don't mark ladder as visited
+//            
+//            // Ignore nodes on the same floor
+//            // Remove vNode from visited
+//            //this.visited.delete(vNode);
+//            
+//            return false;
+//        }
+//        else {
+//            return true;
+//        }
+//    }
+//    
+//    return true;
+//    
+//};
 
 
 /*******************************************/
@@ -2017,6 +2321,12 @@ Pathfinder.prototype.dfs_setup = function() {
     var visited = this.visited;
     var source = this.source.tile.id;
     var target = this.target.tile.id;
+    
+    // Special case for ladders
+    if (this.source.tile.ladder) {
+        var neighbors = this.graph.getNeighbors(this.source.tile.id);
+        source = neighbors[0];
+    }
 
     // Setup algorithm
     parent[source] = null;
@@ -2071,9 +2381,11 @@ Pathfinder.prototype.dfs_step = function() {
         return;
     }
     
-    for (let edge of this.graph.getAdj(vNode)) {
+    var neighbors = this.getNeighbors(vNode, target);
+    
+    for (let neigh of neighbors) {
         
-        let uNode = edge.to();
+        let uNode = neigh;
         
         if (!visited.has(uNode)) {
             
@@ -2100,9 +2412,9 @@ Pathfinder.prototype.dfs_step = function() {
 
 Pathfinder.prototype.dijkstra_setup = function() {
     
-//    // Stack for iterative implementation
-//    this.pq = new BinaryHeap(function(x){return x[1];});
-//    var pq = this.pq;
+    //    // Stack for iterative implementation
+    //    this.pq = new BinaryHeap(function(x){return x[1];});
+    //    var pq = this.pq;
     
     this.pq = new PriorityQueue();
     var pq = this.pq;
@@ -2121,6 +2433,12 @@ Pathfinder.prototype.dijkstra_setup = function() {
     var source = this.source.tile.id;
     var target = this.target.tile.id;
     var alltiles = this.target.all;
+    
+    // Special case for ladders
+    if (this.source.tile.ladder) {
+        var neighbors = this.graph.getNeighbors(this.source.tile.id);
+        source = neighbors[0];
+    }
 
     // Setup algorithm
     parent[source] = null;
@@ -2181,9 +2499,11 @@ Pathfinder.prototype.dijkstra_step = function() {
         return;
     }
     
-    for (let edge of this.graph.getAdj(vNode)) {
+    var neighbors = this.getNeighbors(vNode, target);
+    
+    for (let neigh of neighbors) {
         
-        let uNode = edge.to();
+        let uNode = neigh;
         let weight = this.getWeight(uNode); 
         
         let relax = cost[vNode] + weight;
@@ -2209,8 +2529,8 @@ Pathfinder.prototype.dijkstra_step = function() {
 Pathfinder.prototype.astar_setup = function() {
     
     // Stack for iterative implementation
-//    this.pq = new BinaryHeap(function(x){return x[1];});
-//    var pq = this.pq;
+    //    this.pq = new BinaryHeap(function(x){return x[1];});
+    //    var pq = this.pq;
     
     this.pq = new PriorityQueue();
     var pq = this.pq;
@@ -2233,6 +2553,12 @@ Pathfinder.prototype.astar_setup = function() {
     var source = this.source.tile.id;
     var target = this.target.tile.id;
     var alltiles = this.target.all;
+    
+    // Special case for ladders
+    if (this.source.tile.ladder) {
+        var neighbors = this.graph.getNeighbors(this.source.tile.id);
+        source = neighbors[0];
+    }
     
     // Cannot run A* is destination is all tiles
     if (alltiles) {
@@ -2298,9 +2624,11 @@ Pathfinder.prototype.astar_step = function() {
         return;
     }
     
-    for (let edge of this.graph.getAdj(vNode)) {
+    var neighbors = this.getNeighbors(vNode, target);
+    
+    for (let neigh of neighbors) {
         
-        let uNode = edge.to();
+        let uNode = neigh;
         let weight = this.getWeight(uNode);     
         
         let relax = gCost[vNode] + weight;
@@ -2320,6 +2648,9 @@ Pathfinder.prototype.astar_step = function() {
         
     }    
 };
+
+
+
 
 
 Pathfinder.prototype.getWeight = function(node) {
@@ -2361,6 +2692,8 @@ Pathfinder.prototype.heuristic = function(vNode, uNode) {
 };
 
 
+
+
 /*******************************************/
 /************       **************/
 /*******************************************/
@@ -2380,11 +2713,11 @@ Pathfinder.prototype.dfs_helper = function(vNode, target, s) {
         //return this.path;
     }
     
-    if (this.graph.getAdj(vNode).length > 0) {
+    if (this.graph.getNeighbors(vNode).length > 0) {
         this.stepbystep.push([]);
     }
     
-    for (let edge of this.graph.getAdj(vNode)) {  
+    for (let edge of this.graph.getNeighbors(vNode)) {  
         
         let uNode = edge.to();    
         
@@ -2447,7 +2780,7 @@ Pathfinder.prototype.astar = function() {
             return;
         }
         
-        for (let edge of graph.getAdj(vNode)) {
+        for (let edge of graph.getNeighbors(vNode)) {
             let uNode = edge.to();
             let relax = distanceTo[vNode] + edge.weight;
             if (relax < distanceTo[uNode]) {
@@ -2477,58 +2810,30 @@ Pathfinder.prototype.astar = function() {
 
 
 
-Pathfinder.prototype.ladderCheck = function(vNode, uNode) {
-  
-    var game = this.game;
-    var vTile = game.getTileFromId(vNode);
-    
-    // If current node is a tile
-    if (vTile.ladder) {
-        // Check whether its neighbor is on the same floor as parent
-        var uTile = game.getTileFromId(uNode);
-        var parent = this.parent[vNode];
-        var pTile = game.getTileFromId(parent);
-        
-        // If ladder and neighbor are on the same floor
-        if (pTile && (uTile.floor.id === pTile.floor.id)) {
-            
-            // Remove vNode from visited
-            //this.visited.delete(vNode);
-            
-            return false;
-        }
-        else {
-            return true;
-        }
-    }
-    
-    return true;
-    
-};
 
 Pathfinder.prototype.handleVCRCommand = function(COMMAND) {
   
-//    if (this.PATH_STATE !== 'PATH' &&
-//            this.PATH_STATE !== 'FRONTIER') {
-//        console.info("You much be generating a frontier or following a path to use the VCR");
-//        return;
-//    }
-//    
-//    var vcr = this.vcr;
-//    
-//    if (COMMAND === 'PLAY') {
-//        vcr.COMMAND = 'PLAY';
-//    }
-//    
-//    else if (COMMAND === 'PAUSE') {
-//        vcr.COMMAND = 'PAUSE';
-//    }
-//    
-//    else if (COMMAND === 'STEP') {
-//        vcr.COMMAND = 'STEP';
-//    }
-//    
-//    console.info(vcr);
+    //    if (this.PATH_STATE !== 'PATH' &&
+    //            this.PATH_STATE !== 'FRONTIER') {
+    //        console.info("You much be generating a frontier or following a path to use the VCR");
+    //        return;
+    //    }
+    //    
+    //    var vcr = this.vcr;
+    //    
+    //    if (COMMAND === 'PLAY') {
+    //        vcr.COMMAND = 'PLAY';
+    //    }
+    //    
+    //    else if (COMMAND === 'PAUSE') {
+    //        vcr.COMMAND = 'PAUSE';
+    //    }
+    //    
+    //    else if (COMMAND === 'STEP') {
+    //        vcr.COMMAND = 'STEP';
+    //    }
+    //    
+    //    console.info(vcr);
     
 };
 

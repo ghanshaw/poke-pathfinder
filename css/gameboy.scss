@@ -29,6 +29,8 @@ body {
         width: 40.0rem;
         height: 73.0rem;
         margin: 2.0rem auto;
+        user-select: none;
+        -webkit-user-select: none;
         
         .screen-body {
             background-color: $cobalt;
@@ -233,77 +235,102 @@ body {
             box-sizing: content-box;
         }
         
-        .d-pad .left {
-            width: 8rem;
-            height: 3rem;
-            position: absolute;
-            /* content: ''; */
-            /* background-color: #333; */
-            left: -8rem;
-            top: 2.6rem;
-        }
-        
-        .d-pad .right {
-            width: 8rem;
-            height: 3rem;
-            position: absolute;
-            left: 2.4rem;
-            top: 2.6rem;
-        }
-        
-        .d-pad .up {
-            width: 3.0rem;
-            height: 8rem;
-            position: absolute;
-            top: -5.5rem;
-            left: -.2rem;
-        }
-        
-        .d-pad .down {
-            width: 3.0rem;
-            height: 8rem;
-            position: absolute;
-            top: 5.5rem;
-            left: -.2rem;
-        }
+        /*        .d-pad .left {
+                    width: 8rem;
+                    height: 3rem;
+                    position: absolute;
+                     content: ''; 
+                     background-color: #333; 
+                    left: -8rem;
+                    top: 2.6rem;
+                }
+                
+                .d-pad .right {
+                    width: 8rem;
+                    height: 3rem;
+                    position: absolute;
+                    left: 2.4rem;
+                    top: 2.6rem;
+                }
+                
+                .d-pad .up {
+                    width: 3.0rem;
+                    height: 8rem;
+                    position: absolute;
+                    top: -5.5rem;
+                    left: -.2rem;
+                }
+                
+                .d-pad .down {
+                    width: 3.0rem;
+        height: 8rem;
+                            position: absolute;
+                            top: 5.5rem;
+                            left: -.2rem;
+                        }*/
         
         .d-pad {
-            width: 2.8rem;
-            height: 8.4rem;
-            background-color: $darkgrey;
-            position: relative;
-            margin: 1.2rem auto;
-            box-sizing: border-box;
-            border: .2rem solid darken($darkgrey, 20%);
-            border-top: .2rem solid lighten($darkgrey, 20%);
-            border-right: .2rem solid lighten($darkgrey, 20%);
-            &:before {
-                width: 3.0rem;
-                height: 2.8rem;
-                position: absolute;
-                content: '';
-                background-color: $darkgrey;
-                left: -2.8rem;
-                top: 2.6rem;
-                border-bottom: .2rem solid darken($darkgrey, 20%);
-                border-left: .2rem solid darken($darkgrey, 20%);
-                border-top: .2rem solid lighten($darkgrey, 20%);
-                box-sizing: border-box;
-                
-                
+            
+            &.perspective-container {
+                perspective-origin: center;
+                perspective: 400px;
             }
-            &:after {
-                width: 3.0rem;
-                height: 2.8rem;
-                position: absolute;
-                content: '';
+            
+            
+            &.press-right {
+                transform: rotateY(30deg);
+            }
+            
+            &.press-left {
+                transform: rotateY(-30deg);
+            }
+            
+            &.press-up {
+                transform: rotateX(30deg);
+            }
+            
+            &.press-down {
+                transform: rotateX(-30deg);
+            }
+            
+            &.buttons {
+                width: 2.8rem;
+                height: 8.4rem;
                 background-color: $darkgrey;
-                left: 2.3rem;
-                top: 2.6rem;
+                position: relative;
+                margin: 1.2rem auto;
+                box-sizing: border-box;
+                border: .2rem solid darken($darkgrey, 20%);
                 border-top: .2rem solid lighten($darkgrey, 20%);
                 border-right: .2rem solid lighten($darkgrey, 20%);
-                border-bottom: .2rem solid darken($darkgrey, 20%);
-                box-sizing: border-box;
+                &:before {
+                    width: 3.0rem;
+                    height: 2.8rem;
+                    position: absolute;
+                    content: '';
+                    background-color: $darkgrey;
+                    left: -2.8rem;
+                    top: 2.6rem;
+                    border-bottom: .2rem solid darken($darkgrey, 20%);
+                    border-left: .2rem solid darken($darkgrey, 20%);
+                    border-top: .2rem solid lighten($darkgrey, 20%);
+                    box-sizing: border-box;
+                    
+                    
+                }
+                &:after {
+                    width: 3.0rem;
+                    height: 2.8rem;
+                    position: absolute;
+                    content: '';
+                    background-color: $darkgrey;
+                    left: 2.3rem;
+                    top: 2.6rem;
+                    border-top: .2rem solid lighten($darkgrey, 20%);
+                    border-right: .2rem solid lighten($darkgrey, 20%);
+                    border-bottom: .2rem solid darken($darkgrey, 20%);
+                    box-sizing: border-box;
+                }
             }
         }
         
@@ -321,7 +348,9 @@ body {
             transform: rotate(-12deg);
         }
         
-        .b-button, .a-button {
+        .b-button,
+        .a-button
+        {
             font-family: Arial, Helvetica, sans-serif;
             font-weight: 700;
             line-height: 4.0rem;
@@ -341,9 +370,53 @@ body {
             border-color: lighten($darkgrey, 10%);
             border-left-color: darken($darkgrey, 5%);
             border-bottom-color: darken($darkgrey, 5%);
+            
+            
+            
         }
         
-        .a-button {
+        .touch-target {
+            position: absolute;   
+            font-family: Arial, Helvetica, sans-serif;
+            font-weight: 700;
+            line-height: 4.0rem;
+            font-size: 2.2rem;
+            color: none;
+            transform: none;
+            text-align: initial;
+            background-color: transparent;
+            border-radius: initial;
+            
+            &.d-pad {
+                position: absolute;       
+                width: 22rem;
+                left: -6rem;
+                height: 20rem;
+                top: -4.5rem;
+                border: 1px solid black
+            }
+            
+            &.a-button {
+                
+                width: 9rem;
+                left: 7rem;
+                height: 14rem;
+                top: -4.5rem;
+                border: 1px solid black;
+            }
+            
+            &.b-button {
+                width: 9rem;
+                height: 14rem;
+                left: -2.5rem;
+                top: -4.5rem;
+                border: 1px solid black;
+                position: absolute;
+                
+            }
+        }
+        
+        .a-button.button {
             left: 7.6rem;
         }
         

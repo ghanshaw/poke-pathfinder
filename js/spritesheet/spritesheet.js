@@ -9,6 +9,9 @@ var SpriteSheet = function(spritesheet_data) {
     this.tile = spritesheet_data.tile();
     this.spritesheet_data = spritesheet_data;
     
+    this.rows =  spritesheet_data.rows();
+    this.cols =  spritesheet_data.cols();
+    
     
     // Objects to hold both spritesheet canvases
     this.color = {};
@@ -16,7 +19,7 @@ var SpriteSheet = function(spritesheet_data) {
     this.sprite = {};
     this.initCanvas('color');
     this.initCanvas('bw');    
-    this.sprite_size = this.color.canvas.width / spritesheet_data.rows();
+    this.sprite_size = this.color.canvas.width / spritesheet_data.cols();
 };
 
 
@@ -37,8 +40,18 @@ SpriteSheet.prototype.initCanvas = function(type) {
     var imgId = 'spritesheet-' + type;
     var spritesheet_img = document.getElementById(imgId);
     
+    if (type === 'color') {
+        this.img = $(spritesheet_img).clone();
+    }
+    
+    console.log('Has the spritesheet been loaded completely?');
+    console.log(spritesheet_img.complete);
+    
     canvas.width = spritesheet_img.width;
     canvas.height = spritesheet_img.height;
+    
+    console.log('Spritesheet: ' + spritesheet_img.width + ', ' + spritesheet_img.height);
+    console.log('Canvas: ' + canvas.width + ', ' + canvas.height);
     
     ctx.drawImage(spritesheet_img, 0, 0);
    
@@ -71,9 +84,6 @@ SpriteSheet.prototype.initSprite = function() {
 
 SpriteSheet.prototype.getSprite = function(spriteOptions, color=true) {
     
-    
-    
-   ;
     var sprite_size = this.sprite_size;
     
     this.sprite.ctx.clearRect(0, 0, sprite_size, sprite_size);
@@ -90,6 +100,11 @@ SpriteSheet.prototype.getSprite = function(spriteOptions, color=true) {
     
     for (let options of spriteOptions) {
         var xy = this.getXY(options);
+        
+//        console.log('has the spritesheet been loaded?');
+//        var spritesheetImg = document.getElementById('spritesheet-color');
+//        console.log(spritesheetImg.isConnected);
+        
         this.sprite.ctx.drawImage(spritesheet.canvas, xy.x, xy.y, sprite_size, sprite_size, 0, 0, sprite_size, sprite_size);     
     }
     

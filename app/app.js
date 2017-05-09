@@ -15,6 +15,10 @@ pokemonApp.config(function ($routeProvider, $locationProvider) {
         templateUrl: 'app/pages/monitor.html',
         controller: 'monitorController'     
     })    
+    
+    .otherwise({
+      redirectTo: '/'
+    });
 
     
 });

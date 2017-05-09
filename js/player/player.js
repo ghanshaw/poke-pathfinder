@@ -44,9 +44,11 @@ var Player = function(game) {
     
     // Variables for different movements;
     this.walkSpeed = 3.5;
+    //this.walkSpeed = 1;
     this.steps = 0;
     
     this.surfSpeed = 5;
+    //this.surfSpeed = 1;
     this.surfTicks = 0;
     
     this.jumpSpeed = 1;
@@ -189,8 +191,10 @@ Player.prototype.setupMove = function() {
         
         //this.map.resetPath()
         //
-        // Throw out keypress unneccessary keypress
-        this.game.pathfinder.keypressList.shift();
+        if (game.getPathfinderState() === 'PATH') {
+            // Throw out keypress unneccessary keypress
+            this.game.pathfinder.keypressList.shift();
+        }
         
         
         var speed = this.getSpeed();
@@ -633,14 +637,14 @@ Player.prototype.updateSpriteOptions = function() {
         if (this.time.percent < .7) {  
             dustOptions.SHOW = false;
         }
-        else if (this.time.percent < .8) {
+        else if (this.time.percent <= .8) {
             dustOptions.SHOW = true;         
             dustOptions.STAGE = '1';
             
             playerOptions.ACTIVITY = 'WALK';
             pokemonOptions.SHOW = false;
         }
-        else if (this.time.percent < .9) {
+        else if (this.time.percent <= .9) {
             dustOptions.SHOW = true;
             dustOptions.STAGE = '2';
             
@@ -746,7 +750,7 @@ Player.prototype.drawToAvatarCanvas = function(img) {
 
 
 
-Player.prototype.drawPlayer = function(floor, dof) {
+Player.prototype.drawPlayer = function(floor) {
  
     var game = this.game;
     
@@ -810,9 +814,22 @@ Player.prototype.drawPlayer = function(floor, dof) {
         let currentTile = this.getCurrentTile();
         let sprite = game.getSprite(this.playerOptions);
         let dof = currentTile.dof;
+        
+        if (this.tile.prestairs || (this.stopTile && this.stopTile.prestairs)) {
+            dof = 'FOREGROUND';
+        }
+//        
+////        // this.playerOptions.FACING = 'RIGHT';
+//        this.playerOptions.ORIENTATION = 'RIGHT';
+////        // this.playerOptions.GENDER = 'GIRL';
+//        this.playerOptions.ACTIVITY = 'RUN';
+////        //this.playerOptions.ACTIVITY = 'SURF';
+//        
         game.drawImageToScreen(sprite.canvas, 'tile', floorId, dof, currentTile, 2);
-
-
+//        this.dustOptions.STAGE = 3;
+//        game.gameboy.drawSprite(this.playerOptions);
+//        game.gameboy.drawSprite(this.dustOptions);
+        
         // Draw dust sprite  
         if (this.dustOptions.SHOW) { 
             // Draw dust on tile player is jumping to
@@ -820,6 +837,7 @@ Player.prototype.drawPlayer = function(floor, dof) {
             let dof = this.stopTile.dof;
             game.drawImageToScreen(sprite.canvas, 'tile',  floorId, dof, this.stopTile, 2);
             //game.drawSprite(this.dustOptions, this.stopTile);
+            
             
         }
     }  

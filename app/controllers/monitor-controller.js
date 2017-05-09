@@ -10,19 +10,19 @@ pokemonApp.controller('monitorController', function($scope, $log, $location, $wi
     
     appWindow.bind('resize', function () {
         
-//        var view = game.getView();
-//        
-//        if (view === 'monitor') {
-//            $scope.monitor.resize();
-//            $scope.updateFloorLabel();
-//        }
+        var view = game.getView();
         
-        var path = $location.path();
-        if (path === '/') {
-            $scope.view = 'gameboy';
-        } else {
-            
+        if (view === 'monitor') {
+            $scope.monitor.resize();
+            $scope.updateFloorLabel();
         }
+        
+//        var path = $location.path();
+//        if (path === '/') {
+//            $scope.view = 'gameboy';
+//        } else {
+//            
+//        }
     });
     
     appWindow.bind('scroll', function () {

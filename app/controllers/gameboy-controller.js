@@ -1,5 +1,6 @@
 pokemonApp.controller('gameboyController', function($scope, $log, $window, $document, pokeGame) { 
     
+    var game = pokeGame.game;
     var userConsole = pokeGame.userConsole;
     
     angular.element(document).ready(function () {
@@ -38,7 +39,8 @@ pokemonApp.controller('gameboyController', function($scope, $log, $window, $docu
     
     $scope.touchStartDpad = function(direction) {
         console.log('Just touched the ' + direction + ' button.');
-        $scope.pressdpad(direction);
+        touchMoveDpad();
+        // $scope.pressdpad(direction);
     };
     
     $scope.touchMoveDpad = function() {
@@ -48,7 +50,7 @@ pokemonApp.controller('gameboyController', function($scope, $log, $window, $docu
         //console.info("I'm moving");
         //console.info($scope.touchevent);  
         
-        // Check if touch intersects iwth any of the targets
+        // Check if touch intersects with any of the targets
         var touches = $scope.touchevent.originalEvent.touches;
 //        console.log(touches);
 //        console.log(Array.isArray(touches));
@@ -66,12 +68,12 @@ pokemonApp.controller('gameboyController', function($scope, $log, $window, $docu
             
             var touch_target = {};
             
-            touch_target.element = $('.touch-target');
+            touch_target.element = $('.d-pad.touch-target');
             
             // Define origin of "circle";
-            touch_target.offset = $('.touch-target').offset();
-            touch_target.width = $('.touch-target').width();
-            touch_target.height = $('.touch-target').height();
+            touch_target.offset = $('.d-pad.touch-target').offset();
+            touch_target.width = $('.d-pad.touch-target').width();
+            touch_target.height = $('.d-pad.touch-target').height();
             
             var origin = {};
             origin.x = touch_target.offset.left + touch_target.width/2;
@@ -171,7 +173,9 @@ pokemonApp.controller('gameboyController', function($scope, $log, $window, $docu
     
     
     
-    
+    $scope.showWaitOverlay = function() {
+        return game.getPathfinderState() === 'FRONTIER';
+    };
     
     $scope.getTheta = function(x, y, radius) {
         

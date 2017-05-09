@@ -3,8 +3,9 @@ var spritesheet_data = (function() {
     var imgId = 'color-spritesheet';
     var bwImgId = 'bw-spritesheet';
     
-    var rows = 12;
-    var cols = 11;
+    
+    var cols = 12;
+    var rows = 10;
     
     
     var player = {
@@ -253,6 +254,9 @@ var spritesheet_data = (function() {
         },
         rows: function() {
             return rows;
+        },
+        cols: function() {
+            return cols;
         },
         player: function() {
             return player;

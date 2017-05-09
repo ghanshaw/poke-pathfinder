@@ -1118,7 +1118,7 @@ Game.prototype.getKeypress = function() {
 };
 
 Game.prototype.hasEdge = function(tile1, tile2) {
-    return Boolean(this.graph.getEdge(tile1.id, tile2.id));
+    return this.graph.hasEdge(tile1.id, tile2.id);
 };
 
 Game.prototype.setUserConsole = function(algorithm, source, target) {

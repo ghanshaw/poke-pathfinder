@@ -17,6 +17,7 @@ var Tile = function(floor, row, col) {
     this.type = 'LAND';
     this.dof = 'BACKGROUND';
     this.stairs = false;
+    this.prestairs = false;
     this.orientation = null;
 };
 

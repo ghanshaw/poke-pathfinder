@@ -240,11 +240,13 @@ Floor.prototype.addFloorData = function() {
         }    
     }
     
-    // Update stairs
+    // Update stairs and generate 'pre-stairs'
+    // 'Pre-stairs' are the tiles right in front of stairs
     for (let s of stairs) {  
         let row = s[0];
         let col = s[1];
         this.tiles[row][col].stairs = true;  
+        this.tiles[row + 1][col].prestairs = true;  
     }
     
     

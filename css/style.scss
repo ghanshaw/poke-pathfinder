@@ -4,6 +4,9 @@ General
 --------------------
 ***/
 
+$darkred: #cb2d3e;
+$lightred: #f33246;
+
 html, body, h1, h2, h3, h4,h5, h6, p, label, button {
     font-family: 'Montserrat', 'Open-Sans', sans-serif;   
     font-weight: 100;
@@ -85,7 +88,19 @@ header {
 .navbar {
     
     margin: 0;
-    z-index: 200;
+    z-index: 2000;
+    
+    &.centered {
+        
+        .brand-container {
+            margin: 0 auto;
+        }
+        
+        .links-container {
+            margin: 0;
+        }
+        
+    }
     
     .container-fluid {
         width: 100%;
@@ -93,38 +108,41 @@ header {
         align-items: center;
         height: 70px;
         
-    }
-    
-    
-    /*** Logo ***/
-    
-    .navbar-brand .logo {
-        width: 250px;
-        image-rendering: auto;
-        vertical-align: middle;
-        display: inline;
-    }
-    
-    @media all and (max-width: 768px) { 
-        .navbar-brand .logo  {
-            width: 150px;
+        .brand-container {
+            
+            
+            
+            /*** Logo ***/
+            
+            .navbar-brand .logo {
+                width: 250px;
+                image-rendering: auto;
+                vertical-align: middle;
+                display: inline;
+            }
+            
+            @media all and (max-width: 768px) { 
+                .navbar-brand .logo  {
+                    width: 150px;
+                }
+            }
         }
-    }
-    
-    ul.links {
-        margin: 0px;
-        list-style: none;
-        margin-left: auto;
-        
-        a {
-            font-weight: 700;
-        }
-    }
+        .links-container {
+            margin-left: auto;
+            
+            ul.links {
+                margin: 0px;
+                list-style: none;
+                
+                a {
+                    font-weight: 700;
+                }
+            }            
+        } 
+    }    
 }
 
-.navbar-header {
-    display: inline-block;
-}
+
 
 .navbar-right {
     float: right;
@@ -166,7 +184,7 @@ header {
 
 /*** Hamburger Icon ***/
 
-.hamburger-container {
+.menu-container {
     display: inline-block;
     cursor: pointer;
     position: relative;
@@ -295,6 +313,96 @@ button:focus {
     transform: none;
 }
 
+/***
+--------------------
+Info popup
+--------------------
+***/
+
+.info-box {
+    
+    position: absolute;
+    right: 1rem;
+    top: 1rem;
+    z-index: 100;
+    
+    .button {
+        width: 3.5rem;
+        height: 3.5rem;
+        font-size: 1.8rem;
+        border: 1px solid black;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        border-radius: 100%;
+        background-color: #e6e6e6;
+        color: #333333;
+        border: none;
+        z-index: 50;
+        box-shadow: 0.4rem 0.7rem 1rem #545454;
+        background: linear-gradient(#eee, #cacaca);
+        float: right;
+        box-shadow: initial;
+        background: #f8f8f8;
+        border: 3px solid #333;
+        
+        &:hover {
+            color: $darkred;
+            border-color: $darkred;
+            
+        }
+        
+        @media (max-width: 1200px) {
+            width: 4.5rem;
+            height: 4.5rem;
+            font-size: 3rem;
+           
+        }       
+        
+    }
+    
+    .how-to-play {
+        
+        background-color: #f8f8f8;
+        width: 300px;
+        /* max-width: 90%; */
+        padding: 2rem 2rem 3rem 1rem;
+        margin-top: 7rem;
+        border: 1rem solid #cb2d3e;
+        /* float: right; */
+        right: 0;
+        position: absolute;
+        border-radius: 2rem;
+        border: none;
+        border-radius: 0;
+        background-color: #333;
+        color: white;
+        /* box-shadow: 10px 10px 10px black; */
+        border: 5px solid #f8f8f8;
+        
+        
+        
+        h3 {
+            text-align: center;
+            font-family: 'Nunito Sans';
+            font-weight: bolder;
+            margin-bottom: 3rem;
+            /* text-transform: uppercase; */
+            font-weight: 100;
+            /* letter-spacing: 1px; */
+        }
+        
+        li {
+            font-family: 'Nunito Sans';
+            margin: 1.5rem 0rem;
+            font-size: 1em;
+        }
+        
+    }
+}   
+
+
+
 
 
 /***
@@ -338,54 +446,122 @@ About
 --------------------
 ***/
 
-.about-container {
-    background-color: rgba(255, 255, 255, 0.97);
-    position: absolute;
-    z-index: 1000;
-    width: 100%;
-    height: 100%;
-    left: 0;
-    opacity: 1;
-    overflow-y: scroll;
-    font-size: 16px;
+.about {
     
-    section {
-        margin: 40px 0px;
+    .container {
+        z-index: 1000;
+        background-color: rgba(255, 255, 255, 0.97);
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        left: 0;
+        padding: 0;
         
+        &.ng-hide {
+            opacity: 0;
+        }
         
-        .section-heading {
-            text-align: center;
+        &.ng-hide-add,
+        &.ng-hide-remove {
+            transition: opacity linear .3s;
+        }
+        
+        .pokeball {
+            position: absolute;
+            z-index: 1010;
+            opacity: .3;
+            /*top: 0%;*/
+            right: 0%;
             
-            margin-bottom: 30px;
-            font-weight: 500;
+            img {
+                opacity: .3; 
+                position: relative;
+                top: -11.5em;
+                right: -10em;
+            }
             
-            &:hover {
-                text-decoration: underline;
+        }
+        
+        .parent {
+            /*background-color: rgba(255, 255, 255, 0.97);*/
+            /*position: absolute;*/
+            z-index: 1020;
+            width: 100%;
+            height: 100%;
+            /*left: 0;*/
+            position: relative;
+            opacity: 1;
+            overflow-y: scroll;
+            font-size: 16px;
+            padding-bottom: 5em;
+            
+            .row {
+                margin: 0;
+            }
+            
+            .content {
+                padding: 0px 30px;
+                
+                .paragraph, ol, li {
+                    font-family: 'Nunito Sans', sans-serif;
+                }
+                
+                li {
+                    font-size: 1.3em;
+                    font-weight: 900;
+                }
+                
+                a {
+                    color: $darkred;
+                    font-weight: bold;
+                }
+                
+                
+                
+                img.logo {
+                    margin: 0 auto;
+                    width: 400px;
+                    image-rendering: auto; 
+                    max-width: 100%;
+                }
+                
+                section {
+                    margin: 40px 0px;
+                    position: relative;
+                    z-index: 10px;
+                    
+                    
+                    .section-heading {
+                        text-align: center;
+                        
+                        margin-bottom: 30px;
+                        font-weight: 500;
+                        
+                        &:hover {
+                            /*text-decoration: underline;*/
+                            color: $darkred;
+                        }
+                    }
+                    
+                    .paragraph {
+                        line-height: 1.5;
+                        font-family: 'Nunito Sans';
+                        padding: .7em 0em;
+                    }
+                    
+                    p {
+                        font-size: 1em;
+                        font-family: 'Nunito Sans';
+                        margin: 25px 40px 25px 0px;
+                    }      
+                }
+                
+                
             }
         }
         
-        p {
-            font-size: 16px;
-        }      
     }
 }
-
-.about-container.ng-hide {
-    opacity: 0;
-}
-
-.about-container.ng-hide-add,
-.about-container.ng-hide-remove {
-    transition: opacity linear 0.3s;
-}
-
-
-/***
---------------------
-Section
---------------------
-***/
-
 
 
 
@@ -443,26 +619,40 @@ Footer
 
 
 footer {
-    height: 80px;
     margin-top: 70px;
     background-color: #777;
+    background-color: #333;
     position: relative;
-}
-
-footer p {
-    color: white;
-}
-
-footer .container {
-    height: 100%;
-}
-
-footer .row {
-    height: 100%;
-}
-
-footer {
     z-index: 100;
+    
+    .container-fluid {
+        padding: 2rem 0rem;
+        text-align: center;
+        
+        .row {
+            margin: 0;
+        }
+        
+        a {
+            color: $lightred;
+            
+            &:hover {
+                text-decoration: underline;
+            }
+        }
+        
+        p {
+            color: white;
+            color: white;
+            font-size: 14px;
+            font-weight: 300;
+            margin: 10px 0px;
+            
+            &:hover {
+                //color: $darkred
+            }
+        }       
+    }    
 }
 
 
@@ -596,10 +786,41 @@ Gameboy
 --------------------
 ***/
 
-.gameboy.screen .layer {
+.gameboy.screen {
     
-    position: absolute;
-    /*max-width: 100%;*/
+    .frontier-wait {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(112, 128, 144, 0.4);
+        z-index: 100;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2em;   
+        
+        .message {
+            
+            p {
+                font-size: 1.3rem;
+                font-weight: 300;
+                text-shadow: 2px 2px black;
+            }
+            
+            img {
+                display: inline;
+                width: 2.5rem;
+                margin-top: 1rem;
+            }
+            
+        }
+    }
+    
+    .layer {        
+        position: absolute;
+        /*max-width: 100%;*/
+    }
     
 }
 
@@ -630,48 +851,70 @@ Gameboy
 }
 
 /*** D-pad Buttons ***/
-
+/*
 .pad-container {
-    .touch-target {       
-        position: absolute;       
-        width: 20rem;
-        left: -4.5rem;
-        height: 20rem;
-        top: -4.5rem;
-        border: 1px solid black;
+    
+    .dpad {
+        
+        
+        &.perspective-container {
+            perspective-origin: center;
+            perspective: 400px;
+        }
+        
+        
+        &.touch-target {       
+            ;
+        }
+        
+        &.press-right {
+            transform: rotateY(30deg);
+        }
+        
+        &.press-left {
+            transform: rotateY(-30deg);
+        }
+        
+        &.press-up {
+            transform: rotateX(30deg);
+        }
+        
+        &.press-down {
+            transform: rotateX(-30deg);
+        }
+
+    }
+    
+    .a-button {
+        
+        &.touch-target {
+            width: 9rem;
+            height: 14rem;
+            left: 6.5rem;    
+            top: -4.5rem;
+            border: 1px solid black;
+            position: absolute;
+        } 
+    }
+    
+    .b-button {
+        
+        &.touch-target {
+            width: 9rem;
+            height: 14rem;
+            left: -2.5rem;
+            top: -4.5rem;
+            border: 1px solid black;
+            position: absolute;
+        }
     }
 }
 
-.d-pad {
-    
-    
-    
-}
 
-.d-pad-perspective-container {
-    perspective-origin: center;
-    perspective: 400px;
-}
 
-.d-pad.press-right {
-    transform: rotateY(30deg);
-}
-
-.d-pad.press-left {
-    transform: rotateY(-30deg);
-}
-
-.d-pad.press-up {
-    transform: rotateX(30deg);
-}
-
-.d-pad.press-down {
-    transform: rotateX(-30deg);
-}
 
 .system-container#gbasp {
-    user-select: none;
-    -webkit-user-select: none;
+    
 }
 
 .d-pad,
@@ -685,12 +928,12 @@ Gameboy
     -webkit-user-select: none;
 }
 
-/*** A/B Buttons ***/
+** A/B Buttons **
 
 .b-button.active,
 .a-button.active {
     top: 1.3rem !important;
-}
+}*/
 
 
 /***
@@ -799,6 +1042,7 @@ User Console
         font-size: 16px;
         background-color: #e6e6e6; 
         padding-top: 30px;
+        padding-bottom: 50px;
     } 
     
     section {

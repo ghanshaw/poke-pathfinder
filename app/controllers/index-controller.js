@@ -24,6 +24,11 @@ pokemonApp.controller('indexController', function($scope, $log, $location, $wind
         lg: 1200
     };
     
+      
+//    $window.onload = function() {
+//        alert("Angularjs call function on page load");
+//    };
+    
     
    
     
@@ -60,6 +65,19 @@ pokemonApp.controller('indexController', function($scope, $log, $location, $wind
         };
     }; 
     
+    
+    /* -------------------- //
+    How To Box
+    // -------------------- */
+    
+    $scope.howto = {
+        show: false,
+    };
+    
+    $scope.toggleHowTo = function() {
+        $scope.howto.show = !$scope.howto.show;
+    };
+    
 
     /* -------------------- //
     View Switcher
@@ -68,10 +86,13 @@ pokemonApp.controller('indexController', function($scope, $log, $location, $wind
     $scope.view;
 
     var path = $location.path();
-    if (path === '/') {
-        $scope.view = 'gameboy';
-    } else {
+    if (path === '/monitor/') {
         $scope.view = 'monitor';
+    } else {
+        $scope.view = 'gameboy';
+        console.log(path);
+        console.log('THE VIEW IS DEFIEND HERE');
+        
     }
     
     
@@ -91,6 +112,8 @@ pokemonApp.controller('indexController', function($scope, $log, $location, $wind
     };
     
     $scope.$watch('view', function(newValue, oldValue) {
+        console.log('SETTING THE VIEW!');
+        console.log($scope.view);
         pokeGame.setView(newValue);        
     });
     
@@ -117,9 +140,16 @@ pokemonApp.controller('indexController', function($scope, $log, $location, $wind
             
             $scope.viewswitcher.visible = false;
         } else {
+            $scope.hideMonitor = false;
             $scope.viewswitcher.visible = true;
         }
         
+    };
+    
+    $scope.links = {
+        mulani: 'https://medium.com/@mmmulani/creating-a-game-size-world-map-of-pok%C3%A9mon-fire-red-614da729476a',
+        sprites_resource: 'https://www.spriters-resource.com/',
+        gameboy: 'https://codepen.io/joshuajcollinsworth/'
     };
     
     $scope.updateView();
@@ -128,11 +158,71 @@ pokemonApp.controller('indexController', function($scope, $log, $location, $wind
     var appWindow = angular.element($window);
     
     appWindow.bind('resize', function () {
-        
+        console.log('window  resizing');
         $scope.updateView();      
         $scope.$apply(); 
         
     });
+    
+    $scope.enableScrollEffect = function() {
+        
+//        var aboutparent = {};
+//        aboutparent.element = angular.element('.about .parent');
+//        aboutparent.width = aboutparent.element.width();
+//        aboutparent.height = aboutparent.element.height();
+//        
+        var about = {
+            parent: {},
+            content:{}
+        };
+        
+        about.parent.elem = angular.element('.about .parent');
+        about.content.elem = angular.element('.about .content');
+        
+        
+        $(about.parent.elem).on('scroll', function() {
+            
+            var content = about.content;
+            var parent = about.parent;
+            
+            parent.width = parent.elem.width();
+            parent.height = parent.elem.height();
+
+            var scrollTop = parent.elem.scrollTop();
+          
+            content.height = content.elem.height();
+            content.width = content.elem.width();
+            
+            //var percent = scrollTop/(content.height - parent.height) * content.height;
+            
+            var percent = scrollTop/(content.height - parent.height);
+//            percent *= 100;
+//            percent = Math.round(percent);
+            
+            var x = (percent) * parent.width;
+            var y = percent * parent.height;
+            
+            var translate = 'translate( ' + -x + 'px, ' + y * 1.3 + 'px)';
+            console.log(translate);
+            
+            $('.pokeball img').css('transform', translate);
+//            $('.pokeball.wrapper').css('right', percent + '%');
+//            $('.pokeball.wrapper').css('top', percent + '%');
+            
+            console.log('Percent through page');
+            console.log(percent);
+            
+            
+        });
+        
+        //$scope.aboutparent = aboutparent;
+        
+        
+    }
+    
+    
+    
+    //appWindow.resize();
     
     
 });

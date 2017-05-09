@@ -1,5 +1,5 @@
 // Game Service (game state, game logic and game loop)
-pokemonApp.service('pokeGame', function($log, $document, $location, $timeout, $interval) {
+pokemonApp.service('pokeGame', function($log, $document, $window, $location, $timeout, $interval) {
     
     this.cancelDirection = function(event) {
         var keyCode = event.keyCode;
@@ -63,10 +63,10 @@ pokemonApp.service('pokeGame', function($log, $document, $location, $timeout, $i
     
     
     // })
-    
-    // Initialize a new Game object
-    var game = new Game();
-    game.initGame();
+
+        // Initialize a new Game object
+        var game = new Game();
+        game.initGame();
     
     this.userConsole = game.userConsole;
     
@@ -79,10 +79,22 @@ pokemonApp.service('pokeGame', function($log, $document, $location, $timeout, $i
     
     var that = this;
     
+    console.log($window);
+  
+  var spritesheet = document.getElementById('spritesheet-color');
+
+//  spritesheet.onload = function() {
+//      alert('trigger already!');
+//  };
+//  
+//  $('#spritesheet-color').on('load', function() {
+//      alert('finally!');
+//  });
     
     angular.element(document).ready(function () {
-        
-        
+   // angular.element($window).on('load', function() {   
+    
+    //$('.image-files').on('oad = function() {   
         
         
         
@@ -196,7 +208,7 @@ pokemonApp.service('pokeGame', function($log, $document, $location, $timeout, $i
         //$interval(gameLoop, 1000/game.FPS);  
         
     });
-    
+    //};
 });
 
 

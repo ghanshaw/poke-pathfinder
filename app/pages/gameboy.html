@@ -22,6 +22,15 @@
                     <img src="../../images/gameboy_logo.png" class="gameboy logo" alt="" style=/>
                 </div> 
                 <div class="gameboy screen">
+                    <div class="frontier-wait ng-hide"
+                         ng-show="showWaitOverlay()">
+                        <div class="message">
+                            <p>Generating frontier...</p>
+                        <p>Movement is disabled.</p>
+                        <p class="ng-hide" ng-show="viewswitcher.visible">Switch to Cave View to see full process.</p>
+                        <img src="../../images/rolling.svg" alt=""/>
+                        </div>
+                    </div>
                     <canvas 
                         id=""
                         class="gameboy foreground"></canvas>
@@ -42,63 +51,41 @@
                 
             
             <div class="pad-container">
-                <div class="touch-target"
+                <div class="d-pad touch-target"
                              ng-mousedown="pressdpad('UP')"
                              ng-mouseup="releasedpad('UP')"
                              touch-start-directive="touchStartDpad()" 
                              touch-move-directive="touchMoveDpad()"
                              touch-end-directive="touchEndDpad()"></div>
                 <div 
-                    class="d-pad-perspective-container">                      
+                    class="d-pad perspective-container">                      
                     <div 
-                        class="d-pad"
+                        class="d-pad buttons"
                         ng-class="cssdpad()">
-                        
-                        
-                        <div class="d-pad-target up"
-                             ng-mousedown="pressdpad('UP')"
-                             ng-mouseup="releasedpad('UP')"
-                             touch-start-directive="touchStartDpad('UP')" 
-                             touch-move-directive="touchMoveDpad()"
-                             touch-end-directive="touchEndDpad('UP')"></div>
-                        <div class="d-pad-target down"
-                             ng-mousedown="pressdpad('DOWN')"
-                             ng-mouseup="releasedpad('DOWN')"
-                             touch-start-directive="touchStartDpad('DOWN')" 
-                             touch-move-directive="touchMoveDpad()"
-                             touch-end-directive="touchEndDpad('DOWN')"></div>
-                        <div class="d-pad-target left"
-                             ng-mousedown="pressdpad('LEFT')"
-                             ng-mouseup="releasedpad('LEFT')"
-                             touch-start-directive="touchStartDpad('LEFT')" 
-                             touch-move-directive="touchMoveDpad()"
-                             touch-end-directive="touchEndDpad('LEFT')"></div>
-                        <div class="d-pad-target right"
-                             ng-mousedown="pressdpad('RIGHT')"
-                             ng-mouseup="releasedpad('RIGHT')"
-                             touch-start-directive="touchStartDpad('RIGHT')" 
-                             touch-move-directive="touchMoveDpad()"
-                             touch-end-directive="touchEndDpad('RIGHT')"></div>
                     </div>
                 </div>
             </div>
                 
             <div class="pad-container buttons-container"> 
+                <div class="b-button touch-target"></div>
+                <div class="a-button touch-target"></div>
                 <div 
-                    class="b-button"
+                    class="b-button button"
                     ng-class="{ active: ab.b }"
                     ng-mousedown="pressAB('B')"
                     ng-mouseup="releaseAB('B')"
                     touch-start-directive="touchStartAB('B')" 
+                    touch-move-directive="touchMoveAB('B')"
                     touch-end-directive="touchEndAB('B')">
                     B
                 </div>
                     
-                <div class="a-button"
+                <div class="a-button button"
                     ng-class="{ active: ab.a }"
                     ng-mousedown="pressAB('A')"
                     ng-mouseup="releaseAB('A')"
                     touch-start-directive="touchStartAB('A')" 
+                    touch-move-directive="touchMoveAB('B')"
                     touch-end-directive="touchEndAB('A')">
                         A
                     </div>
@@ -150,3 +137,24 @@
         </div>
     </div>
 </div>
+
+    
+<!--<div class="d-padup"></div>
+<div class="d-pad-target down"
+     ng-mousedown="pressdpad('DOWN')"
+     ng-mouseup="releasedpad('DOWN')"
+     touch-start-directive="touchStartDpad('DOWN')" 
+     touch-move-directive="touchMoveDpad()"
+     touch-end-directive="touchEndDpad('DOWN')"></div>
+<div class="d-pad-target left"
+     ng-mousedown="pressdpad('LEFT')"
+     ng-mouseup="releasedpad('LEFT')"
+     touch-start-directive="touchStartDpad('LEFT')" 
+     touch-move-directive="touchMoveDpad()"
+     touch-end-directive="touchEndDpad('LEFT')"></div>
+<div class="d-pad-target right"
+     ng-mousedown="pressdpad('RIGHT')"
+     ng-mouseup="releasedpad('RIGHT')"
+     touch-start-directive="touchStartDpad('RIGHT')" 
+     touch-move-directive="touchMoveDpad()"
+     touch-end-directive="touchEndDpad('RIGHT')"></div>-->

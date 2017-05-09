@@ -13,7 +13,7 @@ var Gameboy = function(game) {
     this.rocklayer = {};
     this.transition = {};
     this.waterlayer = {
-        img: [],
+        img: []
     };
     this.screen = {
         background: null,
@@ -48,7 +48,8 @@ var Gameboy = function(game) {
         transition: {
             active: 45,
             inactive: 0
-        }
+        },
+        spritesheet: 1       
     };
     
     this.currentLayer = 0;
@@ -71,6 +72,62 @@ Gameboy.prototype.init = function() {
     this.initFloors();
     this.initWaterlayer();
     
+    this.initSpriteSheet();
+};
+
+Gameboy.prototype.resizeSpriteSheet = function() {
+    
+    this.spritesheet.sprite_size = this.tile_size * 2;
+    var sprite_size = this.spritesheet.sprite_size;
+    var cols = this.spritesheet.cols;
+    var width = sprite_size * cols;
+    
+    
+    var yOffset = ((this.rows - 1)/2 - .5) * this.tile_size;
+    var xOffset = ((this.cols - 1)/2 - .5) * this.tile_size;
+    
+    this.spritesheet.top = yOffset;
+    this.spritesheet.left = xOffset;
+    
+    this.spritesheet.img.css('width', width);
+    this.spritesheet.img.css('top', yOffset);
+    this.spritesheet.img.css('left', xOffset);
+   // this.spritesheet.img.css('z-index', xOffset);
+    
+};
+
+Gameboy.prototype.initSpriteSheet = function() {
+  
+  
+    var spritesheet = new SpriteSheet(spritesheet_data);
+    
+    this.spritesheet = spritesheet;
+    
+    $(this.spritesheet.img).addClass('layer');
+    $(this.spritesheet.img).css('z-index', this.zIndex.spritesheet);
+    $('.gameboy.screen').append(this.spritesheet.img);
+    
+    return;
+    
+    
+  
+    // Skip if layer has already been initialized
+//    if (this.rocklayer.img) { return; }
+  
+    var game = this.game;
+
+    var rocklayer = game.getSpritesheet();  
+   
+    this.rocklayer['img'] = $(rocklayer.img).clone();
+    this.rocklayer.rows = rocklayer.rows;
+    this.rocklayer.cols = rocklayer.cols;
+    
+    var width = this.tile_size * this.rocklayer.cols; 
+    
+    $(this.rocklayer.img).addClass('layer');
+    $(this.rocklayer.img).css('z-index', this.zIndex.rocklayer);
+    $('.gameboy.screen').append(this.rocklayer.img);
+    
 };
 
 Gameboy.prototype.resize = function() {
@@ -79,6 +136,8 @@ Gameboy.prototype.resize = function() {
     this.resizeRocklayer();
     this.resizeFloors();
     this.resizeWaterlayer();
+    this.resizeSpriteSheet();
+    
     
     // Must be done after reisizing
     this.initGrid();
@@ -551,6 +610,71 @@ Gameboy.prototype.drawShapeToScreen = function(shape, floorId, tile, color) {
 };
 
 
+Gameboy.prototype.drawSprite = function(spriteOptions, tile) {
+  
+//        $(this.spritesheet.img).css('display', 'none');
+//        return;
+        var pTile = this.game.getPlayerCurrentTile();
+        
+        var rowcol = this.spritesheet.getRowCol(spriteOptions);
+        
+        // X and Y on spritesheet
+        
+        var y = rowcol[0] * this.spritesheet.sprite_size;
+        var x = rowcol[1] * this.spritesheet.sprite_size;
+        
+        var top = this.spritesheet.top - y;
+        var left = this.spritesheet.left - x;
+        
+        $(this.spritesheet.img).css('top', top);
+        $(this.spritesheet.img).css('left', left);
+        
+        return;
+        
+        
+        
+        
+        // Origin is the top, left corner of the gameboy
+        var origin = this.getOrigin(pTile);
+        
+        
+        var pX = pTile.col * this.tile_size;
+        var pY = pTile.row * this.tile_size;
+        
+        
+        var game = this.game;
+        
+        var camera = {};
+        var c = camera;
+
+        // Get camera offset used by various drawing methods
+        var pTile = game.getPlayerCurrentTile();
+        c.floorId = pTile.floor.id;
+        
+        c.offset_top = (pTile.row + .5) % 1;
+        c.offset_left = pTile.col % 1;
+        
+        c.offset_top *= this.tile_size;
+        c.offset_left *= this.tile_size;
+        
+        c.width = this.screen.width;
+        c.height = this.screen.height;  
+        
+        
+        
+        c.sx = origin.col * this.tile_size;
+        c.sy = origin.row * this.tile_size;  
+        
+        var top = (pTile.row - .5) * this.tile_size;
+        var left = (pTile.col - .5) * this.tile_size;
+        
+        $(this.spritesheet.img).css('top', top);
+        $(this.spritesheet.img).css('left', left);
+        
+    
+    
+};
+
 
 Gameboy.prototype.drawImageToScreen = function(img, options) {
     
@@ -600,6 +724,7 @@ Gameboy.prototype.drawImageToScreen = function(img, options) {
         ctx.drawImage(img, xy.x, xy.y, tile_size * span, tile_size * span);
         return;
     }
+   
     
     if (options.location === 'floor') {
         
