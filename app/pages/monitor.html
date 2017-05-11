@@ -8,7 +8,7 @@
                     id="foreground"
                     class="monitor foreground"
                     ng-mousemove="movePointer($event, 'CLICK')" 
-                    ng-mousedown="clickPointer(); startDrag($event, 'CLICK');" 
+                    ng-mousedown="clickMonitor(); startDrag($event, 'CLICK');" 
                     ng-mouseup="endDrag($event);"
                     ng-mouseleave="endDrag($event);"
                     touch-start-directive="touchStartMonitor()" 

@@ -1,15 +1,15 @@
 pokemonApp.directive('setClassWhenAtTop', function ($window) {
     var $win = angular.element($window); // wrap window object as jQuery object
-
+    
     return {
         restrict: 'A',
         link: function (scope, element, attrs) {
             console.info('directive running');
-        
+            
             var topClass = attrs.setClassWhenAtTop, // get CSS class from directive's attribute value
             //offsetTop = element.offset().top; // get element's offset top relative to document
             offsetTop = $('nav.navbar').height();
-
+            
             $win.on('scroll', function (e) {
                 if ($win.scrollTop() >= offsetTop) {
                     element.addClass(topClass);
@@ -28,7 +28,7 @@ pokemonApp.directive('userConsole', function ($window) {
         controller: 'userConsoleController',
         link: function (scope, element, attrs) {
             console.info('directive running');
-        
+            
         }
     };
 });
@@ -74,85 +74,114 @@ pokemonApp.directive('userConsole', function ($window) {
 
 
 pokemonApp.directive('touchStartDirective', function ($window, $location) {
-
+    
     return {
         restrict: 'A',
         link: function (scope, element, attr) {
-        
+            
             element.on('touchstart', function(event) {
                 
                 event.preventDefault();
                 event.stopPropagation();
-
-                scope.touchevent = event;
-
+                
+                scope.touchstart = event;
+                
                 //console.log(event);
                 scope.$apply(function() { 
                     // Invoke touchstart
                     scope.$eval(attr.touchStartDirective); 
                 });
             });
-        
-
-      
+            
+            
+            
         }
     };
 });
 
 pokemonApp.directive('touchMoveDirective', function ($window) {
-
+    
     return {
         restrict: 'A',
         link: function (scope, element, attr) {
-        
+            
             element.on('touchmove', function(event) {
                 
                 event.preventDefault();
                 event.stopPropagation();
                 
-                scope.touchevent = event;
-
+                scope.touchmove = event;
+                console.log(event);
+                
                 //console.log(event);
                 scope.$apply(function() { 
                     // Invoke touchstart
                     scope.$eval(attr.touchMoveDirective); 
                 });
             });
-        
-
-      
+            
+            
+            
         }
     };
 });
 
 
-pokemonApp.directive('touchEndDirective', function ($window, $location) {
 
+
+
+pokemonApp.directive('touchLeaveDirective', function ($window, $location) {
+    
     return {
         restrict: 'A',
         link: function (scope, element, attr) {
-        
+            
+            element.on('touchleave', function(event) {
+                
+                event.preventDefault();
+                event.stopPropagation();
+                
+                scope.touchleave = event;
+                
+                scope.$apply(function() { 
+                    // Invoke touchend
+                    scope.$eval(attr.touchLeaveDirective); 
+                });
+            });
+        }
+    };
+});
+
+
+pokemonApp.directive('touchEndDirective', function ($window) {
+    
+    return {
+        restrict: 'A',
+        link: function (scope, element, attr) {
+            
             element.on('touchend', function(event) {
                 
                 event.preventDefault();
                 event.stopPropagation();
-
-                scope.touchevent = event;
-
+                
+                scope.touchend = event;
+                console.log(event);
+                
+                //console.log(event);
                 scope.$apply(function() { 
-                    // Invoke touchend
+                    // Invoke touchstart
                     scope.$eval(attr.touchEndDirective); 
                 });
             });
-        
-
-      
+            
+            
+            
         }
     };
 });
 
 
-pokemonApp.directive("repeatEnd", function(){
+pokemonApp.directive("repeatEnd", function() {
     return {
         restrict: "A",
         link: function (scope, element, attrs) {

@@ -231,7 +231,8 @@ body {
       box-sizing: content-box; }
     body .system-container#gbasp .d-pad.perspective-container {
       perspective-origin: center;
-      perspective: 400px; }
+      perspective: 400px;
+      z-index: 15; }
     body .system-container#gbasp .d-pad.press-right {
       transform: rotateY(30deg); }
     body .system-container#gbasp .d-pad.press-left {
@@ -307,6 +308,9 @@ body {
       border-color: #4d4d4d;
       border-left-color: #262626;
       border-bottom-color: #262626; }
+      body .system-container#gbasp .b-button.active,
+      body .system-container#gbasp .a-button.active {
+        top: 1.3rem !important; }
     body .system-container#gbasp .touch-target {
       position: absolute;
       font-family: Arial, Helvetica, sans-serif;
@@ -317,7 +321,8 @@ body {
       transform: none;
       text-align: initial;
       background-color: transparent;
-      border-radius: initial; }
+      border-radius: initial;
+      z-index: 20; }
       body .system-container#gbasp .touch-target.d-pad {
         position: absolute;
         width: 22rem;

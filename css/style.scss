@@ -324,7 +324,7 @@ Info popup
     position: absolute;
     right: 1rem;
     top: 1rem;
-    z-index: 100;
+    z-index: 110;
     
     .button {
         width: 3.5rem;
@@ -930,10 +930,6 @@ Gameboy
 
 ** A/B Buttons **
 
-.b-button.active,
-.a-button.active {
-    top: 1.3rem !important;
-}*/
 
 
 /***

@@ -1,104 +1,252 @@
 pokemonApp.controller('gameboyController', function($scope, $log, $window, $document, pokeGame) { 
     
+    $log.info('*** Gameboy controller has begun.');
+    
+    // Aquire Game objects
     var game = pokeGame.game;
     var userConsole = pokeGame.userConsole;
     
-    angular.element(document).ready(function () {
-        
-        var game = pokeGame.game;
-        var gameboy = game.gameboy;
-        
-        gameboy.init();
-        gameboy.resize();
-        
-        var appWindow = angular.element($window);
-        
-        appWindow.bind('resize', function () {
-            console.log('resizing');
+    // Initialize Gameboy
+    var gameboy = game.gameboy;
+    gameboy.init();
+    gameboy.resize();
+    
+    /* -------------------- //
+    Event handlers
+    // -------------------- */
+    
+    // Resize gameboy when window resizes
+    var appWindow = angular.element($window);
+    appWindow.bind('resize', function () {
+        if (view === 'gameboy') {
             gameboy.resize();
-        });
-        
-        pokeGame.viewLoaded = true;
-        
+        }
     });
     
-    $scope.gameboy = userConsole.interface.gameboy;
+    // Indicate that view has finished loading
+    pokeGame.viewLoaded = true;
     
+    /* -------------------- //
+    Wait overlay
+    // -------------------- */
     
-    $scope.toggleLock = function() {
-        var status = $scope.gameboy.locked;
-        $scope.gameboy.locked = !status;
+    // Show wait screen when pathfinder is in Frontier Mode
+    $scope.showWaitOverlay = function() {
+        return game.getPathfinderMode() === 'FRONTIER';
     };
     
-//    $scope.touchMe = function($event) {
-//        console.log("I'm being touched!");
-//        console.log($event);
-//    };
     
-    $scope.touched = false;
+    /* -------------------- //
+    Handle d-pad interaction
+    // -------------------- */
     
-    $scope.touchStartDpad = function(direction) {
-        console.log('Just touched the ' + direction + ' button.');
-        touchMoveDpad();
-        // $scope.pressdpad(direction);
+    
+    // Define the touch target as it exists in DOM
+    $scope.defineDpadTouchTarget = function() {
+        
+        // Get touch targets from DOM
+        var a_button = {};
+        a_button.element = $('.a-button.touch-target');
+        
+        var b_button = {};
+        b_button.element = $('.b-button.touch-target');
+        
+        var d_pad = {}; 
+        d_pad.element = $('.d-pad.touch-target');
+
+        // Measure d-pad touch target
+        d_pad.offset = $('.d-pad.touch-target').offset();
+        d_pad.width = $('.d-pad.touch-target').width();
+        d_pad.height = $('.d-pad.touch-target').height();
+        
+        // Define origin of touch "circle" on page
+        var origin = {};
+        origin.x = d_pad.offset.left + d_pad.width/2;
+        origin.y = d_pad.offset.top + d_pad.height/2;
+        d_pad.origin = origin;
+        
+        // Attach touch targets to scope
+        $scope.touch_targets = {
+            a_button: a_button,
+            b_button: b_button,
+            d_pad: d_pad
+        };
+        
     };
     
-    $scope.touchMoveDpad = function() {
+    // Object storing d-pad direction
+    $scope.dpad = {
+        direction: null
+    };   
+    
+    // Control CSS of d-pad
+    $scope.cssdpad = function() {
         
-        console.log("Looking for overlap");
+        var dpad = $scope.dpad;
         
-        //console.info("I'm moving");
-        //console.info($scope.touchevent);  
+        var css = {
+            'press-left': dpad.direction === 'LEFT',
+            'press-right': dpad.direction === 'RIGHT',
+            'press-up': dpad.direction === 'UP',
+            'press-down': dpad.direction === 'DOWN'
+        };
         
-        // Check if touch intersects with any of the targets
-        var touches = $scope.touchevent.originalEvent.touches;
-//        console.log(touches);
-//        console.log(Array.isArray(touches));
+        return css;
+    };
+    
+    // Define touch target when DOM has loaded
+    angular.element(document).ready(function() { 
+        $scope.defineDpadTouchTarget(); 
+    });
+    
+    
+    // Store interaction details
+    $scope.interaction = {
+        x: 0,
+        y: 0,
+        pressing: false      
+    };
+    
+    
+    // Handle mouse down on d-pad
+    $scope.mouseDownDpad = function(event) {
+        var interaction = $scope.interaction;
         
-        for (let i = 0; i < touches.length; i++) {
-            
-            // Check if any of touches corresponds with a direction
-            
+        interaction.x = event.pageX;
+        interaction.y = event.pageY;
+        interaction.pressing = true;
+        
+        $scope.handleDpadInteraction();
+    };
+    
+    $scope.mouseMoveDpad = function(event) {
+        
+        var interaction = $scope.interaction;
+        
+        // If user is already pressing
+        if (interaction.pressing) {
+            interaction.x = event.pageX;
+            interaction.y = event.pageY;
+            $scope.handleDpadInteraction();
+        }
+        
+    };
+    
+    // Handle mouse down on d-pad
+    $scope.mouseLeaveDpad = function(event) {
+        
+        var interaction = $scope.interaction;
+        interaction.pressing = false;
+        $scope.handleDpadInteraction();
+        
+    };
+    
+    
+    // Handle mouse up on d-pad
+    $scope.mouseUpDpad = function(event) {
+        
+        var interaction = $scope.interaction;
+        
+        interaction.x = event.pageX;
+        interaction.y = event.pageY;
+        
+        interaction.pressing = false;
+        $scope.handleDpadInteraction(interaction);
+  
+    };
+    
+    // Handle touch start on d-pad
+    $scope.touchStartDpad = function() {
+        console.log('started touching');
+        var touches = $scope.touchstart.originalEvent.touches;
+        $scope.touchMoveDpad(touches); 
+    };
+    
+    // Handle touch move on d-pad
+    $scope.touchMoveDpad = function(touches) {       
+        var interaction = $scope.interaction;    
+        
+        // Check if any of touches intersects with the d-pad touch-target
+        // Either get touches from arguments, or from touchmove objects
+        touches = touches || $scope.touchmove.originalEvent.touches;
+        
+        // Get d-pad touch target
+        var touch_target = $scope.touch_targets.d_pad;
+        
+        for (let i = 0; i < touches.length; i++) {         
             var touch = touches[i];
-            
-            var touchX = touch.pageX;
-            var touchY = touch.pageY;
-            
-            console.log(touch);
-            
-            var touch_target = {};
-            
-            touch_target.element = $('.d-pad.touch-target');
-            
-            // Define origin of "circle";
-            touch_target.offset = $('.d-pad.touch-target').offset();
-            touch_target.width = $('.d-pad.touch-target').width();
-            touch_target.height = $('.d-pad.touch-target').height();
-            
-            var origin = {};
-            origin.x = touch_target.offset.left + touch_target.width/2;
-            origin.y = touch_target.offset.top + touch_target.height/2;
-            
-            
-            
-            // Cooridinates in relation to origin (center of touch target)
-            var x = touchX - origin.x;
-            var y = origin.y - touchY;
-            
-            console.log(x, y);
-            
-            var theta = $scope.getTheta(x, y, touch_target.width/2);
-            
-            if (!theta) { continue; }
-            
-            console.log('I have an angle');
+            if ($(touch.target).is(touch_target.element)) {
+                
+                // Update the interaction and handle it
+                interaction.x = touch.pageX;
+                interaction.y = touch.pageY;
+                interaction.pressing = true;
+                $scope.handleDpadInteraction();
+            }
+        } 
+    };
+    
+    // Handle touch end on d-pad
+    $scope.touchEndDpad = function() {
+        var interaction = $scope.interaction;
+        interaction.pressing = false;
+        $scope.handleDpadInteraction();
+    };
+
+    // Get angle based on coordinates using Unit Cirlce trig
+    $scope.getTheta = function(x, y, radius) {
+        
+        var x2 = Math.pow(x, 2);
+        var y2 = Math.pow(y, 2);
+        
+        var r2 = x2 + y2;
+        var r = Math.pow(r2, .5);
+        
+        // Don't process if radius is too larget
+        if (r <= radius) {
+            var theta = {};
+            theta.x = Math.acos(x/r);
+            theta.y = Math.asin(y/r);
+            return theta;
+        } else {
+            return null;
+        } 
+        
+    };
+    
+    // Handle interaction from either mouse or touch
+    $scope.handleDpadInteraction = function(interaction) {
+        
+        // Interaction is either a touch or a click
+        // Interaction coordinates are page coordinates
+        var interaction = $scope.interaction;
+
+        // Get d-pad touch target
+        var touch_target = $scope.touch_targets.d_pad;
+        
+        /* The function takes touches and clicks on the touch-target div
+         * and interprets them as lying on an imaginary circle defined within the div.
+         * The circle is divided into four sections (like a pie rotated 45deg) and the move is defined
+         * based on the location of that interaction within the imaginary circle
+         */
+        
+        // Cooridinates of interaction in relation to origin (center of touch target)
+        var x = interaction.x - touch_target.origin.x;
+        var y = touch_target.origin.y - interaction.y;
+        
+        // Get angle of user interaction in relation to origin
+        var radius = touch_target.width;
+        var theta = $scope.getTheta(x, y, radius);
+        
+        // If theta is defined, compute angle
+        if (theta) { 
             
             // Convert angle to degrees
             var deg = 180/Math.PI;
             theta.x *= deg;
             theta.y *= deg;
-            //console.log(theta.x * deg, theta.y * deg);
             
+            // Determine quadrant of interaction
             var angle;
             // Quadrants 1, and 2
             if (y >= 0) {
@@ -113,222 +261,104 @@ pokemonApp.controller('gameboyController', function($scope, $log, $window, $docu
                 angle = 360 + theta.y;
             }
             
+            var input;
+            // Extract input based on angle
             
-            //angle -= 45;
-            console.log('Angle is: ' + angle);
-            
-            var direction;
-            // Extract direction from angle
             if (angle >= 45 && angle < 135) {
-                direction = 'UP';
+                input = 'UP';
             }
             else if (angle >= 135 && angle < 225) {
-                direction = 'LEFT';
+                input = 'LEFT';
             }
             else if (angle >= 225 && angle < 315) {
-                direction = 'DOWN';
+                input = 'DOWN';
             }
             else if (angle >= 315 || angle < 45) {
-                direction = 'RIGHT'; 
+                input = 'RIGHT'; 
             }
-            
-            $scope.pressdpad(direction);
-            return;
-            
-            //console.log(origin);
-            
-            
-            
-            var targets = [$(".d-pad-target.up"), $(".d-pad-target.down"), $(".d-pad-target.left"), $(".d-pad-target.right")];
-            var direction = ['UP', 'DOWN', 'LEFT', 'RIGHT'];
-            
-            
-            
-            var j = 0;
-            for (let t of targets) {   
-                
-                var offset = t.offset();
-                var width = t.width();
-                var height = t.height();
-                
-                if (touchY > offset.top &&
-                        touchY < offset.top + height &&
-                        touchX > offset.left &&
-                        touchX < offset.left + width) {
-                    //console.log(t);
-                    break;
-                }
-                j++;
-            }
-            
-            if (j < 4) {
-                console.log('My touch overlaps with: ' + direction[j]);
-                $scope.pressdpad(direction[j]);   
-            } else {
-                console.log('Touch did not overlap');
-                console.log({ touchX: touchX, touchY: touchY });
-            }
-        }       
-    };
-    
-    
-    
-    $scope.showWaitOverlay = function() {
-        return game.getPathfinderState() === 'FRONTIER';
-    };
-    
-    $scope.getTheta = function(x, y, radius) {
-        
-        var x2 = Math.pow(x, 2);
-        var y2 = Math.pow(y, 2);
-        
-        var r2 = x2 + y2;
-        var r = Math.pow(r2, .5);
-        
-       
-        
-        if (r <= radius) {
-            var theta = {};
-             theta.x = Math.acos(x/r);
-             theta.y = Math.asin(y/r);
-             return theta;
-        } else {
-            return null;
         } 
-        
-
-    };
-    
-    $scope.touchEndDpad = function() {
-        console.log("Stopped touching dpad.");
-        $scope.releasedpad();
-    };
-    
-    $scope.dpad = {
-        direction: null
-    };
-    
-    $scope.pressdpad = function(direction) {
-        
-        //$scope.dpad.direction = direction;
-        console.log('Pressing in the ' + direction + ' direction.');
-        
-        //$scope.touched = true;
-        
-        var dpad = $scope.dpad;
-        
-        if (direction === 'LEFT') {
-            dpad.direction = 'LEFT';
-            //userConsole.pressDpad();
-            pokeGame.game.KEYPRESS = 'LEFT';
+        // Otherwise invalidate interaction
+        else {
+            interaction.pressing = false;
         }
         
-        else if (direction === 'RIGHT') {
-            dpad.right = true;
-            dpad.direction = 'RIGHT';
-            pokeGame.game.KEYPRESS = 'RIGHT';
+        // If user is 'pressing'
+        if (interaction.pressing) {
+            // Send input to User Console
+            userConsole.handleKeyboardGamepadInput(input);
+            
+            // Update css variable to reflect change
+            $scope.dpad.direction = input;
+            console.log('Input is ' + input);
+        }
+        else {
+            // Send input to User Console
+            userConsole.cancelKeyboardGamepadInput(null);
+            $scope.dpad.direction = null;
         }
         
-        else if (direction === 'UP') {
-            dpad.up = true;
-            dpad.direction = 'UP';
-            pokeGame.game.KEYPRESS = 'UP';
-        }
-        
-        else if (direction === 'DOWN') {
-            dpad.down = true;
-            dpad.direction = 'DOWN';
-            pokeGame.game.KEYPRESS = 'DOWN';
-        }
-        
-        
-        
-        //        console.log('pressing dpad');
-        //        $scope.dpad.down = true;
-        
+        return;
     };
     
-    $scope.releasedpad = function(direction) {
-        
-        //$scope.touched = false;
-        $scope.dpad.direction = null;
-        pokeGame.game.KEYPRESS = null;
-        return; 
-        
-    };
+    /* -------------------- //
+    Handle A/B Button Interaction
+    // -------------------- */
     
-    $scope.cssdpad = function(direction) {
-        
-        var dpad = $scope.dpad;
-        
-        var css = {
-            'press-left': dpad.direction === 'LEFT',
-            'press-right': dpad.direction === 'RIGHT',
-            'press-up': dpad.direction === 'UP',
-            'press-down': dpad.direction === 'DOWN'
-        };
-        
-        return css;
-    };
-    
+    // Control CSS of A/B Buttons;
     $scope.ab = {
         a: false,
         b: false
     };
     
-    $scope.touchStartAB = function(button) {
-        console.log('Touched ' + button + ' button.');
-        $scope.pressAB(button);
-    };
-    
-    $scope.touchEndAB = function(button) {
-        console.log('Finished touching ' + button + ' button.');
-        $scope.releaseAB(button);
-    };
-    
-    
-    $scope.pressAB = function(button) {
+    // Handle mouse down on A/B buttons
+    $scope.mouseDownAB = function(button) {
         if (button === 'A') {
-            //game.setSpeed('')
             $scope.ab.a = true;
             userConsole.toggleGender();
-            
-            //userConsole.toggleSpeed();
         }
         
         if (button === 'B') {
-            console.log('Pressing B Button.');
             userConsole.holdSpeedButton(2);
             $scope.ab.b = true;
         }
     };
     
-    $scope.releaseAB = function(button) {
+    // Handle mouse leave on A/B buttons
+    $scope.mouseLeaveAB = function(button) {
         if (button === 'A') {
-            //game.setSpeed('')
             $scope.ab.a = false;
+        }      
+        if (button === 'B') {          
+            userConsole.holdSpeedButton(null);
+            $scope.ab.b = false;
+        }  
+    };
+    
+    // Handle mouse up on A/B buttons
+    $scope.mouseUpAB = function(button) {
+        if (button === 'A') {
+            $scope.ab.a = false; 
         }
         
         if (button === 'B') {
-            console.log('Released B Button.');
             userConsole.holdSpeedButton(null);
             $scope.ab.b = false;
         }
     };
     
+    // Handle touch start on A/B
+    $scope.touchStartAB = function(button) {
+        $scope.mouseDownAB(button);
+    };
     
+    // Handle touch leave on A/B
+    $scope.touchLeaveAB = function(button) {
+        $scope.mouseUpAB(button);
+    };
     
-    
-    
-    console.log('the gameboy scope: ')
-    console.log($scope);
-    
-    //    
-    //    
-    //    
-    //    // Controller (re-)initializes the canvas  
-    //    gameboy.initCanvas();
-    //    gameboy.createGameboyBackground();
-    //    gameboy.createGrid();
+    // Handle touch end on A/B
+    $scope.touchEndAB = function(button) {
+        $scope.mouseUpAB(button);
+    };
     
 });

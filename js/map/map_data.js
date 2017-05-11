@@ -24,7 +24,7 @@ var map_data = (function() {
         cols: 39.5
     };
     
-    var transition = {
+    var transitionlayer = {
         id: 'transition',
     };
     
@@ -183,8 +183,8 @@ var map_data = (function() {
         waterlayer: function() {
             return waterlayer;
         },
-        transition: function() {
-            return transition;
+        transitionlayer: function() {
+            return transitionlayer;
         },
         keyTiles: function() {
             return keyTiles;

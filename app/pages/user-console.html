@@ -178,7 +178,7 @@
                     <div class="col-xs-12">         
                         <button 
                             class="button-flat full-width" 
-                            ng-click="startPathfinder('PATH'); openSidePanel(false)"
+                            ng-click="startPathfinder('FOLLOW PATH'); openSidePanel(false)"
                             ng-class="pathfindertask.path.button">Follow Path</button>               
                     </div>
                         
@@ -224,7 +224,7 @@
                     <div class="col-xs-12">
                         <button 
                             class="button-flat full-width"
-                            ng-click="clearPathfinder(); openSidePanel(false)">Cancel</button>
+                            ng-click="clearPathfinder(); openSidePanel(false)">Clear/Cancel</button>
                     </div>
                         
                     <div class="col-xs-12">
@@ -237,7 +237,7 @@
                                             class="line" 
                                             repeat-end="updateLogHeight()"
                                             ng-bind-html="line"
-                                            ng-repeat="line in message.log track by $index">{{ line }}</div>
+                                            ng-repeat="line in activity.log track by $index">{{ line }}</div>
                                     </div>
                                 </div>
                             </div>

@@ -1,30 +1,31 @@
 pokemonApp.controller('userConsoleController', function($scope, $log, $location, pokeGame) {
     
-    console.info('console loading');
-    
+    $log.info('*** User Console controller has begun.');
+     
+    // Aquire game objects
     var game = pokeGame.game;
     var userConsole = game.userConsole;
     
-    
     /********* -- Select Algorithm -- ************/
     
-    
+    // Get algorithms from User Console, attach to scope
     $scope.algorithms = {
         options: userConsole.getAlgorithms(),
         selected: userConsole.getSelectedAlgorithm()
     };        
     
-    $scope.$watch('algorithms.selected', function() {
-        
+    // Update selected algorithms when DOM changes
+    $scope.$watch('algorithms.selected', function() {      
         var algorithm = $scope.algorithms.selected;
-        userConsole.setSelectedAlgorithm(algorithm);
-        
+        userConsole.setSelectedAlgorithm(algorithm);      
     });
     
     /********* -- Modify Edge Weights -- ************/
     
+    // Get edg weights from User Console
     $scope.edgeWeight = userConsole.getEdgeWeights();
     
+    // Show edge weights in a slider on DOM
     $scope.showEdgeWeightSliders = function() {
         var id = $scope.algorithms.selected.id;
         
@@ -36,46 +37,36 @@ pokemonApp.controller('userConsoleController', function($scope, $log, $location,
     };
     
     // When user changes edge weight, reveal weight layer
-    $scope.$watch('edgeWeight', function(newValue, oldValue) {
-        
-        userConsole.startWeightChange(newValue, oldValue);
-        
+    $scope.$watch('edgeWeight', function(newValue, oldValue) { 
+        userConsole.startWeightChange(newValue, oldValue);       
     }, true);
     
+    /********* -- Select Source/Target Tiles in Dropdown -- ************/
     
-    /********* -- Select Source/Target Tiles -- ************/
-    
-    //        $scope.locations = {
-    //            options: userConsole.getLocations(),
-    //            source: userConsole.getSourceLocation(),
-    //            target: userConsole.getTargetLocation()
-    //        };
-    
+    // Get source/target locations from User Console
     $scope.locations = userConsole.locations;
     
-    
-    
-    //console.log($scope.locations.options);
-    
-    $scope.$watch('locations.source', function() {
-        
+   
+    // Update User Console when Source Location changes
+    $scope.$watch('locations.source', function() {        
         var location = $scope.locations.source;
-        userConsole.setSourceLocation(location);
-        
+        userConsole.setSourceLocation(location);        
     });
     
-    $scope.$watch('locations.target', function() {
-        
+    // Update User Consle when Target Location changes
+    $scope.$watch('locations.target', function() {        
         var location = $scope.locations.target;
-        userConsole.setTargetLocation(location);
-        
+        userConsole.setTargetLocation(location);       
     });
     
     //-----> Disable different options in dropdown //
     
     // Disable A* if "all tiles" is selected as target
-    $scope.disableAstar = function(id) {          
+    // disable managed in ng-options in html
+    $scope.disableAstar = function(id) { 
+        // 'All Tiles' is location with id 5
         if ($scope.locations.target.id === 5) {
+            // A* is algorithm with id 3
             if (id === 3) { return true; }              
         }     
     };
@@ -87,14 +78,10 @@ pokemonApp.controller('userConsoleController', function($scope, $log, $location,
         }
     };
     
-    //        // Disable Path task button if "all tiles" is selected
-    //        $scope.disablePathTaskButton = function(id) {
-    //            if ($scope.algorithms.selected.id === 3) {  
-    //                //if (id === 5) { return true; }        
-    //            }
-    //        };
-    
+    // Hide 'All Tiles' in Source Location dropdown (cannot start from 'All Tiles')
+    // Implemented with filter in html
     $scope.hideOptions = function(value, index, array) {
+        // 'All Tiles' is location with id 5
         if (value.id === 5) { return false; }
         return true;
     };
@@ -102,21 +89,24 @@ pokemonApp.controller('userConsoleController', function($scope, $log, $location,
     
     /********* -- PointMarker Buttons -- ************/
     
-    
+    // Get point markers button objects from User Console
     $scope.pointmarker = userConsole.getPointMarker();
     
+    // Start Pathfinder when user clicked Point Marker button
     $scope.clickPointMarkerButton = function(sourceTarget) {           
-        state = 'MARK ' + sourceTarget;
-        game.startPathfinder(state);          
+        mode = 'PLACE ' + sourceTarget;
+        game.startPathfinder(mode);          
     };
     
+    // Toggle Point Marker when user clicks checkbox
     $scope.clickPointMarkerCheckbox = function(point) {     
         userConsole.togglePointMarker(point);            
     };
     
-    
+    // Control Point Marker label on checkbox
     $scope.labelPointMarkerCheckbox = function(point) {         
-        var checkbox;            
+        var checkbox;       
+        // Get corresponding checkbox from User Console
         if (point === 'SOURCE') {
             checkbox = $scope.pointmarker.source.checkbox;
         }
@@ -124,6 +114,7 @@ pokemonApp.controller('userConsoleController', function($scope, $log, $location,
             checkbox = $scope.pointmarker.target.checkbox;
         }
         
+        // Update label based on whether checkbox is active
         var label;
         if (!checkbox.disabled) {      
             label = checkbox.active ? 'hide' : 'show';
@@ -137,13 +128,16 @@ pokemonApp.controller('userConsoleController', function($scope, $log, $location,
     /********* -- Start/Cancel Pathfinding -- ************/
     
     
-    //$scope.pathfinderlayer = userConsole.getPathfinderLayer();
-    $scope.pathfindertask = userConsole.getPathfinderTask();
+    // Get Pathfinder Task button objects from User Console
+    // These are the 'Follow Path' and 'Generate Frontier' buttons
+    $scope.pathfindertask = userConsole.getPathfinderTaskButtons();
     
+    // Start pathfinder when Task Button is clicked
     $scope.startPathfinder = function(button) {  
         userConsole.startPathfinder(button);
     };
     
+    // Clear pathfinder when Clear button is clicked
     $scope.clearPathfinder = function() {            
         userConsole.clearPathfinder();            
     };
@@ -151,8 +145,10 @@ pokemonApp.controller('userConsoleController', function($scope, $log, $location,
     
     /**************** -- Press VCR -- ******************/
     
+    // Get VCR button objects from User Console
     $scope.vcr = userConsole.getVCR();
     
+    // Update VCR when VCR buttons are pressed by User
     $scope.pressVCR = function($event, userCommand) {            
         userConsole.handleVCRCommand(userCommand);
     };
@@ -160,7 +156,7 @@ pokemonApp.controller('userConsoleController', function($scope, $log, $location,
     
     /********* -- Turn Layers on and off -- ************/
     
-    
+    // Button object for map state
     $scope.mapStateButton = {
         click: 'BITMAP',
         hover: null
@@ -173,12 +169,13 @@ pokemonApp.controller('userConsoleController', function($scope, $log, $location,
     
     $scope.clickMapStateButton = function(state) { $scope.mapStateButton.click = state; };
     
-    // Update active view as necessary
+    // Update view when button object changes
     $scope.$watch('mapStateButton', function() { 
         
-        // Turn Graphic/Bitmap layers on/off based on variables
+        // Get button object
         var mapStateButton = $scope.mapStateButton;
         
+        // Update User Console based on button object
         if (mapStateButton.hover) {
             userConsole.toggleMapState(mapStateButton.hover);
         }
@@ -190,39 +187,34 @@ pokemonApp.controller('userConsoleController', function($scope, $log, $location,
     
     
     /********* -- Turn Rows/Columns on and off -- ************/
-    
-    
-    // Toggle rows/cols
+      
+    // Button object for grid state
     $scope.gridButton = {
         click: false,
         hover: false
     };
     
+    // Toggle gridlines on and off
     $scope.enterGridButton = function() { $scope.gridButton.hover = true; };
     
     $scope.leaveGridButton = function() { $scope.gridButton.hover = false; };
     
     $scope.clickGridButton = function() { $scope.gridButton.click = !$scope.gridButton.click; };
     
-    
-    // Update active view as necessary
+    // Update view when button object changes
     $scope.$watch('gridButton', function(newValue, oldValue) {
         
-        // Turn rows/cols on/off
+        // Get button object
         var button = $scope.gridButton;
         
+        // Update User Console based on button object
         if (button.hover) {
-            userConsole.toggleGrid(true);
-            //map.ROWSCOLS_STATE = 'ON';
-            //map.drawGraphicRowsCols();   
+            userConsole.toggleGrid(true); 
         }
         else if (button.click) {
             userConsole.toggleGrid(true);
-            //map.ROWSCOLS_STATE = 'ON';
-            //map.drawGraphicRowsCols();
         } else {
             userConsole.toggleGrid(false);
-            //map.ROWSCOLS_STATE = 'OFF';       
         }
         
     }, true);
@@ -230,8 +222,11 @@ pokemonApp.controller('userConsoleController', function($scope, $log, $location,
     
     /********* -- Toggle Path/Frontier Layer -- ************/
     
+    // Get Pathfinder Layer button objects
     $scope.pathfinderlayer = userConsole.getPathfinderLayer(); 
     
+    // Update Pathfinder Layer button objects based on mouse behavior
+    // Send updates to User Console
     $scope.enterPathfinderLayerButton = function(selection) { 
         userConsole.togglePathfinderLayerButton('hover', selection);          
     };
@@ -247,46 +242,31 @@ pokemonApp.controller('userConsoleController', function($scope, $log, $location,
     
     /********* -- Activity Log -- ************/
     
-    $scope.message = userConsole.message; 
+    // Get Activity Log messages array from User Console
+    $scope.activity = userConsole.getActivityLog(); 
     
-    
-    
+    // Update height of Activity Log based on messages
     $scope.updateLogHeight = function() {
-        // Update height of activity log
-        //var maxLogHeight = 400;
-
+        
+        // Get log DOM elements
         var log = {};    
-        log.wrapperHeight = $('.activity-log .wrapper').height();
+        log.element = $('.activity-log');
+        log.wrapper = $('.activity-log .wrapper');
         
-//        
-//        
-//        //log.line = $('.activity-log .wrapper .line')[0];
-//        
-//        
-//        if (!log.line) {
-//            log.lineHeight = 20;
-//        } else {
-//            log.lineHeight = $(log.line).height();
-//        }
-//        
-//        log.messageHeight = $scope.message.log.length * log.lineHeight;        
-//        log.logHeight = Math.min(log.messageHeight, 300);
-//        
-//        
-//        //
-        //log.height = Math.min(log.containerHeight, maxLogHeight);
-    
-        $('.activity-log').css('height', log.wrapperHeight);
+        // Measure log wrapper
+        log.wrapperHeight = log.wrapper.height();
         
-        // Position scroll bar at bottom of log window
-//        $(".activity-log .wrapper").scrollTop($(".activity-log .wrapper")[0].scrollHeight)
-        var scrollHeight = $('.activity-log .wrapper')[0].scrollHeight;
-        $(".activity-log .wrapper").scrollTop(scrollHeight);
+        // Update log height to match wrapper
+        log.element.css('height', log.wrapperHeight);
+        
+        // Position scrollbar to bottom of activity log window when heigh increases
+        var scrollHeight = log.wrapper[0].scrollHeight;
+        log.wrapper.scrollTop(scrollHeight);
         
     };
     
-    
-    $scope.$watch('message', function() {
+    // Update log height when number log messages increases
+    $scope.$watch('activity', function() {
         $scope.updateLogHeight();
     }, true);
     
@@ -295,18 +275,14 @@ pokemonApp.controller('userConsoleController', function($scope, $log, $location,
     
     /********* -- Update Speed -- ************/
     
-//    $scope.speed = {
-//        click: 1,
-//        hover: null
-//    };
-    
+    // Get speed button from User Console
     $scope.speed = {
         button: userConsole.getSpeedButton()
     };
     
+    // Update User Console based on mouse behavior on DOM
     $scope.enterSpeed = function(speed) { 
         userConsole.holdSpeedButton(speed);
-        //$scope.speed.hover = speed; 
     };
     
     $scope.leaveSpeed = function() { 
@@ -317,33 +293,14 @@ pokemonApp.controller('userConsoleController', function($scope, $log, $location,
         userConsole.clickSpeedButton(speed);
     };
     
-//    // Update sprite speed
-//    $scope.$watch('speed', function() {
-//        
-//        var speed = $scope.speed;
-//        
-//        if (speed.hold) {
-//            userConsole.setPlayerSpeed(speed.hover);
-//            //sprite.factorSpeed = speed.hover;
-//        }
-//        else if (speed.click) {
-//            userConsole.setPlayerSpeed(speed.click);
-//        }
-//        
-//    }, true);
-    
     /********* -- Update Gender -- ************/
     
-//    $scope.GENDER = {
-//        click: 'BOY',
-//        hover: null
-//    };
-//    
+    // Get Gender button from User Console
     $scope.gender = {
         button: userConsole.getGenderButton()
     };
     
-    // Toggle Graphic layer on/off
+    // Update Gender based on mouse behavior on DOM
     $scope.enterGender = function(gender) { 
         userConsole.holdGenderButton(gender);
     };
@@ -354,38 +311,6 @@ pokemonApp.controller('userConsoleController', function($scope, $log, $location,
     
     $scope.clickGender = function(gender) { 
         userConsole.clickGenderButton(gender);
-    };
-    
-//    $scope.$watch('GENDER', function(newValue, oldValue) {
-//        
-//        var GENDER = $scope.GENDER;
-//        
-//        if (GENDER.hover) {
-//            userConsole.setPlayerGender(GENDER.hover);
-//        }
-//        else if (GENDER.click) {
-//            userConsole.setPlayerGender(GENDER.click);
-//        }
-//        
-//    }, true);
-//    
-    
-    
-    
-    
-    $scope.game = game;
-    
-    $scope.debugClick = function() {
-        
-        game.map.addRemoveGaps(true);
-        game.map.createMapLayers(game.graph);
-        
-    };
-    
-    $scope.debugClick2 = function() {
-        
-        game.map.addRemoveGaps(false);
-        
-    };
+    };    
     
 });

@@ -14,16 +14,48 @@ var SpriteSheet = function(spritesheet_data) {
     
     
     // Objects to hold both spritesheet canvases
-    this.color = {};
-    this.bw = {};
     this.sprite = {};
-    this.initCanvas('color');
-    this.initCanvas('bw');    
-    this.sprite_size = this.color.canvas.width / spritesheet_data.cols();
+    this.sheet = {};  
+ 
 };
 
 
-SpriteSheet.prototype.initCanvas = function(type) {
+SpriteSheet.prototype.init = function() {
+    
+    this.initImage();
+    var self = this;
+    
+    if (this.img.complete) {
+        
+        this.initCanvas();
+        this.initSprite();
+        
+    } else {
+        
+        $(this.img).on('load', function() {           
+            
+            self.initCanvas();
+            self.initSprite();
+            
+        });
+        
+    }
+       
+    this.initCanvas();
+    this.initSprite();
+    
+};
+
+
+SpriteSheet.prototype.initImage = function() {
+  
+    // Select either color or black/white spritesheet
+    var imgId = 'spritesheet';
+    this.img = document.getElementById(imgId);    
+    
+};
+
+SpriteSheet.prototype.initCanvas = function(type = 'color') {
     
     var spritesheet_data = this.spritesheet_data;
     
@@ -35,30 +67,26 @@ SpriteSheet.prototype.initCanvas = function(type) {
     ctx.webkitImageSmoothingEnabled = false;
     ctx.msImageSmoothingEnabled = false;
     ctx.imageSmoothingEnabled = false;
+
     
-    // Select either color or black/white spritesheet
-    var imgId = 'spritesheet-' + type;
-    var spritesheet_img = document.getElementById(imgId);
+//    console.log('Has the spritesheet been loaded completely?');
+//    console.log(spritesheet_img.complete);
     
-    if (type === 'color') {
-        this.img = $(spritesheet_img).clone();
-    }
+    canvas.width = this.img.width;
+    canvas.height = this.img.height;
     
-    console.log('Has the spritesheet been loaded completely?');
-    console.log(spritesheet_img.complete);
-    
-    canvas.width = spritesheet_img.width;
-    canvas.height = spritesheet_img.height;
-    
-    console.log('Spritesheet: ' + spritesheet_img.width + ', ' + spritesheet_img.height);
+    console.log('Spritesheet: ' + this.img.width + ', ' + this.img.height);
     console.log('Canvas: ' + canvas.width + ', ' + canvas.height);
     
-    ctx.drawImage(spritesheet_img, 0, 0);
+    ctx.drawImage(this.img, 0, 0);
    
-    this[type] = {
-        canvas: canvas,
-        ctx: ctx
-    };
+    this.sheet.canvas = canvas;
+    this.sheet.ctx = ctx;
+   
+//    this[type] = {
+//        canvas: canvas,
+//        ctx: ctx
+//    };
 
 };
 
@@ -72,6 +100,8 @@ SpriteSheet.prototype.initSprite = function() {
     ctx.msImageSmoothingEnabled = false;
     ctx.imageSmoothingEnabled = false;
     
+    this.sprite_size = this.sheet.canvas.width / spritesheet_data.cols();
+    
     canvas.width = this.sprite_size;
     canvas.height = this.sprite_size;
     
@@ -84,15 +114,17 @@ SpriteSheet.prototype.initSprite = function() {
 
 SpriteSheet.prototype.getSprite = function(spriteOptions, color=true) {
     
+    if (!this.img.complete) { return; }
+    
     var sprite_size = this.sprite_size;
     
     this.sprite.ctx.clearRect(0, 0, sprite_size, sprite_size);
     
     // Get correct spritesheet
-    var spritesheet = this.color;
-    if (!color) {
-        spritesheet = this.bw;
-    }
+    var sheet = this.sheet;
+//    if (!color) {
+//        spritesheet = this.bw;
+//    }
     
     if (!Array.isArray(spriteOptions)) {
         spriteOptions = [spriteOptions];
@@ -105,7 +137,7 @@ SpriteSheet.prototype.getSprite = function(spriteOptions, color=true) {
 //        var spritesheetImg = document.getElementById('spritesheet-color');
 //        console.log(spritesheetImg.isConnected);
         
-        this.sprite.ctx.drawImage(spritesheet.canvas, xy.x, xy.y, sprite_size, sprite_size, 0, 0, sprite_size, sprite_size);     
+        this.sprite.ctx.drawImage(sheet.canvas, xy.x, xy.y, sprite_size, sprite_size, 0, 0, sprite_size, sprite_size);     
     }
     
     return this.sprite;

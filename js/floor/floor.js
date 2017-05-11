@@ -33,6 +33,15 @@ var Floor = function(game, floor_data) {
     console.log(this.tiles);
 };
 
+//-------------------------------------//
+/////////////////////////////////////////
+// Itialization
+/////////////////////////////////////////
+//-------------------------------------//
+
+Floor.prototype._________INITIALIZATION_________ = function() {};
+
+
 Floor.prototype.init = function(graph) {
   
     this.addFloorData();
@@ -58,12 +67,6 @@ Floor.prototype.initBackgroundandForeground = function() {
   
     //this.tile_size = this.background.img.width/this.cols;
 };
-
-// Draw Grid view floor layer
-Floor.prototype.drawFloorLayer = function() {
-    this.game.drawImageToScreen(this.floorlayer.canvas, 'floor', this.id, 'BACKGROUND');
-};
-
 
 
 // Create Floor layer of Grid view
@@ -169,6 +172,61 @@ Floor.prototype.initFloorLayer = function() {
     
     this.floorlayer = floorlayer;
 };
+
+// Create key tile indicators
+Floor.prototype.createKeyTiles = function() {
+
+    var canvas = document.createElement('canvas');
+    var ctx = canvas.getContext('2d');
+    
+    canvas.width = this.cols * this.tile_size;
+    canvas.height = this.rows * this.tile_size;
+    
+    // Semi-transparent yellow
+    ctx.fillStyle = 'rgba(255, 193, 7, .3)';
+
+    var tile_size = this.tile_size;
+      
+    for (let ladder of this.floor_data.ladders()) {
+        
+        let tile_arr = ladder.tile;
+
+        let row = tile_arr[0];
+        let col = tile_arr[1];
+        
+        let y = row * tile_size;
+        let x = col * tile_size;
+        
+        ctx.fillRect(x, y, tile_size, tile_size);
+        //this.ctx.fillRect(this.offset_x + x, this.offset_y + y, tile_size, tile_size);
+    }
+    
+    this.keytiles.canvas = canvas;
+    this.keytiles.ctx = ctx;
+
+};
+
+//-------------------------------------//
+/////////////////////////////////////////
+// Drawing
+/////////////////////////////////////////
+//-------------------------------------//
+
+Floor.prototype._________DRAW_METHODS_________ = function() {};
+
+// Draw Graphic View view floor layer
+Floor.prototype.drawFloorLayer = function() {
+    var options = {
+        image: this.floorlayer.canvas,
+        target: 'floor',
+        floorId: this.id,
+        dof: 'BACKGROUND'
+    };
+    this.game.drawImageToScreen(options);
+};
+
+
+
 
 
 // Create key tile indicators
@@ -292,16 +350,21 @@ Floor.prototype.addFloorToGraph = function(graph) {
                         continue;
                     }
                     
-                    // Add weight to 'LAND' tiles
-                    if (nTile.type === "LAND") {
-                        let weight = this.game.getWeight('LAND');
-                        graph.addEdge(tile.id, nTile.id, weight);
+                    if (nTile.type === 'LAND' ||
+                            nTile.type === 'WATER') {
+                        graph.addEdge(tile.id, nTile.id);
                     }
-                    // Add weight to 'WATER' tiles
-                    else if (nTile.type === "WATER") {
-                        let weight = this.game.getWeight('WATER');
-                        graph.addEdge(tile.id, nTile.id, weight);
-                    }
+                    
+//                    // Add weight to 'LAND' tiles
+//                    if (nTile.type === "LAND") {
+//                        let weight = this.game.getWeight('LAND');
+//                        graph.addEdge(tile.id, nTile.id, weight);
+//                    }
+//                    // Add weight to 'WATER' tiles
+//                    else if (nTile.type === "WATER") {
+//                        let weight = this.game.getWeight('WATER');
+//                        graph.addEdge(tile.id, nTile.id, weight);
+//                    }
                     
                     
                 }        
@@ -327,6 +390,16 @@ Floor.prototype.addFloorToGraph = function(graph) {
 //    }
     
 };
+
+
+//-------------------------------------//
+/////////////////////////////////////////
+// Tile Methods
+/////////////////////////////////////////
+//-------------------------------------//
+
+Floor.prototype._________TILE_METHODS_________ = function() {};
+
 
 
 // Check if row/col is in bounds
@@ -363,581 +436,187 @@ Floor.prototype.getTileType = function(row, col) {
     
 };
 
-
-
-
-
-/*******************************************/
-/**********    Canvas Methods    ***********/
-/*******************************************/
-Floor.prototype.__________FRAME_CANVAS_METHODS__________ = function() {};
-
-
-
-Floor.prototype.createFrame = function() {
-        
-    var canvas = document.createElement('canvas');
-    var ctx = canvas.getContext('2d');
-
-    var img = this.background.img;
+Floor.prototype.getXY = function(row, col) {
     
-    this.width = canvas.width = img.width;
-    this.height = canvas.height = img.height;
-    
-    this.tile_size = img.width / this.cols;
-    
-    this.frame = {
-        canvas: canvas,
-        ctx: ctx
+    var x = (col + this.left_offset) * this.tile_size;
+    var y = (row + this.top_offset) * this.tile_size;
+
+    return {
+        x: x,
+        y: y
     };
-    
-};
+};        
 
 
-Floor.prototype.createWaterLayer = function() {
-    
-    
-    var game = this.game;
-    this.waterlayer = Array(8);
-   
-    var waterOptions = {
-        TYPE: 'TILE',
-        SURFACE: 'WATER',
-        NUM: 0
-    };
-    
-    var rows = this.rows;
-    var cols = this.cols;
-    var tile_size = this.tile_size;
-    
-    for (var i = 0; i < 8; i++) {
-        
-        // Create a new canvas for each layer of water
-        var canvas = document.createElement('canvas');
-        var ctx = canvas.getContext('2d');
 
-        ctx.mozImageSmoothingEnabled = false;
-        ctx.webkitImageSmoothingEnabled = false;
-        ctx.msImageSmoothingEnabled = false;
-        ctx.imageSmoothingEnabled = false;
-
-        canvas.width = this.cols * this.tile_size;
-        canvas.height = this.rows * this.tile_size;        
-        
-        // Update water sprite options
-        waterOptions.NUM = i;
-        var waterSprite = game.spritesheet.getSprite(waterOptions);
-        
-        // draw sprite to ctx
-        for (let r = 0; r < rows; r++) {
-            for (let c = 0; c < cols; c++) {
-                
-                let y = r * tile_size;
-                let x = c * tile_size;
-                
-                ctx.drawImage(waterSprite.canvas, x, y, tile_size, tile_size);
-                
-            }
-        }
-        
-        
-        // Attach rocklayer to floor via bitmap object
-        var layer = {
-            canvas: canvas,
-            ctx: ctx
-        };
-        
-        this.waterlayer[i] = layer;
-    }
-    
-    //this.frame.ctx.drawImage(this.bitmap.rocklayer.canvas, this.frame.offset_x, this.frame.offset_y);
-    console.log(this);
-    
-};
-
-
-// Draw animated water layer
-Floor.prototype.drawWaterLayer = function() {
-    let i = Math.floor( (this.game.ticks/16) % 8 );    
-    this.frame.ctx.drawImage(this.waterlayer[i].canvas, 0, 0, this.frame.canvas.width, this.frame.canvas.height);
-};
-
-// Draw background
-Floor.prototype.drawBackground = function() {
-    this.frame.ctx.drawImage(this.backgroundImg, 0, 0);
-};
-
-// Draw foreground
-Floor.prototype.drawForeground = function() {
-    
-    // Not every floor has an foreground
-    if (this.foregroundImg) {
-        this.frame.ctx.drawImage(this.foregroundImg, 0, 0);
-    }
-    
+Floor.prototype.hasWater = function() {
+    var water = this.floor_data.water();
+    return Object.keys(water).length !== 0;
 };
 
 
 
-
-
-// Draw Grid view edges
-Floor.prototype.drawPathLayer = function() {
-    console.log('Drawing  path layer');
-    this.frame.ctx.drawImage(this.pathlayer.canvas, 0, 0);
-};
-
-
-Floor.prototype.drawVisualizerLayer = function() {
-    //console.log(this.visualizerlayer);
-    this.frame.ctx.drawImage(this.visualizerlayer.canvas, 0, 0);
-};
-
-
-Floor.prototype.__________END_FRAME_CANVAS_METHODS__________ = function() {};
-
-
-
-Floor.prototype.createFram = function(tile_size, rows, cols) {
-     
-//    // Get canvas Id
-//    var canvasId = this.floor_data.canvasId();
-//    
-//    // Define canvas objects
-    //    var canvas = document.getElementById(canvasId);
-    //    var ctx = canvas.getContext('2d');
-    
-    
-    
-    ctx.mozImageSmoothingEnabled = false;
-    ctx.webkitImageSmoothingEnabled = false;
-    ctx.msImageSmoothingEnabled = false;
-    ctx.imageSmoothingEnabled = false;
-      
-    // Number of rows/cols in frame
-    var frame_rows = rows || 27;
-    var frame_cols = cols || 44;
-    
-    var floor_rows = this.rows;
-    var floor_cols = this.cols;
-    
-    // Update canvas height
-    canvas.width = tile_size * frame_cols;
-    canvas.height = tile_size * frame_rows;
-    
-    // Compute offsets of floor from frame
-    var offset_rows = Math.floor((frame_rows - floor_rows)/2);
-    var offset_cols = Math.floor((frame_cols - floor_cols)/2);
-    
-    var offset_x = offset_cols * tile_size;
-    var offset_y = offset_rows * tile_size;
-
-    this.tile_size = tile_size;
-    
-    // Create frame object to hold canvas, related data;
-    var frame = {};
-    
-    frame.canvas = canvas;
-    frame.ctx = ctx;
-    frame.rows = frame_rows;
-    frame.cols = frame_cols;
-    frame.offset_rows = offset_rows;
-    frame.offset_cols = offset_cols;
-    frame.offset_x = offset_x;
-    frame.offset_y = offset_y;
-    
-    this.frame = frame;
-    
-};
-
-
-/* ---- Bitmap Layers ---- */
-
-// Nope
-Floor.prototype.createBitmapRockLayer = function() {
-    
-    var game = this.game;
-    
-    var canvas = document.createElement('canvas');
-    var ctx = canvas.getContext('2d');
-    
-    ctx.mozImageSmoothingEnabled = false;
-    ctx.webkitImageSmoothingEnabled = false;
-    ctx.msImageSmoothingEnabled = false;
-    ctx.imageSmoothingEnabled = false;
-    
-    canvas.width = this.frame.canvas.width;
-    canvas.height = this.frame.canvas.height;
-    
-    var rows = this.frame.rows;
-    var cols = this.frame.cols;
-    var tile_size = this.tile_size;
-    
-    //var tile_rock = document.getElementById('tile-rock');
-    
-    var rockOptions = {
-        TYPE: 'TILE',
-        SURFACE: 'ROCK',
-        NUM: 0
-    };
-    
-    var rockSprite = game.spritesheet.getSprite(rockOptions);
-    
-    for (let r = 0; r < rows; r++) {
-        for (let c = 0; c < cols; c++) {
-     
-            let y = r * tile_size;
-            let x = c * tile_size;
-
-            ctx.drawImage(rockSprite.canvas, x, y, tile_size, tile_size);
-            
-        }
-    }
-    
-    // Attach rocklayer to floor via bitmap object
-    var rocklayer = {
-        canvas: canvas,
-        ctx: ctx
-    };
-    
-    this.bitmap['rocklayer'] = rocklayer;
-};
-
-
-
-
-Floor.prototype.drawImageToFrame = function(img, tile, span=1) {
-    
-    if (!tile) {
-       var frame = this.frame;
-       this.frame.ctx.drawImage(img, 0, 0); 
-       return;
-    }
-    
-    var row = tile.row;
-    var col = tile.col;  
-    var floor = tile.floor;
-    var frame = floor.frame;
-    var tile_size = floor.tile_size;
-
-    var offset = (1 - span)/2;
-
-    var x = (col + offset) * tile_size;
-    var y = (row + offset) * tile_size;
-
-    floor.frame.ctx.drawImage(img, x, y, tile_size * span, tile_size * span);
-
-};
-
-
-
-
-
-
-
-// Draw Bitmap rock layer
-Floor.prototype.drawBitmapRockLayer = function() {
-    this.frame.ctx.drawImage(this.bitmap.rocklayer.canvas, 0, 0);
-};
-
-
-
-
-// Draw Bitmap floor layer
-Floor.prototype.drawBitmapFloorLayer = function() {
-    this.frame.ctx.drawImage(this.bitmap.floorlayer.canvas, this.frame.offset_x, this.frame.offset_y);
-};
-
-
-
-
-/*---- Grahpic Layers ----*/
-
-Floor.prototype.createGraphicRockLayer = function() {
- 
-    var canvas = document.createElement('canvas');
-    var ctx = canvas.getContext('2d');
-    
-    canvas.width = this.frame.canvas.width;
-    canvas.height = this.frame.canvas.height;
-    
-    ctx.fillStyle = '#4CAF50';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    
-    // Attach rocklayer to floor via graphic object
-    var rocklayer = {
-        canvas: canvas,
-        ctx: ctx
-    };
-    
-    this.graphic['rocklayer'] = rocklayer;
-
-};
-
-// Create Floor layer of Grid view
-Floor.prototype.createGraphicFloorLayer = function() {
-    
-    var canvas = document.createElement('canvas');
-    var ctx = canvas.getContext('2d');
-    
-    canvas.width = this.cols * this.tile_size;
-    canvas.height = this.rows * this.tile_size;
-    
-    var rows = this.rows;
-    var cols = this.cols;
-    
-    for (let r = 0; r < rows; r++) {
-        for (let c = 0; c < cols; c++) {
-     
-            let type = this.getTileType(r, c);
-            
-            if (type === 'LAND') {
-               ctx.fillStyle = '#ccc';
-            }
-
-            if (type === 'ROCK') {
-               ctx.fillStyle = '#4CAF50';
-            }
-
-            if (type === 'WATER') {
-               ctx.fillStyle = '#337ab7';
-            }
-            
-            let tile_size = this.tile_size;
-            let y = r * tile_size;
-            let x = c * tile_size;
-            ctx.fillRect(x, y, tile_size, tile_size);
-            //this.ctx.fillRect(this.offset_x + x, this.offset_y + y, tile_size, tile_size);
-        }
-    }
-    
-    // Attach rocklayer to floor via graphic object
-    var floorlayer = {
-        canvas: canvas,
-        ctx: ctx
-    };
-    
-    this.graphic['floorlayer'] = floorlayer;
-};
-
-
-// Create lines of rows/cols
-Floor.prototype.createRowsCols = function() {
-    
-    
-    
-
-};
-
-//Floor.prototype.createGraphicPathLayer = function() {
-//    
-//    //Draw dots to represent edges. Mostly for debugging purposes
+//
+//
+//
+///*---- Grahpic Layers ----*/
+//
+//Floor.prototype.createGraphicRockLayer = function() {
+// 
 //    var canvas = document.createElement('canvas');
 //    var ctx = canvas.getContext('2d');
 //    
-//    //nodeV = graph.getNode([r,c]);
-//    canvas.width = this.canvas.width;
-//    canvas.height = this.canvas.height;
-//    var tile_size = this.tile_size;
+//    canvas.width = this.frame.canvas.width;
+//    canvas.height = this.frame.canvas.height;
 //    
-//    ctx.strokeStyle = 'turquoise';
-//    ctx.beginPath();
-//    ctx.lineWidth = 4;
+//    ctx.fillStyle = '#4CAF50';
+//    ctx.fillRect(0, 0, canvas.width, canvas.height);
 //    
-//    this.path.canvas = canvas;
-//    this.path.ctx = ctx;
+//    // Attach rocklayer to floor via graphic object
+//    var rocklayer = {
+//        canvas: canvas,
+//        ctx: ctx
+//    };
 //    
+//    this.graphic['rocklayer'] = rocklayer;
+//
 //};
-
-Floor.prototype.appendPath = function(color, player) {
-    
-   
-    
-    var x = player.current.col * this.tile_size;
-    var y = player.current.row * this.tile_size;
-    
-    // Adjust path during jump on/jump off
-    if (player.MOVE_STATE === 'JUMP ON' || player.MOVE_STATE === 'JUMP OFF') {
-        if (player.current.row < player.stopTile.row && player.playerOptions.FACING !== 'DOWN') {
-            var y = player.stopTile.row * this.tile_size;
-        }
-    }
-    
-    x += this.tile_size / 2;
-    y += this.tile_size / 2;        
-    
-    var canvas = this.pathlayer.canvas;
-    var ctx = this.pathlayer.ctx;
-    ctx.strokeStyle = color;
-    ctx.lineTo(x, y);
-    ctx.stroke();
-    
-    
-    //ctx.beginPath();
-    
-    
-        //ctx.closePath();
-        //ctx.moveTo(x, y);
-        
-    
-    //ctx.beginPath();
-    
-    //ctx.lineTo(startXY.x, startXY.y, endXY.x, endXY.y);
-    
-    
-};
-
-
-
-// Create edges 
-Floor.prototype.createEdges = function(graph) {
-     
-    //Draw dots to represent edges. Mostly for debugging purposes
-    var canvas = document.createElement('canvas');
-    var ctx = canvas.getContext('2d');
-    
-    //nodeV = graph.getNode([r,c]);
-    canvas.width = this.canvas.width;
-    canvas.height = this.canvas.height;
-    tile_size = this.tile_size;
-    
-    ctx.strokeStyle = 'red';
-    
-    for (let v in graph.getNodes()) {
-        
-        let tile = this.getTileFromId(v);
-        
-        if (!tile) { continue; }
-        
-        let row = tile.row;
-        let col = tile.col;
-        
-        for (let u of graph.getAdj(v)) {
-        
-            let uTile = this.getTileFromId(u);
-        
-            if (!uTile) { continue; }
-            
-            let uRow = uTile.row;
-            let uCol = uTile.col;            
-
-            if (uRow > row) { }
-            else if (uRow === row) { uRow += (.5); }
-            else if (uRow < row) { uRow += 1; }
-
-            if (uCol > col) { }
-            else if (uCol === col) { uCol += (.5); }
-            else if (uCol < col) { uCol += 1; }
-
-            
-            let dot_x = uCol * tile_size;
-            let dot_y = uRow * tile_size;
-            
-            ctx.moveTo(dot_x, dot_y);
-            ctx.arc(dot_x, dot_y, 1, 0, Math.PI * 2, true);
-            ctx.stroke();            
-        }  
-    }
-    
-    this.edges = canvas;
-};
-
-
-
-// Create key tile indicators
-Floor.prototype.createKeyTiles = function() {
-
-    var canvas = document.createElement('canvas');
-    var ctx = canvas.getContext('2d');
-    
-    canvas.width = this.cols * this.tile_size;
-    canvas.height = this.rows * this.tile_size;
-    
-    // Semi-transparent yellow
-    ctx.fillStyle = 'rgba(255, 193, 7, .3)';
-
-    var tile_size = this.tile_size;
-      
-    for (let ladder of this.floor_data.ladders()) {
-        
-        let tile_arr = ladder.tile;
-
-        let row = tile_arr[0];
-        let col = tile_arr[1];
-        
-        let y = row * tile_size;
-        let x = col * tile_size;
-        
-        ctx.fillRect(x, y, tile_size, tile_size);
-        //this.ctx.fillRect(this.offset_x + x, this.offset_y + y, tile_size, tile_size);
-    }
-    
-    this.keytiles.canvas = canvas;
-    this.keytiles.ctx = ctx;
-
-};
-
-
-// Draw Grid view rock layer
-Floor.prototype.drawGraphicRockLayer = function() {
-    this.frame.ctx.drawImage(this.graphic.rocklayer.canvas, 0, 0);
-};
-
-
-
-// Draw Grid view rows/cols
-Floor.prototype.drawRowsCols = function() {    
-    //this.frame.ctx.drawImage(this.rowscols.canvas, 0, 0);
-};
-
-// Draw Grid view key tiles
-Floor.prototype.drawKeyTiles = function() {
-    this.frame.ctx.drawImage(this.keytiles.canvas, this.frame.offset_x, this.frame.offset_y);
-};
-
-// Draw Grid view edges
-Floor.prototype.drawEdges = function() {
-    this.frame.ctx.drawImage(this.edges.canvas, this.frame.offset_x, this.frame.offset_y);
-};
+////
+////// Create Floor layer of Grid view
+////Floor.prototype.createGraphicFloorLayer = function() {
+////    
+////    var canvas = document.createElement('canvas');
+////    var ctx = canvas.getContext('2d');
+////    
+////    canvas.width = this.cols * this.tile_size;
+////    canvas.height = this.rows * this.tile_size;
+////    
+////    var rows = this.rows;
+////    var cols = this.cols;
+////    
+////    for (let r = 0; r < rows; r++) {
+////        for (let c = 0; c < cols; c++) {
+////     
+////            let type = this.getTileType(r, c);
+////            
+////            if (type === 'LAND') {
+////               ctx.fillStyle = '#ccc';
+////            }
+////
+////            if (type === 'ROCK') {
+////               ctx.fillStyle = '#4CAF50';
+////            }
+////
+////            if (type === 'WATER') {
+////               ctx.fillStyle = '#337ab7';
+////            }
+////            
+////            let tile_size = this.tile_size;
+////            let y = r * tile_size;
+////            let x = c * tile_size;
+////            ctx.fillRect(x, y, tile_size, tile_size);
+////            //this.ctx.fillRect(this.offset_x + x, this.offset_y + y, tile_size, tile_size);
+////        }
+////    }
+////    
+////    // Attach rocklayer to floor via graphic object
+////    var floorlayer = {
+////        canvas: canvas,
+////        ctx: ctx
+////    };
+////    
+////    this.graphic['floorlayer'] = floorlayer;
+////};
+////
+////
+////
+//////Floor.prototype.createGraphicPathLayer = function() {
+//////    
+//////    //Draw dots to represent edges. Mostly for debugging purposes
+//////    var canvas = document.createElement('canvas');
+//////    var ctx = canvas.getContext('2d');
+//////    
+//////    //nodeV = graph.getNode([r,c]);
+//////    canvas.width = this.canvas.width;
+//////    canvas.height = this.canvas.height;
+//////    var tile_size = this.tile_size;
+//////    
+//////    ctx.strokeStyle = 'turquoise';
+//////    ctx.beginPath();
+//////    ctx.lineWidth = 4;
+//////    
+//////    this.path.canvas = canvas;
+//////    this.path.ctx = ctx;
+//////    
+//////};
+//////
+//////
+//////
+//////
+//////// Create edges 
+//////Floor.prototype.createEdges = function(graph) {
+//////     
+//////    //Draw dots to represent edges. Mostly for debugging purposes
+//////    var canvas = document.createElement('canvas');
+//////    var ctx = canvas.getContext('2d');
+//////    
+//////    //nodeV = graph.getNode([r,c]);
+//////    canvas.width = this.canvas.width;
+//////    canvas.height = this.canvas.height;
+//////    tile_size = this.tile_size;
+//////    
+//////    ctx.strokeStyle = 'red';
+//////    
+//////    for (let v in graph.getNodes()) {
+//////        
+//////        let tile = this.getTileFromId(v);
+//////        
+//////        if (!tile) { continue; }
+//////        
+//////        let row = tile.row;
+//////        let col = tile.col;
+//////        
+//////        for (let u of graph.getAdj(v)) {
+//////        
+//////            let uTile = this.getTileFromId(u);
+//////        
+//////            if (!uTile) { continue; }
+//////            
+//////            let uRow = uTile.row;
+//////            let uCol = uTile.col;            
+//////
+//////            if (uRow > row) { }
+//////            else if (uRow === row) { uRow += (.5); }
+//////            else if (uRow < row) { uRow += 1; }
+//////
+//////            if (uCol > col) { }
+//////            else if (uCol === col) { uCol += (.5); }
+//////            else if (uCol < col) { uCol += 1; }
+//////
+//////            
+//////            let dot_x = uCol * tile_size;
+//////            let dot_y = uRow * tile_size;
+//////            
+//////            ctx.moveTo(dot_x, dot_y);
+//////            ctx.arc(dot_x, dot_y, 1, 0, Math.PI * 2, true);
+//////            ctx.stroke();            
+//////        }  
+//////    }
+//////    
+//////    this.edges = canvas;
+//////};
+//////
 
 
 
 
-Floor.prototype.createPathfinderFloorLayer = function() {
-    
-    var floorlayer = this.bitmap.floorlayer;
-    
-    
-    // Create sprite layer
-    var canvas = document.createElement('canvas');
-    var ctx = canvas.getContext('2d');
-    
-    
-    canvas.width = floorlayer.canvas.width;
-    canvas.height = floorlayer.canvas.height;
-    
-    
-    var visualizerlayer = {};
-    visualizerlayer.canvas = canvas;
-    visualizerlayer.ctx = ctx;       
-    floor.visualizerlayer = visualizerlayer;
-    
-    
-    //        // Create arrow layer
-    //        canvas = document.createElement('canvas');  
-    //        canvas.width = floorCanvas.width;
-    //        canvas.height = floorCanvas.height;
-    //        floors[f].arrowlayer = canvas;
-    //     
-    
-    // Create path layer
-    var pathlayer = {};
-    pathlayer.canvas = canvas;
-    pathlayer.ctx = ctx;       
-    this.pathlayer = pathlayer;    
-    
 
-};
+
+
+
+
+
+
 
 /*---- Reusable Canvas Images ---- */
 
@@ -979,126 +658,126 @@ Floor.prototype.createPathfinderFloorLayer = function() {
 
 
 
-   
-    
-Floor.prototype.createTileRockBackground = function() {
-    
-    var that = this;
-    
-    var tile_size = this.tile_size;
-    
-    var tempCanvas = document.createElement('canvas');
-    var tempCtx = tempCanvas.getContext('2d');
-    
-    tempCanvas.width = this.canvas.width;
-    tempCanvas.height = this.canvas.height;
-    
-    tempCtx.webkitImageSmoothingEnabled = false;
-    tempCtx.mozImageSmoothingEnabled = false;
-    tempCtx.imageSmoothingEnabled = false; 
-    
-
-    
-//    tempCanvas.width = this.canvas.width * 2;
-//    tempCanvas.height = this.canvas.height * 2;
-    
-    var tileRock = new Image();
-    tileRock.src = 'images/floors/tile_rock.png';
-    
-    var top_offset_pix = that.top_offset * that.tile_size;
-    var left_offset_pix = that.left_offset * that.tile_size;
-    
-    tileRock.addEventListener('load', function() {
-        that.tileRock = tileRock
-    
-        for (let r = 0; r < that.canvas.rows; r++) {
-            for (let c = 0; c < that.canvas.cols; c++) {
-
-                let x = c * tile_size;
-                let y = r * tile_size;
-                tempCtx.drawImage(tileRock, x, y, tile_size, tile_size);
-
-            }
-        }
-        
-        that.tileRockBackground = tempCanvas;
-        
-        //tempCtx.drawImage(tileRock, 0, 0, that.canvas.width, that.canvas.height);
-        tempCtx.drawImage(that.backgroundBitmap, left_offset_pix, top_offset_pix, that.backgroundBitmap.width, that.backgroundBitmap.height);
-        
-        
-        
-        //that.createBitmapBackground();
-        
-    }, false);
-    
-}
-
-Floor.prototype.createTileBackground = function() {
-    
-//    var tile_width = this.tileSize['width'];
-//    var tile_height = this.tileSize['height']
-    
-    
-    
-    //this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height); 
-    
-    var tempCanvas = document.createElement('canvas');
-    var tempCtx = tempCanvas.getContext('2d');
-    
+//   
+//    
+//Floor.prototype.createTileRockBackground = function() {
+//    
+//    var that = this;
+//    
+//    var tile_size = this.tile_size;
+//    
+//    var tempCanvas = document.createElement('canvas');
+//    var tempCtx = tempCanvas.getContext('2d');
+//    
 //    tempCanvas.width = this.canvas.width;
 //    tempCanvas.height = this.canvas.height;
-    
-    tempCanvas.width = this.canvas.width;
-    tempCanvas.height = this.canvas.height;
-    
-    
-    tempCtx.fillStyle = '#4CAF50';
-    tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
-    
-    var tile_size = this.tile_size;
-       
-    for (let r = 0; r < this.rows; r++) {
-        for (let c = 0; c < this.cols; c++) {
-
-            let type = this.getTileType(r, c);
-
-            if (type === 'land') {
-               tempCtx.fillStyle = '#ccc';
-            }
-
-            if (type === 'rock') {
-               tempCtx.fillStyle = '#4CAF50';
-            }
-
-            if (type === 'water') {
-               tempCtx.fillStyle = '#337ab7';
-            }
-
-            let x = (c + this.left_offset) * tile_size;
-            let y = (r + this.top_offset) * tile_size;
-            tempCtx.fillRect(x, y, tile_size, tile_size); 
-
-        }
-    }
-    
-    return this.backgroundTiles = tempCanvas;
-    
-};
-
-
-
-
-
-
-
-Floor.prototype.drawTileBackground = function() {
-    
-    if (this.backgroundTiles) {
-        this.ctx.drawImage(this.backgroundTiles, 0, 0);
-    }
-
-};
+//    
+//    tempCtx.webkitImageSmoothingEnabled = false;
+//    tempCtx.mozImageSmoothingEnabled = false;
+//    tempCtx.imageSmoothingEnabled = false; 
+//    
+//
+//    
+////    tempCanvas.width = this.canvas.width * 2;
+////    tempCanvas.height = this.canvas.height * 2;
+//    
+//    var tileRock = new Image();
+//    tileRock.src = 'images/floors/tile_rock.png';
+//    
+//    var top_offset_pix = that.top_offset * that.tile_size;
+//    var left_offset_pix = that.left_offset * that.tile_size;
+//    
+//    tileRock.addEventListener('load', function() {
+//        that.tileRock = tileRock
+//    
+//        for (let r = 0; r < that.canvas.rows; r++) {
+//            for (let c = 0; c < that.canvas.cols; c++) {
+//
+//                let x = c * tile_size;
+//                let y = r * tile_size;
+//                tempCtx.drawImage(tileRock, x, y, tile_size, tile_size);
+//
+//            }
+//        }
+//        
+//        that.tileRockBackground = tempCanvas;
+//        
+//        //tempCtx.drawImage(tileRock, 0, 0, that.canvas.width, that.canvas.height);
+//        tempCtx.drawImage(that.backgroundBitmap, left_offset_pix, top_offset_pix, that.backgroundBitmap.width, that.backgroundBitmap.height);
+//        
+//        
+//        
+//        //that.createBitmapBackground();
+//        
+//    }, false);
+//    
+//};
+//
+//Floor.prototype.createTileBackground = function() {
+//    
+////    var tile_width = this.tileSize['width'];
+////    var tile_height = this.tileSize['height']
+//    
+//    
+//    
+//    //this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height); 
+//    
+//    var tempCanvas = document.createElement('canvas');
+//    var tempCtx = tempCanvas.getContext('2d');
+//    
+////    tempCanvas.width = this.canvas.width;
+////    tempCanvas.height = this.canvas.height;
+//    
+//    tempCanvas.width = this.canvas.width;
+//    tempCanvas.height = this.canvas.height;
+//    
+//    
+//    tempCtx.fillStyle = '#4CAF50';
+//    tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+//    
+//    var tile_size = this.tile_size;
+//       
+//    for (let r = 0; r < this.rows; r++) {
+//        for (let c = 0; c < this.cols; c++) {
+//
+//            let type = this.getTileType(r, c);
+//
+//            if (type === 'land') {
+//               tempCtx.fillStyle = '#ccc';
+//            }
+//
+//            if (type === 'rock') {
+//               tempCtx.fillStyle = '#4CAF50';
+//            }
+//
+//            if (type === 'water') {
+//               tempCtx.fillStyle = '#337ab7';
+//            }
+//
+//            let x = (c + this.left_offset) * tile_size;
+//            let y = (r + this.top_offset) * tile_size;
+//            tempCtx.fillRect(x, y, tile_size, tile_size); 
+//
+//        }
+//    }
+//    
+//    return this.backgroundTiles = tempCanvas;
+//    
+//};
+//
+//
+//
+//
+//
+//
+//
+//Floor.prototype.drawTileBackground = function() {
+//    
+//    if (this.backgroundTiles) {
+//        this.ctx.drawImage(this.backgroundTiles, 0, 0);
+//    }
+//
+//};
 
 //
 //Floor.prototype.drawBitmapBackground = function() {
@@ -1119,54 +798,420 @@ Floor.prototype.drawTileBackground = function() {
 //    
 //};
 
-Floor.prototype.drawEdges = function() {
-    
-    if (this.dotsEdges) {
-        this.ctx.drawImage(this.dotsEdges, 0, 0);
-    }  
-    
-};
+//Floor.prototype.drawEdges = function() {
+//    
+//    if (this.dotsEdges) {
+//        this.ctx.drawImage(this.dotsEdges, 0, 0);
+//    }  
+//    
+//};
 
 
 
 
-Floor.prototype.getXY = function(row, col) {
-    
-    var x = (col + this.left_offset) * this.tile_size;
-    var y = (row + this.top_offset) * this.tile_size;
 
-    return {
-        x: x,
-        y: y
-    };
-};        
 
-Floor.prototype.drawShape = function(shape, tile, color) {
-    
-    var row = tile.row;
-    var col = tile.col;  
-    var floor = tile.floor;
-    var frame = floor.frame;
-    var tile_size = floor.tile_size;
-    var x = col * tile_size;
-    var y = row * tile_size;
-    
-    if (shape.toUpperCase() === 'CIRCLE') {
-        frame.ctx.fillStyle = '#FF5722';
-        frame.ctx.beginPath();
-        frame.ctx.arc(x, y, tile_size/3, 0, Math.PI * 2);
-        frame.ctx.fill();
-        frame.ctx.closePath();
-    }
-    
-    if (shape.toUpperCase() === 'SQUARE') {
-        frame.ctx.strokeStyle = '#FF5722';
-        frame.ctx.strokeRect(x, y, tile_size, tile_size);
-    }
-    
-};
 
-Floor.prototype.hasWater = function() {
-    var water = this.floor_data.water();
-    return Object.keys(water).length !== 0;
-};
+//
+//// Draw Grid view rock layer
+//Floor.prototype.drawGraphicRockLayer = function() {
+//    this.frame.ctx.drawImage(this.graphic.rocklayer.canvas, 0, 0);
+//};
+//
+//
+//
+//// Draw Grid view rows/cols
+//Floor.prototype.drawRowsCols = function() {    
+//    //this.frame.ctx.drawImage(this.rowscols.canvas, 0, 0);
+//};
+//
+//// Draw Grid view key tiles
+//Floor.prototype.drawKeyTiles = function() {
+//    this.frame.ctx.drawImage(this.keytiles.canvas, this.frame.offset_x, this.frame.offset_y);
+//};
+//
+//// Draw Grid view edges
+//Floor.prototype.drawEdges = function() {
+//    this.frame.ctx.drawImage(this.edges.canvas, this.frame.offset_x, this.frame.offset_y);
+//};
+//
+//Floor.prototype.drawShape = function(shape, tile, color) {
+//    
+//    var row = tile.row;
+//    var col = tile.col;  
+//    var floor = tile.floor;
+//    var frame = floor.frame;
+//    var tile_size = floor.tile_size;
+//    var x = col * tile_size;
+//    var y = row * tile_size;
+//    
+//    if (shape.toUpperCase() === 'CIRCLE') {
+//        frame.ctx.fillStyle = '#FF5722';
+//        frame.ctx.beginPath();
+//        frame.ctx.arc(x, y, tile_size/3, 0, Math.PI * 2);
+//        frame.ctx.fill();
+//        frame.ctx.closePath();
+//    }
+//    
+//    if (shape.toUpperCase() === 'SQUARE') {
+//        frame.ctx.strokeStyle = '#FF5722';
+//        frame.ctx.strokeRect(x, y, tile_size, tile_size);
+//    }
+//    
+//};
+
+
+//
+///*******************************************/
+///**********    Canvas Methods    ***********/
+///*******************************************/
+//
+//
+//Floor.prototype.__________FRAME_CANVAS_METHODS__________ = function() {};
+//
+//
+//
+//Floor.prototype.createFrame = function() {
+//        
+//    var canvas = document.createElement('canvas');
+//    var ctx = canvas.getContext('2d');
+//
+//    var img = this.background.img;
+//    
+//    this.width = canvas.width = img.width;
+//    this.height = canvas.height = img.height;
+//    
+//    this.tile_size = img.width / this.cols;
+//    
+//    this.frame = {
+//        canvas: canvas,
+//        ctx: ctx
+//    };
+//    
+//};
+//
+//
+//Floor.prototype.createWaterLayer = function() {
+//    
+//    
+//    var game = this.game;
+//    this.waterlayer = Array(8);
+//   
+//    var waterOptions = {
+//        TYPE: 'TILE',
+//        SURFACE: 'WATER',
+//        NUM: 0
+//    };
+//    
+//    var rows = this.rows;
+//    var cols = this.cols;
+//    var tile_size = this.tile_size;
+//    
+//    for (var i = 0; i < 8; i++) {
+//        
+//        // Create a new canvas for each layer of water
+//        var canvas = document.createElement('canvas');
+//        var ctx = canvas.getContext('2d');
+//
+//        ctx.mozImageSmoothingEnabled = false;
+//        ctx.webkitImageSmoothingEnabled = false;
+//        ctx.msImageSmoothingEnabled = false;
+//        ctx.imageSmoothingEnabled = false;
+//
+//        canvas.width = this.cols * this.tile_size;
+//        canvas.height = this.rows * this.tile_size;        
+//        
+//        // Update water sprite options
+//        waterOptions.NUM = i;
+//        var waterSprite = game.spritesheet.getSprite(waterOptions);
+//        
+//        // draw sprite to ctx
+//        for (let r = 0; r < rows; r++) {
+//            for (let c = 0; c < cols; c++) {
+//                
+//                let y = r * tile_size;
+//                let x = c * tile_size;
+//                
+//                ctx.drawImage(waterSprite.canvas, x, y, tile_size, tile_size);
+//                
+//            }
+//        }
+//        
+//        
+//        // Attach rocklayer to floor via bitmap object
+//        var layer = {
+//            canvas: canvas,
+//            ctx: ctx
+//        };
+//        
+//        this.waterlayer[i] = layer;
+//    }
+//    
+//    //this.frame.ctx.drawImage(this.bitmap.rocklayer.canvas, this.frame.offset_x, this.frame.offset_y);
+//    console.log(this);
+//    
+//};
+//
+//
+//// Draw animated water layer
+//Floor.prototype.drawWaterLayer = function() {
+//    let i = Math.floor( (this.game.ticks/16) % 8 );    
+//    this.frame.ctx.drawImage(this.waterlayer[i].canvas, 0, 0, this.frame.canvas.width, this.frame.canvas.height);
+//};
+//
+//// Draw background
+//Floor.prototype.drawBackground = function() {
+//    this.frame.ctx.drawImage(this.backgroundImg, 0, 0);
+//};
+//
+//// Draw foreground
+//Floor.prototype.drawForeground = function() {
+//    
+//    // Not every floor has an foreground
+//    if (this.foregroundImg) {
+//        this.frame.ctx.drawImage(this.foregroundImg, 0, 0);
+//    }
+//    
+//};
+//
+//
+//
+//
+//
+//// Draw Grid view edges
+//Floor.prototype.drawPathLayer = function() {
+//    console.log('Drawing  path layer');
+//    this.frame.ctx.drawImage(this.pathlayer.canvas, 0, 0);
+//};
+//
+//
+//Floor.prototype.drawVisualizerLayer = function() {
+//    //console.log(this.visualizerlayer);
+//    this.frame.ctx.drawImage(this.visualizerlayer.canvas, 0, 0);
+//};
+//
+//
+//Floor.prototype.createFram = function(tile_size, rows, cols) {
+//     
+////    // Get canvas Id
+////    var canvasId = this.floor_data.canvasId();
+////    
+////    // Define canvas objects
+//    //    var canvas = document.getElementById(canvasId);
+//    //    var ctx = canvas.getContext('2d');
+//    
+//    
+//    
+//    ctx.mozImageSmoothingEnabled = false;
+//    ctx.webkitImageSmoothingEnabled = false;
+//    ctx.msImageSmoothingEnabled = false;
+//    ctx.imageSmoothingEnabled = false;
+//      
+//    // Number of rows/cols in frame
+//    var frame_rows = rows || 27;
+//    var frame_cols = cols || 44;
+//    
+//    var floor_rows = this.rows;
+//    var floor_cols = this.cols;
+//    
+//    // Update canvas height
+//    canvas.width = tile_size * frame_cols;
+//    canvas.height = tile_size * frame_rows;
+//    
+//    // Compute offsets of floor from frame
+//    var offset_rows = Math.floor((frame_rows - floor_rows)/2);
+//    var offset_cols = Math.floor((frame_cols - floor_cols)/2);
+//    
+//    var offset_x = offset_cols * tile_size;
+//    var offset_y = offset_rows * tile_size;
+//
+//    this.tile_size = tile_size;
+//    
+//    // Create frame object to hold canvas, related data;
+//    var frame = {};
+//    
+//    frame.canvas = canvas;
+//    frame.ctx = ctx;
+//    frame.rows = frame_rows;
+//    frame.cols = frame_cols;
+//    frame.offset_rows = offset_rows;
+//    frame.offset_cols = offset_cols;
+//    frame.offset_x = offset_x;
+//    frame.offset_y = offset_y;
+//    
+//    this.frame = frame;
+//    
+//};
+//
+//
+///* ---- Bitmap Layers ---- */
+//
+//// Nope
+//Floor.prototype.createBitmapRockLayer = function() {
+//    
+//    var game = this.game;
+//    
+//    var canvas = document.createElement('canvas');
+//    var ctx = canvas.getContext('2d');
+//    
+//    ctx.mozImageSmoothingEnabled = false;
+//    ctx.webkitImageSmoothingEnabled = false;
+//    ctx.msImageSmoothingEnabled = false;
+//    ctx.imageSmoothingEnabled = false;
+//    
+//    canvas.width = this.frame.canvas.width;
+//    canvas.height = this.frame.canvas.height;
+//    
+//    var rows = this.frame.rows;
+//    var cols = this.frame.cols;
+//    var tile_size = this.tile_size;
+//    
+//    //var tile_rock = document.getElementById('tile-rock');
+//    
+//    var rockOptions = {
+//        TYPE: 'TILE',
+//        SURFACE: 'ROCK',
+//        NUM: 0
+//    };
+//    
+//    var rockSprite = game.spritesheet.getSprite(rockOptions);
+//    
+//    for (let r = 0; r < rows; r++) {
+//        for (let c = 0; c < cols; c++) {
+//     
+//            let y = r * tile_size;
+//            let x = c * tile_size;
+//
+//            ctx.drawImage(rockSprite.canvas, x, y, tile_size, tile_size);
+//            
+//        }
+//    }
+//    
+//    // Attach rocklayer to floor via bitmap object
+//    var rocklayer = {
+//        canvas: canvas,
+//        ctx: ctx
+//    };
+//    
+//    this.bitmap['rocklayer'] = rocklayer;
+//};
+//
+//
+//
+//
+//Floor.prototype.drawImageToFrame = function(img, tile, span=1) {
+//    
+//    if (!tile) {
+//       var frame = this.frame;
+//       this.frame.ctx.drawImage(img, 0, 0); 
+//       return;
+//    }
+//    
+//    var row = tile.row;
+//    var col = tile.col;  
+//    var floor = tile.floor;
+//    var frame = floor.frame;
+//    var tile_size = floor.tile_size;
+//
+//    var offset = (1 - span)/2;
+//
+//    var x = (col + offset) * tile_size;
+//    var y = (row + offset) * tile_size;
+//
+//    floor.frame.ctx.drawImage(img, x, y, tile_size * span, tile_size * span);
+//
+//};
+//
+//
+//
+//
+//
+//
+//
+//// Draw Bitmap rock layer
+//Floor.prototype.drawBitmapRockLayer = function() {
+//    this.frame.ctx.drawImage(this.bitmap.rocklayer.canvas, 0, 0);
+//};
+//
+//
+//
+//
+////// Draw Bitmap floor layer
+////Floor.prototype.drawBitmapFloorLayer = function() {
+////    this.frame.ctx.drawImage(this.bitmap.floorlayer.canvas, this.frame.offset_x, this.frame.offset_y);
+////};
+////
+//
+//Floor.prototype.appendPath = function(color, player) {
+//    
+//   
+//    
+//    var x = player.current.col * this.tile_size;
+//    var y = player.current.row * this.tile_size;
+//    
+//    // Adjust path during jump on/jump off
+//    if (player.MOVE_STATE === 'JUMP ON' || player.MOVE_STATE === 'JUMP OFF') {
+//        if (player.current.row < player.stopTile.row && player.playerOptions.FACING !== 'DOWN') {
+//            var y = player.stopTile.row * this.tile_size;
+//        }
+//    }
+//    
+//    x += this.tile_size / 2;
+//    y += this.tile_size / 2;        
+//    
+//    var canvas = this.pathlayer.canvas;
+//    var ctx = this.pathlayer.ctx;
+//    ctx.strokeStyle = color;
+//    ctx.lineTo(x, y);
+//    ctx.stroke();
+//    
+//    
+//    //ctx.beginPath();
+//    
+//    
+//        //ctx.closePath();
+//        //ctx.moveTo(x, y);
+//        
+//    
+//    //ctx.beginPath();
+//    
+//    //ctx.lineTo(startXY.x, startXY.y, endXY.x, endXY.y);
+//    
+//    
+//};
+
+//Floor.prototype.createPathfinderFloorLayer = function() {
+//    
+//    var floorlayer = this.bitmap.floorlayer;
+//    
+//    
+//    // Create sprite layer
+//    var canvas = document.createElement('canvas');
+//    var ctx = canvas.getContext('2d');
+//    
+//    
+//    canvas.width = floorlayer.canvas.width;
+//    canvas.height = floorlayer.canvas.height;
+//    
+//    
+//    var visualizerlayer = {};
+//    visualizerlayer.canvas = canvas;
+//    visualizerlayer.ctx = ctx;       
+//    floor.visualizerlayer = visualizerlayer;
+//    
+//    
+//    //        // Create arrow layer
+//    //        canvas = document.createElement('canvas');  
+//    //        canvas.width = floorCanvas.width;
+//    //        canvas.height = floorCanvas.height;
+//    //        floors[f].arrowlayer = canvas;
+//    //     
+//    
+//    // Create path layer
+//    var pathlayer = {};
+//    pathlayer.canvas = canvas;
+//    pathlayer.ctx = ctx;       
+//    this.pathlayer = pathlayer;    
+//    
+//
+//};

@@ -1,8 +1,15 @@
 var UserConsole = function(game) {
     
+    // Attach game object
     this.game = game;
     
+    //////////////////////
+    // Algorithms
+    /////////////////////
+    
+    // Avaialble algorithms
     this.algorithms = {};
+    
     this.algorithms.options = {
         0: {
             id: 0,
@@ -27,7 +34,13 @@ var UserConsole = function(game) {
         }
     };   
     
+    this.algorithms.selected = this.algorithms.options[0];
     
+    //////////////////////
+    // Source/Target Locations
+    /////////////////////
+    
+    // Available locations
     this.locations = {};
     this.locations.options = [
         {
@@ -58,18 +71,30 @@ var UserConsole = function(game) {
         }          
     ];
     
+    this.locations.source = this.locations.options[1];
+    this.locations.target = this.locations.options[2];
     
-    
-    this.message = {
-        
+    // Activity Log messages
+    this.activity = {      
         content: 'Default message',
-        log: []
-        
+        log: []       
     };
     
+    //////////////////////
+    // Edge Weight Visualization Layers
+    /////////////////////
     
+    // Edge weights for slider
     
-    // Time measures used to account for movement
+    this.edgeweight = {
+        background: 1,
+        foreground: 10,
+        water: 20 ,
+        min: 1,
+        max: 30
+    };
+        
+    // Time measures used for interpolation of weight layers
     this.time = {
         start: null,
         total: null,
@@ -78,37 +103,20 @@ var UserConsole = function(game) {
         speed: .6
     };
     
-    
-//    
-//    this.map.mode;
-//    this.pathfinder.mode;
-    
-    
-    this.LAYER = null;
-    
+    // Weight layer color
     this.hexWeightLayer = "#FFEB3B";
-    this.opacity = .3;
     
-    
-    
-    
+    // Flag indicating if weight has changed
     this.WEIGHT_CHANGE = null;
     
+    // Store a layer for each floor
+    this.floors = {};
     
+    //////////////////////
+    // Point Marker Buttons
+    /////////////////////
     
-        // Settings
-    this.speed = 0;
-    
-    this.layers = {
-        GRID: false,
-        PATH: false,
-        VISUALIZER: false
-    };
-
-    this.algorithms.selected = this.algorithms.options[0];
-    this.locations.source = this.locations.options[1];
-    this.locations.target = this.locations.options[2];
-    
+    // Hide point markers by default
     this.pointmarker = {
         source: {
             show: false,
@@ -134,6 +142,9 @@ var UserConsole = function(game) {
         }
     };
     
+    //////////////////////
+    // Pathfinder Task and Layer Buttons
+    /////////////////////
     
     this.pathfinder = {
         state: null,
@@ -172,7 +183,10 @@ var UserConsole = function(game) {
             }
         }
     };
-    
+        
+    //////////////////////
+    // VCR Buttons
+    /////////////////////
     
     this.vcr = {
         command: null,
@@ -192,6 +206,9 @@ var UserConsole = function(game) {
         }
     };
     
+    //////////////////////
+    // Map State buttons
+    //////////////////////
     
     this.map = {
         state: 'BITMAP',
@@ -201,117 +218,130 @@ var UserConsole = function(game) {
         }
     };
     
-    this.edgeweight = {
-        background: 1,
-        foreground: 10,
-        water: 20 ,
-        min: 1,
-        max: 30
+    //////////////////////
+    // Grid layers
+    //////////////////////
+    
+    this.grid = {
+        layer: false
     };
     
-        // Settings
+    //////////////////////
+    // Speed buttons
+    //////////////////////
+    
     this.speed = {
         button: {
             click: 1,
-            hold: null,
+            hold: null
         }
     };
     
-    this.interface = {
-        gameboy: {
-            locked: false
-        },
-        monitor: {}
-    }
+    //////////////////////
+    // Gender buttons
+    /////////////////////
     
     this.gender = {
         button: {
             click: 'BOY',
-            hold: null,
+            hold: null
         }
     };
     
+    //////////////////////
+    // Current Game direction 
+    //////////////////////   
     
-//    
-//    this.pathfinder = {
-//        state: null,
-//        layer: {
-//            path: {
-//                on: false,
-//                disabled: false,
-//                active: false
-//            },
-//            frontier: {
-//                on: false,
-//                disabled: false,
-//                active: false,
-//            }
-//        }        
-//    };
+    this.direction = {
+        button: null
+    };
     
-    
-    
-    this.floors = {};
-    
+    this.input = {
+        direction: null
+    };
     
 };
 
-UserConsole.prototype.init = function() {
+
+
+//-------------------------------------//
+/////////////////////////////////////////
+// Itialization
+/////////////////////////////////////////
+//-------------------------------------//
+
+// Initialize User Console
+UserConsole.prototype.init = function() {   
+    // Initialize Weight Layers
     this.initWeightLayers();
-    
-    // Implement initial settings
-    this.initSettings();
 };
 
-UserConsole.prototype.initSettings = function() {
-    
-    this.pointmarker.source.show = false;
-    this.pointmarker.target.show = false;
-    
-};
+//-------------------------------------//
+/////////////////////////////////////////
+// Update Settings
+/////////////////////////////////////////
+//-------------------------------------//
 
-
+// Update User Console settings (once each frame)
 UserConsole.prototype.updateSettings = function() {
     
+    // Get game object
     var game = this.game;
     
+    // Get Pathfinder buttons object
     var pathfinder = this.pathfinder;
-    pathfinder.state = game.getPathfinderState();
     
+    // Get current Pathfinder state
+    pathfinder.mode = game.getPathfinderMode();
     
-    //this.pathfinder.layer.path.disabled = true;
-    //this.pathfinder.layer.frontier.disabled = true;
+    // Update buttons and game based on various conditions
+    this.updatePointMarkerSettings();
+    this.updatePathfinderTaskButtonSettings();  
+    this.updatePathfinderLayerButtonSettings();  
+    this.updateSpeedSettings();  
+    this.updateGenderSettings();
+    this.updateVCRButtonSettings();
+
+};
+
+
+// Update Point Marker buttons and checkboxes
+UserConsole.prototype.updatePointMarkerSettings = function() {
     
-   
-    
+    var pathfinder = this.pathfinder;
     
     // Activate checkboxes if point markers are showing
     this.pointmarker.source.checkbox.active = this.pointmarker.source.show;
     this.pointmarker.target.checkbox.active = this.pointmarker.target.show;
     
+    //--------------------->
+    // Source Point Marker Settings
+    //--------------------->
     
-    
-    if (pathfinder.state === 'MARK SOURCE' ||
-          pathfinder.state === 'DRAG SOURCE') {
+    // If User is moving Source PointMarker
+    if (pathfinder.mode === 'PLACE SOURCE' ||
+          pathfinder.mode === 'DRAG SOURCE') {
         
         // Pointmarker button is active
         this.pointmarker.source.button.active = true;
         
         // Checkbox is disabled and inactive
         this.pointmarker.source.checkbox.disabled = true;
-        this.pointmarker.source.checkbox.active = false;
-        
-        
+        this.pointmarker.source.checkbox.active = false;       
     } 
-    // Cannot move pointmarker when pathfinder is active
-    else if (pathfinder.state === 'PATH' ||
-            pathfinder.state === 'FRONTIER') {
+    
+    // If Pathfinder is in 'FOLLOW PATH' or 'FRONTIER' modes,
+    // Cannot move pointmarker
+    else if (pathfinder.mode === 'FOLLOW PATH' ||
+            pathfinder.mode === 'FRONTIER') {
         
         // Pointmarker button is disabled
         this.pointmarker.source.button.acive = false;
         this.pointmarker.source.button.disabled = true;      
         
-    } else {
+    } 
+    // If Pathfinder is not in above modes
+    else {
         // Button is enabled, but inactive
         this.pointmarker.source.button.disabled = false; 
         this.pointmarker.source.button.active = false;
@@ -320,23 +350,32 @@ UserConsole.prototype.updateSettings = function() {
         this.pointmarker.source.checkbox.disabled = false;
     }
     
-    if (pathfinder.state === 'MARK TARGET' ||
-            pathfinder.state === 'DRAG TARGET') {
+    //--------------------->
+    // Target Point Marker Settings
+    //--------------------->
+    
+    // If User is moving Target Point Marker
+    if (pathfinder.mode === 'PLACE TARGET' ||
+            pathfinder.mode === 'DRAG TARGET') {
         // Pointmarker button is active
         this.pointmarker.target.button.active = true;
         
         // Checkbox is disabled and inactive
         this.pointmarker.target.checkbox.disabled = true;
         this.pointmarker.target.checkbox.active = false;
-    } // Cannot move pointmarker when pathfinder is active
-    else if (pathfinder.state === 'PATH' ||
-            pathfinder.state === 'FRONTIER') {
+    } 
+    // If Pathfinder is in FOLLOW PATH or FRONTIER modes
+    // Cannot move pointmarker when pathfinder is active
+    else if (pathfinder.mode === 'FOLLOW PATH' ||
+            pathfinder.mode === 'FRONTIER') {
         
         // Pointmarker button is disabled
         this.pointmarker.target.button.acive = false;
         this.pointmarker.target.button.disabled = true;      
         
-    } else {
+    } 
+    // If Pathfinder is not in above states
+    else {
         // Button is enabled, but inactive
         this.pointmarker.target.button.disabled = false; 
         this.pointmarker.target.button.active = false;
@@ -345,6 +384,7 @@ UserConsole.prototype.updateSettings = function() {
         this.pointmarker.target.checkbox.disabled = false;
     }
     
+    
     // Hide and disable target pointmarker if "all tiles" is target tile
     if (this.locations.target.id === 5) {
         this.pointmarker.target.show = false;
@@ -352,18 +392,26 @@ UserConsole.prototype.updateSettings = function() {
         this.pointmarker.target.checkbox.active = false;
     }
     
+};
+
+// Update Pathfinder Task buttons
+UserConsole.prototype.updatePathfinderTaskButtonSettings = function() {
+    
+    var pathfinder = this.pathfinder;
+    
     // Enable pathfinder task buttons by default
     pathfinder.task.path.button.disabled = false;
     pathfinder.task.frontier.button.disabled = false;
     
-    // Turn the pathfinder task buttons on and off
-    if (pathfinder.state === 'PATH') {
+    // Turn 'PATH' button on/off
+    if (pathfinder.mode === 'FOLLOW PATH') {
         pathfinder.task.path.button.active = true;
     } else {
         pathfinder.task.path.button.active = false;
     }
     
-    if (pathfinder.state === 'FRONTIER') {
+    // Turn 'FRONTIER' button on/off
+    if (pathfinder.mode === 'FRONTIER') {
         pathfinder.task.frontier.button.active = true;
     } else {
         pathfinder.task.frontier.button.active = false;
@@ -374,12 +422,24 @@ UserConsole.prototype.updateSettings = function() {
         pathfinder.task.path.button.disabled = true;
     }
     
-    // Activate pathfinder layer buttons as necessary
+};
+
+// Update Pathfinder Layer buttons
+UserConsole.prototype.updatePathfinderLayerButtonSettings = function() {
+    
+    var pathfinder = this.pathfinder;
+    var game = this.game;
+    
+    // Loop through and update pathfinder layer
     for (let l in pathfinder.layer) {
+        
+        // Get and captalize the layer name
         let layer = pathfinder.layer[l];
         let LAYER = l.toUpperCase();
         
-        // If path layer exists, enable the button       
+        
+        // Check with Pathfinder to see if layer exists
+        // If so, enable      
         if (game.hasPathfinderLayer(LAYER)) {
             layer.button.disabled = false;       
         } else {
@@ -405,110 +465,94 @@ UserConsole.prototype.updateSettings = function() {
             layer.show = true;       
         } 
         // If button is already active
+        // Show layer
         else if (layer.button.active) {           
             layer.show = true;          
         }
+        // Otherwise, hide layer
         else {
             // Default setting
             layer.show = false; 
-        }
-        
-    }
+        }        
+    } 
+};
+
+// Update Game Speed based on Speed button
+UserConsole.prototype.updateSpeedSettings = function() {
     
-    
-    // Speed settings
+    // If user is 'holding' button
     if (this.speed.button.hold) {
+        // Update game wtih the 'hold' speed
         this.game.setPlayerSpeed(this.speed.button.hold);
     }
     else {
+        // Update game with the 'click' speed
         this.game.setPlayerSpeed(this.speed.button.click);
     }
     
-    // Gender settings
+};
+
+// Update Game Gender based on Gender button
+UserConsole.prototype.updateGenderSettings = function() {
+    
+     // If user is 'holding' button
     if (this.gender.button.hold) {
+        // Update game with the 'hold' gender
         this.game.setPlayerGender(this.gender.button.hold);
     }
     else {
+        // Update game with the 'click' gender
         this.game.setPlayerGender(this.gender.button.click);
     }
-    
-    
-            
-//    
-//    
-//    // If frontier layer exists, button should be enabled
-//    if (game.hasPathfinderLayer('FRONTIER')) {
-//        this.pathfinder.layer.frontier.button.disabled = false;
-//    } else {
-//        this.pathfinder.layer.frontier.button.disabled = true;
-//        this.pathfinder.layer.frontier.button.active = false;
-//    }
+      
+};
 
+// Update VCR buttons
+UserConsole.prototype.updateVCRButtonSettings = function() {
+    
+    var pathfinder = this.pathfinder;
+    var vcr = this.vcr;
+    
     // Turn VCR off if pathfinder is off
-    if (pathfinder.state === 'OFF') {
-        this.vcr.command = null;
+    if (pathfinder.mode === 'OFF') {
+        vcr.command = null;
     }
     
-    
-    // VCR Settings
-    var vcr = this.vcr;
+    //Loop through and update VCR buttons
     for (let b in vcr.button) {
         
+        // Deactivate and enable by default
         vcr.button[b].active = false;
         vcr.button[b].disabled = false;
         
-        // Make case of b match command
+        // Capitalize button to match command
         var B = b.toUpperCase();
         
+        // Disable each button if VCR command is null (VCR is inactive)
         if (vcr.command === null) {
             vcr.button[b].disabled = true;
         }
         
-        // Active pause button if user presses 'STEP'
+        // Active pause button if user has pressed 'STEP'
         else if (vcr.command === 'STEP' &&
                 B === 'PAUSE') {
             vcr.button[b].disabled = false;
             vcr.button[b].active = true;
         }
-        
+        // Activate button that user as pressed
         else if (vcr.command === B) {
             vcr.button[b].disabled = false;
             vcr.button[b].active = true;
         };
- 
-    }
- 
-    
-    
-    
-    // Map settings
-    
-    // Turn Graphic/Bitmap layers on/off based on variables
-//    var mapStateButton = $scope.mapStateButton;
-    
-//    if (this.map.button.hover) {
-//        this.map.state = this.map.button.hover
-//    }
-//    else {
-//        userConsole.toggleMapState(mapStateButton.click);
-//    }
-//    
-//    
-    
-//    
-//    if (game.getPathfinderState() === 'PATH') {
-//        this.pathfinder.layer.path.disabled = false;
-//    } 
-//    
-//    if (game.getPathfinderState() === 'FRONTIER') {
-//        this.pathfinder.layer.frontier.disabled = false;
-//    } 
-//    
-
-    //this.vcr.COMMAND = game.getVCRCommand();
-
+    }    
 };
 
+
+//-------------------------------------//
+/////////////////////////////////////////
+// Algorithm Methods
+/////////////////////////////////////////
+//-------------------------------------//
 
 UserConsole.prototype.getSelectedAlgorithm = function() {
     return this.algorithms.selected;
@@ -522,10 +566,13 @@ UserConsole.prototype.getAlgorithms = function() {
     return this.algorithms.options;
 };
 
-UserConsole.prototype.getEdgeWeights = function() {
-    return this.edgeweight;
-};
+//-------------------------------------//
+/////////////////////////////////////////
+// Source/Target Location Methods
+/////////////////////////////////////////
+//-------------------------------------//
 
+UserConsole.prototype.____Source_Target_Location_Methods____ = function() {};
 
 UserConsole.prototype.getLocations = function() {
     return this.locations.options;
@@ -557,6 +604,72 @@ UserConsole.prototype.setTargetLocation = function(location) {
     }
 };
 
+UserConsole.prototype.setLocationTile = function(sourceTarget, id) {
+    
+    
+    if (sourceTarget === 'SOURCE') {
+        this.locations.source = this.locations.options[id];
+    }
+    else if (sourceTarget === 'TARGET') {
+        this.locations.target = this.locations.options[id];
+    }
+    
+};
+
+UserConsole.prototype.getLocationTile = function(sourceTarget) {
+    
+    var game = this.game;
+    
+    var location;
+    if (sourceTarget === 'SOURCE') {
+        location = this.locations.source;
+    }
+    else {
+        location = this.locations.target;
+    }
+    
+    // If Console tile is Player Tile
+    if (location.id === 0) {
+        tile = game.getPlayerTile();
+    }
+    // If console tile is Entrance
+    else if (location.id === 1) {
+        var keyTileId = location.keyTile;
+        tile = game.getKeyTile(keyTileId);
+    }  
+    // If console tile is Mewtwo
+    else if (location.id === 2) {
+        var obId = location.obstacle;
+        tile = game.getObstacle(obId);   
+    }
+    else if (location.id === 3) {
+        tile = game.getRandomTile();       
+    }
+    else if (location.id === 4) {
+        tile = game.getPointMarkerTile(sourceTarget);
+    }
+    else if (location.id === 5) {
+        tile = game.getPointMarkerTile(sourceTarget);
+    }
+    
+    return tile;
+    
+};
+
+UserConsole.prototype.targetTileIsAll = function() {
+    // Return true if target location is set to 'All Tiles'
+    return this.locations.target.id === 5;   
+};
+
+
+//-------------------------------------//
+/////////////////////////////////////////
+// Pathfinder Methods
+/////////////////////////////////////////
+//-------------------------------------//
+
+UserConsole.prototype._________Pathfinder_Methods_________ = function() {};
+
 UserConsole.prototype.startPathfinder = function(state) {    
     this.game.startPathfinder(state);    
 };
@@ -566,19 +679,32 @@ UserConsole.prototype.clearPathfinder = function() {
 };
 
 UserConsole.prototype.getPathfinderState = function() {
-    return this.pathfinder.state;
+    return this.pathfinder.mode;
+};
+
+
+//-------------------------------------//
+/////////////////////////////////////////
+// VCR Methods
+/////////////////////////////////////////
+//-------------------------------------//
+
+UserConsole.prototype._________VCR_Methods_________ = function() {};
+
+UserConsole.prototype.getVCR = function() {
+    return this.vcr;
 };
 
 UserConsole.prototype.handleVCRCommand = function(command) {
     
-    if (this.pathfinder.state !== 'PATH'  &&
-            this.pathfinder.state !== 'FRONTIER') {
-        console.info("You much be generating a frontier or following a path to use the VCR");
+    if (this.pathfinder.mode !== 'FOLLOW PATH'  &&
+            this.pathfinder.mode !== 'FRONTIER') {
         return;
     }
     
     var vcr = this.vcr;
     
+    // Update VCR with current command
     if (command === 'PLAY') {
         vcr.command = 'PLAY';
     }
@@ -591,10 +717,7 @@ UserConsole.prototype.handleVCRCommand = function(command) {
         vcr.command = 'STEP';
     }
     
-    console.info(vcr);
-    
 };
-
 
 UserConsole.prototype.getVCRCommand = function() {
     return this.vcr.command;
@@ -604,26 +727,15 @@ UserConsole.prototype.setVCRCommand = function(command) {
     this.vcr.command = command;
 };
 
-UserConsole.prototype.getVCR = function() {
-    return this.vcr;
-};
-
-UserConsole.prototype.toggleMapState = function(state) {
-    this.map.state = state;
-};
 
 
-UserConsole.prototype.getMapState = function() {
-    return this.map.state;
-};
+//-------------------------------------//
+/////////////////////////////////////////
+// Point Marker Methods
+/////////////////////////////////////////
+//-------------------------------------//
 
-UserConsole.prototype.toggleGrid = function(state) {
-    this.layers.GRID = state;
-};
-
-UserConsole.prototype.isGridVisible = function() {
-    return this.layers.GRID;
-};
+UserConsole.prototype._________PointMarker_Methods_________ = function() {};
 
 UserConsole.prototype.isPointMarkerVisible = function(point) {
     
@@ -640,7 +752,6 @@ UserConsole.prototype.isPointMarkerVisible = function(point) {
     
 };
 
-
 UserConsole.prototype.showPointMarker = function(point, show) {
     
     var marker;
@@ -655,10 +766,6 @@ UserConsole.prototype.showPointMarker = function(point, show) {
     marker.show = show;
     
 };
-
-
-
-
 
 
 UserConsole.prototype.enablePointMarker = function(point, enable) {
@@ -739,36 +846,28 @@ UserConsole.prototype.togglePointMarker = function(point) {
         return;
     }
         
-  
-  
-//    // If pathfinder is currently in MARK SOURCE or MARK TARGET states
-//    if (game.getPathfinderState().search(point) !== -1) {
-//        pointmarker.checkbox.disabled = true;
-//        checkbox.active = false;
-//        checkbox.label = '';
-//        pointmarker.show = false;
-//        return;
-//    }
-//    
-//    var status = pointmarker.show;
-//    
-//    checkbox.disabled = false;
-//    checkbox.active = !status;
-//    pointmarker.show = !status;
-//    
-//    if (pointmarker.show) {
-//        checkbox.label = 'hide';
-//    } else {
-//        checkbox.label = 'show';
-//    }
-  
 };
 
 
+//-------------------------------------//
+/////////////////////////////////////////
+// Pathfinder Layer Methods
+/////////////////////////////////////////
+//-------------------------------------//
 
+UserConsole.prototype._________Pathfinder_Layer_Methods_________ = function() {};
 
-
-
+UserConsole.prototype.getPathfinderLayer = function(selection) {
+    
+    if (selection === 'FRONTIER') {
+        return this.pathfinder.layer.frontier;        
+    } else if (selection === 'PATH') {      
+        return this.pathfinder.layer.path;
+    }
+    
+    return this.pathfinder.layer;
+    
+};
 
 UserConsole.prototype.togglePathlayer = function(button) {
    
@@ -797,93 +896,6 @@ UserConsole.prototype.togglePathlayer = function(button) {
     return this.pathlayer;
     
 };
-
-
-UserConsole.prototype.getPathfinderLayer = function(selection) {
-    
-    if (selection === 'FRONTIER') {
-        return this.pathfinder.layer.frontier;        
-    } else if (selection === 'PATH') {      
-        return this.pathfinder.layer.path;
-    }
-    
-    return this.pathfinder.layer;
-    
-};
-
-UserConsole.prototype.isPathfinderLayerVisible = function(selection) {
-    
-    if (selection === 'FRONTIER') {
-        return this.pathfinder.layer.frontier.show;        
-    } else if (selection === 'PATH') {      
-        return this.pathfinder.layer.path.show;
-    }
-    
-};
-
-
-
-
-
-UserConsole.prototype.getPathfinderTask = function(selection) {
-
-
-    if (selection === 'FRONTIER') {
-        return  this.pathfinder.task.frontier;        
-    } else if (selection === 'PATH') {      
-        return this.pathfinder.task.path;
-    }
-    
-    return this.pathfinder.task;
-    
-};
-//
-//UserConsole.prototype.togglePathfinderLayerButton = function(selection, button) {
-//   
-//
-//    if (selection === 'FRONTIER') {
-//        layer = this.pathfinder.layer.frontier;        
-//    } else if (selection === 'PATH') {      
-//        layer = this.pathfinder.layer.path;
-//    }
-//    
-//    if (layer.disabled) { 
-//        return; 
-//    }
-//    else if (button.click) {
-//        var state = layer.active;
-//        layer.active = !state;
-//        layer.on = layer.active;
-//    }   
-//    else if (button.hover) {
-//        layer.on = true;
-//    }      
-//    else {
-//        layer.on = layer.active;
-//    }
-//    
-//    
-//    
-//};
-//
-
-
-
-
-
-
-//UserConsole.prototype.existsPathfinderLayer = function(selection, bool) {
-//    
-//    var layer;
-//    if (selection === 'FRONTIER') {
-//        layer = this.pathfinder.layer.frontier;        
-//    } else if (selection === 'PATH') {      
-//        layer = this.pathfinder.layer.path;
-//    }
-//    
-//    layer.exists = bool;
-//};
-//
 
 
 UserConsole.prototype.enablePathfinderLayerButton = function(selection, bool) {
@@ -937,21 +949,6 @@ UserConsole.prototype.togglePathfinderLayerButton = function(action, selection) 
 
 };
 
-//
-//UserConsole.prototype.activatePathfinderLayerButton = function(selection, bool) {
-//    
-//    var layer;
-//    if (selection === 'FRONTIER') {
-//        layer = this.pathfinder.layer.frontier;        
-//    } else if (selection === 'PATH') {      
-//        layer = this.pathfinder.layer.path;
-//    }
-//    
-//    layer.button.disabled = !bool;
-//    layer.button.active = bool;
-//};
-
-
 UserConsole.prototype.showPathfinderLayer = function(selection, bool) {
     
     var layer;
@@ -966,13 +963,52 @@ UserConsole.prototype.showPathfinderLayer = function(selection, bool) {
 
 
 
-UserConsole.prototype.setPlayerSpeed = function(speed) {    
-    this.game.setPlayerSpeed(speed);
-    this.speed = speed;
+UserConsole.prototype.isPathfinderLayerVisible = function(selection) {
+    
+    if (selection === 'FRONTIER') {
+        return this.pathfinder.layer.frontier.show;        
+    } else if (selection === 'PATH') {      
+        return this.pathfinder.layer.path.show;
+    }
+    
 };
 
 
 
+//-------------------------------------//
+/////////////////////////////////////////
+// Pathfinder Task Methods
+/////////////////////////////////////////
+//-------------------------------------//
+
+UserConsole.prototype._________Pathfinder_Task_Methods_________ = function() {};
+
+
+UserConsole.prototype.getPathfinderTaskButtons = function(selection) {
+
+    if (selection === 'FRONTIER') {
+        return  this.pathfinder.task.frontier;        
+    } else if (selection === 'PATH') {      
+        return this.pathfinder.task.path;
+    }
+    
+    return this.pathfinder.task;
+    
+};
+
+
+//-------------------------------------//
+/////////////////////////////////////////
+// Edge Weight Layer Methods
+/////////////////////////////////////////
+//-------------------------------------//
+
+UserConsole.prototype._________Edge_Weight_Layer_Methods_________ = function() {};
+
+
+UserConsole.prototype.getEdgeWeights = function() {
+    return this.edgeweight;
+};
 
 
 UserConsole.prototype.initWeightLayers = function() {
@@ -995,16 +1031,21 @@ UserConsole.prototype.initWeightLayers = function() {
         var height = mapFloor.background.img.height;
         var tile_size = width/mapFloor.cols;
         
+        var canvas_size = {
+            width: width,
+            height: height
+        };
+        
         // Create foreground, background and water layers for each floor
-        var background = game.createCanvasCtx();
+        var background = game.createCanvasCtx(canvas_size);
         background.canvas.width = width;
         background.canvas.height = height;
         
-        var foreground = game.createCanvasCtx();        
+        var foreground = game.createCanvasCtx(canvas_size);        
         foreground.canvas.width = width;
         foreground.canvas.height = height;
         
-        var water = game.createCanvasCtx();        
+        var water = game.createCanvasCtx(canvas_size);        
         water.canvas.width = width;
         water.canvas.height = height;
         
@@ -1095,8 +1136,7 @@ UserConsole.prototype.drawWeightLayers = function(floorId) {
     this.game.drawImageToScreen(layer.canvas, 'floor', floorId, dof, '', '', alpha);
 
     if (time.percent >= .95) {
-        this.WEIGHT_CHANGE = null;
-        console.log(this.edgeWeight);
+//        this.WEIGHT_CHANGE = null;
     }
 };
 
@@ -1137,147 +1177,74 @@ UserConsole.prototype.startWeightChange = function(newValue, oldValue) {
     
     this.WEIGHT_CHANGE = weightChange.layer.toUpperCase();
     
-    console.log(weightChange);
-    
-    //this.show = true;
-    
 };
 
+//-------------------------------------//
+/////////////////////////////////////////
+// Activity Log Methods
+/////////////////////////////////////////
+//-------------------------------------//
+
+UserConsole.prototype._________Activity_Log_Methods_________ = function() {};
 
 
-
-UserConsole.prototype.setLocationTile = function(sourceTarget, id) {
-    
-    
-    if (sourceTarget === 'SOURCE') {
-        this.locations.source = this.locations.options[id];
-    }
-    else if (sourceTarget === 'TARGET') {
-        this.locations.target = this.locations.options[id];
-    }
-    
+UserConsole.prototype.getActivityLog = function() {
+    return this.activity;
 };
-
-UserConsole.prototype.getLocationTile = function(sourceTarget) {
-    
-    var game = this.game;
-    
-    var location;
-    if (sourceTarget === 'SOURCE') {
-        location = this.locations.source;
-    }
-    else {
-        location = this.locations.target;
-    }
-    
-    // If Console tile is Player Tile
-    if (location.id === 0) {
-        tile = game.getPlayerTile();
-    }
-    // If console tile is Entrance
-    else if (location.id === 1) {
-        var keyTileId = location.keyTile;
-        tile = game.getKeyTile(keyTileId);
-    }  
-    // If console tile is Mewtwo
-    else if (location.id === 2) {
-        var obId = location.obstacle;
-        tile = game.getObstacle(obId);   
-    }
-    else if (location.id === 3) {
-        tile = game.getRandomTile();       
-    }
-    else if (location.id === 4) {
-        tile = game.getPointMarkerTile(sourceTarget);
-    }
-    else if (location.id === 5) {
-        tile = game.getPointMarkerTile(sourceTarget);
-    }
-    
-    return tile;
-    
-};
-
-
-
-
-
-
-UserConsole.prototype.activatePathFrontierButton = function(button) {
-    
-    if (button === 'FRONTIER') {
-        this.frontierButton.click = true;
-    }
-    else if (button === 'PATH') {
-        this.pathButton.click = true;
-    }
-    
-};
-
 
 UserConsole.prototype.log = function(text) {
     
-    var log = this.message.log;
-    
-//    if (log.length === 5) {
-//        log.shift();
-//    }
-    
-    
+    var log = this.activity.log;    
     log.push(text);
-    console.log(this.message);
-    
-    
-    
     
 };
 
-UserConsole.prototype.getPath = function() {
-  
-    
-    
+//-------------------------------------//
+/////////////////////////////////////////
+// Map State Methods
+/////////////////////////////////////////
+//-------------------------------------//
+
+UserConsole.prototype._________Map_State_Methods_________ = function() {};
+
+UserConsole.prototype.toggleMapState = function(state) {
+    this.map.state = state;
 };
 
 
-UserConsole.prototype.toggleFrontierPathLayers = function(button, action) {
-    
-    // If the layer is avaiable
-    if (this.game.pathfinder.LAYER === button) {
-        
-        if (action === 'ON') {
-            
-            // Turn it on
-            this.game.map.layers.PATHFINDER = button;
-        } else if (action === 'OFF') {
-            this.game.map.layers.PATHFINDER = null;
-        }
-        else if (action === 'SWITCH') {
-            let layer = this.game.map.layers.PATHFINDER;
-            
-            this.game.map.layers.PATHFINDER = button ? layer === null : null;
-        }
-        //        // If layer is off, turn it on
-        //        if (this.map.layers.PATHFINDER !== layer) {
-        //            
-        //        }
-        return true;
-    }
-    
-    this.game.map.layers.PATHFINDER = null;
-    return false;
-    
+UserConsole.prototype.getMapState = function() {
+    return this.map.state;
+};
+
+//-------------------------------------//
+/////////////////////////////////////////
+// Grid Methods
+/////////////////////////////////////////
+//-------------------------------------//
+
+UserConsole.prototype._________Grid_Methods_________ = function() {};
+
+
+UserConsole.prototype.toggleGrid = function(state) {
+    this.grid.layer = state;
+};
+
+UserConsole.prototype.isGridVisible = function() {
+    return this.grid.layer;
 };
 
 
-UserConsole.prototype.targetTileIsAll = function() {
-    // Return true if target location is set to 'All Tiles'
-    return this.locations.target.id === 5;   
-};
+//-------------------------------------//
+/////////////////////////////////////////
+// Speed Settings Methods
+/////////////////////////////////////////
+//-------------------------------------//
+
+UserConsole.prototype._________Speed_Settings_Methods_________ = function() {};
 
 UserConsole.prototype.holdSpeedButton = function(speed) {   
     this.speed.button.hold = speed;
 };
-
 
 UserConsole.prototype.clickSpeedButton = function(speed) {   
     this.speed.button.click = speed; 
@@ -1287,6 +1254,15 @@ UserConsole.prototype.clickSpeedButton = function(speed) {
 UserConsole.prototype.getSpeedButton = function() {
     return this.speed.button;
 };
+
+
+//-------------------------------------//
+/////////////////////////////////////////
+// Gender Settings Methods
+/////////////////////////////////////////
+//-------------------------------------//
+
+UserConsole.prototype._________Gender_Settings_Methods_________ = function() {};
 
 UserConsole.prototype.clickGenderButton = function(gender) {
     this.gender.button.click = gender;
@@ -1309,4 +1285,56 @@ UserConsole.prototype.toggleGender = function() {
 
 UserConsole.prototype.getGenderButton = function() {
     return this.gender.button;   
+};
+
+//-------------------------------------//
+/////////////////////////////////////////
+// User Input Methods
+/////////////////////////////////////////
+//-------------------------------------//
+
+UserConsole.prototype._________User_Input_Methods_________ = function() {};
+
+UserConsole.prototype.handleKeyboardGamepadInput = function(input) {
+    
+    if (input === 'LEFT' ||
+            input === 'RIGHT' ||
+            input === 'UP' ||
+            input === 'DOWN') {
+        this.game.KEYPRESS = input;
+        this.input.direction = input;
+    }
+    else if (input === 'A') {
+        this.toggleGender();
+    }
+    else if (input === 'B') {
+        this.holdSpeedButton(2);
+    };
+    
+};
+
+UserConsole.prototype.cancelKeyboardGamepadInput = function(input) {
+    
+    // If input already matches game's direction
+    // Or input is null (unilaterally cancel)
+    if (input === this.game.KEYPRESS || !input) {
+        this.game.KEYPRESS = null;
+        this.input.direction = null;
+    }
+    else if (input === 'A') {
+        // Do nothing
+    }
+    else if (input === 'B') {       
+        // Stop 'holding' speed button
+        this.holdSpeedButton(null);
+    }
+    
+};
+
+UserConsole.prototype.setDirection = function(direction) {
+    this.input.direction = direction;
+};
+
+UserConsole.prototype.getDirection = function() {
+    return this.input.direction;
 };

@@ -1,6 +1,7 @@
 var Map = function(game, map_data) {
     
     this.game = game;
+    this.map_data = map_data;
     
     // Create object to hold floors
     this.floors = {};
@@ -15,16 +16,11 @@ var Map = function(game, map_data) {
         PATH: false,
         FRONTIER: false,
         TRANSITION: false
-    };
+    };  
     
-    this.map_data = map_data;
-    
-    this.rocklayer = {};
-    
-    this.waterlayer = [];
-    
-    this.transition = {};
-
+    this.rocklayer = {};   
+    this.waterlayer = [];   
+    this.transitionlayer = {};
     
     this.obstacles = {
         tiles: [],
@@ -35,6 +31,14 @@ var Map = function(game, map_data) {
     };
     
 };
+
+//-------------------------------------//
+/////////////////////////////////////////
+// Itialization
+/////////////////////////////////////////
+//-------------------------------------//
+
+Map.prototype._________INITIALIZATION_________ = function() {};
 
 Map.prototype.init = function(floors, graph) {
     
@@ -93,9 +97,9 @@ Map.prototype.initMapLayers = function(graph) {
     };
     
     // Get floor map png from html img
-    var transition = this.map_data.transition();
-    img = document.getElementById(transition.id);
-    this.transition = {
+    var transitionlayer = this.map_data.transitionlayer();
+    img = document.getElementById(transitionlayer.id);
+    this.transitionlayer = {
         img: img
     };
     
@@ -103,13 +107,6 @@ Map.prototype.initMapLayers = function(graph) {
     
 };
 
-
-Map.prototype.addObstacles = function() {
-    
-  
-    
-    
-};
 
 
 Map.prototype.addMapData = function() {
@@ -181,34 +178,49 @@ Map.prototype.addMapData = function() {
 };
 
 
-Map.prototype.drawObstacles = function() {
-    
-    var game = this.game;
-    
-    for (let ob of this.obstacles.tiles) {
-        if (ob.active) {
-             // Draw tile to screen
-            let tile = ob.tile;
-            let floorId = ob.tile.floor.id;
-            let dof = tile.dof;
-            
-            if (this.game.getMapState() === 'GRAPHIC') {
-                game.drawShapeToScreen('star', floorId, tile);
-                return;
-            }
-            
-            let label = ob.label;
-            let spriteOptions = this.obstacles.spriteOptions;
-            spriteOptions.LABEL = label;
-            let sprite = game.getSprite(spriteOptions);
- 
-            game.drawImageToScreen(sprite.canvas, 'tile', floorId, dof, tile, 2);
-            //game.drawImageToScreen(sprite.canvas)
-            
-        }
+Map.prototype.addFloor = function(floor) {
+    if (!this.floors.hasOwnProperty(floor.id)) {
+        
+        // Add floor to map
+        this.floors[floor.id] = floor;
+        
+        // Expose game to floor
+        //floor.game = this.game;
     }
+    
 };
 
+
+Map.prototype.addLadders = function() {
+    var map_ladders = {};
+    
+    for (let f in this.floors) {
+        
+        // Ladders on floor f
+        let ladders = this.floors[f].floor_data.ladders();
+        
+        // Loop through ladders
+        for (let l of ladders) {
+            
+            // Create array of tiles if neccessary
+            if (!map_ladders.hasOwnProperty(l.id)) {
+                map_ladders[l.id] = [];
+            }
+            
+            // Get ladder's tile
+            let row =  l.tile[0];
+            let col =  l.tile[1];
+            
+            // Add tile to map's ladder object
+            map_ladders[l.id].push([this.floors[f].id, row, col].toString()); 
+        }
+        
+    }
+    
+    this.ladders = map_ladders;
+    console.log(this.ladders);
+    
+};
 
 
 Map.prototype.addMapToGraph = function(graph) {
@@ -273,54 +285,62 @@ Map.prototype.addMapToGraph = function(graph) {
 };
 
 
-Map.prototype.addFloor = function(floor) {
-    if (!this.floors.hasOwnProperty(floor.id)) {
-        
-        // Add floor to map
-        this.floors[floor.id] = floor;
-        
-        // Expose game to floor
-        //floor.game = this.game;
-    }
-    
-};
+//-------------------------------------//
+/////////////////////////////////////////
+// Obstacles
+/////////////////////////////////////////
+//-------------------------------------//
 
+Map.prototype._________OBSTACLES_________ = function() {};
 
-Map.prototype.addLadders = function() {
-    var map_ladders = {};
+Map.prototype.drawObstacles = function() {
     
-    for (let f in this.floors) {
-        
-        // Ladders on floor f
-        let ladders = this.floors[f].floor_data.ladders();
-        
-        // Loop through ladders
-        for (let l of ladders) {
+    var game = this.game;
+    
+    for (let ob of this.obstacles.tiles) {
+        if (ob.active) {
+             // Draw tile to screen
+            let tile = ob.tile;
+            let floorId = ob.tile.floor.id;
+            let dof = tile.dof;
             
-            // Create array of tiles if neccessary
-            if (!map_ladders.hasOwnProperty(l.id)) {
-                map_ladders[l.id] = [];
+            if (this.game.getMapState() === 'GRAPHIC') {
+                game.drawShapeToScreen('star', floorId, tile);
+                return;
             }
             
-            // Get ladder's tile
-            let row =  l.tile[0];
-            let col =  l.tile[1];
+            let label = ob.label;
+            let spriteOptions = this.obstacles.spriteOptions;
+            spriteOptions.LABEL = label;
+            let sprite = game.getSprite(spriteOptions);
             
-            // Add tile to map's ladder object
-            map_ladders[l.id].push([this.floors[f].id, row, col].toString()); 
+            let options = {
+                image: sprite.canvas,
+                target: 'tile',
+                floorId: floorId,
+                dof: dof,
+                tile: tile,
+                span: 2
+            };
+ 
+            game.drawImageToScreen(options);
+            //game.drawImageToScreen(sprite.canvas, 'tile', floorId, dof, tile, 2);
+            //game.drawImageToScreen(sprite.canvas)
+            
         }
-        
     }
-    
-    this.ladders = map_ladders;
-    console.log(this.ladders);
-    
 };
+
+
+
 
 
 /*****************************************/
 /**********    Tile Methods    ***********/
 /*****************************************/
+
+
+Map.prototype._________TILE_METHODS_________ = function() {};
 
 
 Map.prototype.getTile = function(floor, row, col) {
@@ -422,9 +442,6 @@ Map.prototype.getTileFromPointer  = function(pointer) {
 };
 
 
-
-
-
 Map.prototype.getMapEuclidDistance = function(tile1, tile2) {
 
     if (typeof tile1 === 'string') {
@@ -466,16 +483,16 @@ Map.prototype.getMapRowCol = function(tile) {
     for (let f of relativeOrder) {
         let floor = this.floors[f];
         if (floor.id === tileFloor.id) { break; }
-        map.row += floor.rows
+        map.row += floor.rows;
     }
 
     return map;
 
-}
+};
 
 Map.prototype.getMapMaxDistance = function() {
 
-    var relativeOrder = this.relativeOrder
+    var relativeOrder = this.relativeOrder;
 
     var topFloor = relativeOrder[0];
         topFloor = this.floors[topFloor];
@@ -489,49 +506,6 @@ Map.prototype.getMapMaxDistance = function() {
 
     return this.getMapEuclidDistance(tile1, tile2);
 };
-
-
-
-Map.prototype.getTileEuclidDistanceOld = function(tile1, tile2) {
-    
-//    var tile1 = this.getTileFromId(tile1_id);
-//    var tile2 = this.getTileFromId(tile2_id);
-
-    // Get top/left, or x/y of tile (they're the same thing)
-    var tile1_xy = this.getTileTopLeft(tile1);
-    var tile2_xy = this.getTileTopLeft(tile2);
-    
-    var delta_y = tile1_xy.top - tile2_xy.top;
-    var delta_x = tile1_xy.left - tile2_xy.left;
-    
-    var x2 = Math.pow(delta_x, 2);
-    var y2 = Math.pow(delta_y, 2);
-    
-    var distance = Math.pow(x2 + y2, .5);
-    
-    var max_width = this.getHeight();
-    var max_height = this.getWidth();
-    
-    var max_height2 = Math.pow(max_height, 2);
-    var max_width2 = Math.pow(max_width, 2);
-    var max_distance = Math.pow(max_width2 + max_height2, .5);
-    
-    return distance/max_distance;
-    
-};
-
-Map.prototype.getHeight = function() {
-  
-  return $('.caveWrapper').height();
-    
-};
-
-Map.prototype.getWidth = function() {
-  
-  return $('.caveWrapper').width();
-    
-};
-
 
 Map.prototype.getTileOtherEndLadder = function(endA) {
     
@@ -547,162 +521,28 @@ Map.prototype.getTileOtherEndLadder = function(endA) {
 };
 
 
-
-/*******************************************/
-/*******    Layer Drawing Methods    *******/
-/*******************************************/
-
+/*****************************************/
+/**********    Floor Methods    **********/
+/*****************************************/
 
 
+Map.prototype._________FLOOR_METHODS_________ = function() {};
 
 
-
-// Create black rectangle used for transitions
-Map.prototype.createMapTransitionLayer = function() {
-  
-    var canvas = document.createElement('canvas');
-    var ctx = canvas.getContext('2d');
-    
-    ctx.fillRect(0, 0, canvas.width, canvas.height);   
-    ctx.fillStyle = 'black';
-
-    this.transitionlayer = {
-        canvas: canvas,
-        ctx: ctx
-    };
-    
-};
-
-Map.prototype.setMapTransitionLayerAlpha = function(alpha) {
-    this.transitionlayer.ctx.globalAlpha = alpha;
-};
-
-
-Map.prototype.drawMapTransitionLayer = function() {
-    
-    // Get transition layer
-    var transitionlayer = this.transitionlayer;
-    
-    // Update layer with new shade black (based on current alpha set during interpolation);
-    transitionlayer.ctx.clearRect(0, 0, transitionlayer.canvas.width, transitionlayer.canvas.height);
-    transitionlayer.ctx.fillStyle = 'black';
-    transitionlayer.ctx.fillRect(0, 0, transitionlayer.canvas.width, transitionlayer.canvas.height);
-    
-    for (let f in this.floors) {    
-        console.log('transitioning');
-        let frame = this.floors[f].frame; 
-        frame.ctx.drawImage(transitionlayer.canvas, 0, 0, frame.canvas.width, frame.canvas.height);
-    }
-    
-    
-    
-};
-
-
-
-
-Map.prototype.drawGraphicLayers = function() {
-    
-    for (let f in this.floors) {   
-        this.floors[f].drawGraphicRockLayer();
-        this.floors[f].drawGraphicFloorLayer(); 
-    }
-    
-};
-
-
-Map.prototype.drawBitmapLayers = function() {
-    
-    for (let f in this.floors) {      
-        this.floors[f].drawBitmapRockLayer();
-        this.floors[f].drawBitmapWaterLayer();
-        this.floors[f].drawBitmapFloorLayer();
+Map.prototype.drawFloorLayer = function(state) {    
+    if (state === 'GRAPHIC') {
+        
+        for (let f in this.floors) {
+            this.floors[f].drawFloorLayer();
+        }       
     }
 };
 
-
-Map.prototype.drawBitmapRockLayers = function() {
+Map.prototype.getFloors = function() {
     
-    for (let f in this.floors) {      
-        this.floors[f].drawBitmapRockLayer();
-    }
-};
-
-Map.prototype.drawBitmapWaterLayers = function() {
-    
-    for (let f in this.floors) {      
-        this.floors[f].drawBitmapWaterLayer();
-    }
-};
-
-Map.prototype.drawBitmapFloorLayers = function() {
-    
-    for (let f in this.floors) {      
-        this.floors[f].drawBitmapFloorLayer();
-    }
-};
-
-Map.prototype.drawBitmapOverlayLayers = function() {
-    
-    for (let f in this.floors) {      
-        this.floors[f].drawBitmapOverlayLayer();
-    }
-};
-
-
-
-
-
-Map.prototype.drawRowsCols = function() {
-    
-    for (let f in this.floors) {      
-        this.floors[f].drawRowsCols();
-    }
+  return this.floors;  
     
 };
-
-Map.prototype.drawPathLayer = function() {
-    
-    for (let f in this.floors) {      
-        this.floors[f].drawPathLayer();
-    }
-    
-};
-
-Map.prototype.drawVisualizerLayer = function() {
-    
-    for (let f in this.floors) {   
-        this.floors[f].drawVisualizerLayer();
-    }
-    
-};
-
-Map.prototype.createPathfinderFloorLayers = function() {
-    
-    for (let f in this.floors) {
-        this.floors[f].createPathfinderFloorLayers();
-    }
-};
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -726,56 +566,17 @@ Map.prototype.createPathfinderFloorLayers = function() {
 /**********    Player Methods    ***********/
 /*******************************************/
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-Map.prototype.appendPath = function(color, player) {
-    
-    var floor = player.tile.floor;
-    floor.appendPath(color, player)
-    
-};
-
-
-
-
-
-
-
-
-
-
-
-Map.prototype.movePathPointerToSprite = function(game) {
-    
-  if (1) {
-      
-        for (let f in this.floors) {
-            this.floors[f].appendPath(this.player);
-        }
-        
-  }  
-    
-};
+//Map.prototype.movePathPointerToSprite = function(game) {
+//    
+//  if (1) {
+//      
+//        for (let f in this.floors) {
+//            this.floors[f].appendPath(this.player);
+//        }
+//        
+//  }  
+//    
+//};
 //
 //
 //
@@ -821,71 +622,225 @@ Map.prototype.movePathPointerToSprite = function(game) {
 //    //ctx.drawSprite()
 //};
 
-Map.prototype.addRemoveGaps = function(add=true) {
-    
-  var game = this.game;
-  
-  for (let g in this.gaps) {
-      
-      let tile = this.gaps[g].tile;
-      
-      // Add gaps, turn tiles into LAND
-      if (add) {
-          tile.type = 'LAND';
-          game.addEdgesToNeighbors(tile);      
-      }
-      // Remove gaps, turn tiles in to ROCK
-      else  {
-          tile.type = 'ROCK';
-          game.removeEdgesToNeighbors(tile);
-      }
-      
-  }
-      
-};
+//Map.prototype.addRemoveGaps = function(add=true) {
+//    
+//  var game = this.game;
+//  
+//  for (let g in this.gaps) {
+//      
+//      let tile = this.gaps[g].tile;
+//      
+//      // Add gaps, turn tiles into LAND
+//      if (add) {
+//          tile.type = 'LAND';
+//          game.addEdgesToNeighbors(tile);      
+//      }
+//      // Remove gaps, turn tiles in to ROCK
+//      else  {
+//          tile.type = 'ROCK';
+//          game.removeEdgesToNeighbors(tile);
+//      }
+//      
+//  }
+//      
+//};
 
-Map.prototype.getFloors = function() {
-    
-  return this.floors;  
-    
-};
 
-Map.prototype.updateMapLayers = function() {
-    
-    var game = this.game;
-    
-    this.layers.GRID;
-    
-    
-//    if (game.getPathfinderLayer() === 'PATH') {
-//        this.layers.PATHFINDER = 'PATH';
-//        this.layers.FRONTIER = false;
+
+//Map.prototype.updateMapLayers = function() {
+//    
+//    var game = this.game;
+//    
+//    this.layers.GRID;
+//    
+//    
+////    if (game.getPathfinderLayer() === 'PATH') {
+////        this.layers.PATHFINDER = 'PATH';
+////        this.layers.FRONTIER = false;
+////    }
+////    else if (game.getPathfinderLayer() === 'FRONTIER') {
+////        this.layers.FRONTIER = true;
+////        this.layers.PATH = false;
+////    }
+//    
+//    if (game.getPlayerMoveState() === 'LADDER') {
+//        this.layers.TRANSITION = true;
 //    }
-//    else if (game.getPathfinderLayer() === 'FRONTIER') {
-//        this.layers.FRONTIER = true;
-//        this.layers.PATH = false;
+//    else {
+//        this.layers.TRANSITION = false;
 //    }
-    
-    if (game.getPlayerMoveState() === 'LADDER') {
-        this.layers.TRANSITION = true;
-    }
-    else {
-        this.layers.TRANSITION = false;
-    }
-    
-    return;
-    
-};
+//    
+//    return;
+//    
+//};
 
-Map.prototype.drawFloorLayer = function(state) {
-    
-    
-    if (state === 'GRAPHIC') {
-        
-        for (let f in this.floors) {
-            this.floors[f].drawFloorLayer();
-        }
-        
-    }
-    
-};
+
+
+
+
+
+
+
+
+//Map.prototype.getTileEuclidDistanceOld = function(tile1, tile2) {
+//    
+////    var tile1 = this.getTileFromId(tile1_id);
+////    var tile2 = this.getTileFromId(tile2_id);
+//
+//    // Get top/left, or x/y of tile (they're the same thing)
+//    var tile1_xy = this.getTileTopLeft(tile1);
+//    var tile2_xy = this.getTileTopLeft(tile2);
+//    
+//    var delta_y = tile1_xy.top - tile2_xy.top;
+//    var delta_x = tile1_xy.left - tile2_xy.left;
+//    
+//    var x2 = Math.pow(delta_x, 2);
+//    var y2 = Math.pow(delta_y, 2);
+//    
+//    var distance = Math.pow(x2 + y2, .5);
+//    
+//    var max_width = this.getHeight();
+//    var max_height = this.getWidth();
+//    
+//    var max_height2 = Math.pow(max_height, 2);
+//    var max_width2 = Math.pow(max_width, 2);
+//    var max_distance = Math.pow(max_width2 + max_height2, .5);
+//    
+//    return distance/max_distance;
+//    
+//};
+//
+///*******************************************/
+///*******    Layer Drawing Methods    *******/
+///*******************************************/
+//
+//
+//// Create black rectangle used for transitions
+//Map.prototype.createMapTransitionLayer = function() {
+//  
+//    var canvas = document.createElement('canvas');
+//    var ctx = canvas.getContext('2d');
+////    
+////    ctx.fillRect(0, 0, canvas.width, canvas.height);   
+////    ctx.fillStyle = 'black';
+////
+////    this.transitionlayer = {
+////        canvas: canvas,
+////        ctx: ctx
+////    };
+////    
+////};
+//
+//Map.prototype.setMapTransitionLayerAlpha = function(alpha) {
+////    this.transitionlayer.ctx.globalAlpha = alpha;
+////};
+//
+//
+//Map.prototype.drawMapTransitionLayer = function() {
+//    
+//    // Get transition layer
+//    var transitionlayer = this.transitionlayer;
+//    
+//    // Update layer with new shade black (based on current alpha set during interpolation);
+//    transitionlayer.ctx.clearRect(0, 0, transitionlayer.canvas.width, transitionlayer.canvas.height);
+//    transitionlayer.ctx.fillStyle = 'black';
+//    transitionlayer.ctx.fillRect(0, 0, transitionlayer.canvas.width, transitionlayer.canvas.height);
+//    
+//    for (let f in this.floors) {    
+//        console.log('transitioning');
+//        let frame = this.floors[f].frame; 
+//        frame.ctx.drawImage(transitionlayer.canvas, 0, 0, frame.canvas.width, frame.canvas.height);
+//    }
+//    
+//    
+//    
+////};
+//
+////
+////Map.prototype.drawBitmapLayers = function() {
+////    
+////    for (let f in this.floors) {      
+////        this.floors[f].drawBitmapRockLayer();
+////        this.floors[f].drawBitmapWaterLayer();
+////        this.floors[f].drawBitmapFloorLayer();
+////    }
+////};
+//
+//Map.prototype.drawGraphicLayers = function() {
+//    
+//    for (let f in this.floors) {   
+//        this.floors[f].drawGraphicRockLayer();
+//        this.floors[f].drawGraphicFloorLayer(); 
+//    }
+//    
+//};
+//
+//
+//
+//Map.prototype.drawBitmapRockLayers = function() {
+//    
+//    for (let f in this.floors) {      
+//        this.floors[f].drawBitmapRockLayer();
+//    }
+//};
+//
+//Map.prototype.drawBitmapWaterLayers = function() {
+//    
+//    for (let f in this.floors) {      
+//        this.floors[f].drawBitmapWaterLayer();
+//    }
+//};
+//
+//Map.prototype.drawBitmapFloorLayers = function() {
+//    
+//    for (let f in this.floors) {      
+//        this.floors[f].drawBitmapFloorLayer();
+//    }
+//};
+//
+//Map.prototype.drawBitmapOverlayLayers = function() {
+//    
+//    for (let f in this.floors) {      
+//        this.floors[f].drawBitmapOverlayLayer();
+//    }
+//};
+//
+//Map.prototype.drawRowsCols = function() {
+//    
+//    for (let f in this.floors) {      
+//        this.floors[f].drawRowsCols();
+//    }
+//    
+//};
+//
+//Map.prototype.drawPathLayer = function() {
+//    
+//    for (let f in this.floors) {      
+//        this.floors[f].drawPathLayer();
+//    }
+//    
+//};
+//
+//Map.prototype.drawVisualizerLayer = function() {
+//    
+//    for (let f in this.floors) {   
+//        this.floors[f].drawVisualizerLayer();
+//    }
+//    
+//};
+//
+//Map.prototype.createPathfinderFloorLayers = function() {
+//    
+//    for (let f in this.floors) {
+//        this.floors[f].createPathfinderFloorLayers();
+////    }
+////};
+////
+//
+//Map.prototype.appendPath = function(color, player) {
+//    
+//    var floor = player.tile.floor;
+//    floor.appendPath(color, player)
+//    
+//};
+

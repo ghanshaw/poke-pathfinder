@@ -1,136 +1,137 @@
-pokemonApp.controller('monitorController', function($scope, $log, $location, $window, pokeGame) { 
+pokemonApp.controller('monitorController', function($scope, $log, $location, $document, $window, pokeGame) { 
     
+    $log.info('*** Monitor controller has begun.');
     
+    // Aquire game object
     var game = pokeGame.game;
+    
+    // Initialize Gameboy
     $scope.monitor = game.monitor;
     $scope.monitor.init();
     $scope.monitor.resize();
     
-    var appWindow = angular.element($window);
+    /* -------------------- //
+    Event handlers
+    // -------------------- */
     
-    appWindow.bind('resize', function () {
-        
+    // Update floor label when document has loaded
+    angular.element($document).ready(function() {     
+        $scope.updateFloorLabel();
+        pokeGame.viewLoaded = true;
+    });
+    
+    // Resize monitor when window resizes
+    var appWindow = angular.element($window);
+    appWindow.bind('resize', function () {       
         var view = game.getView();
-        
         if (view === 'monitor') {
             $scope.monitor.resize();
             $scope.updateFloorLabel();
         }
-        
-//        var path = $location.path();
-//        if (path === '/') {
-//            $scope.view = 'gameboy';
-//        } else {
-//            
-//        }
     });
     
-    appWindow.bind('scroll', function () {
-	$scope.updateFloorLabel();
-    });
     
-    angular.element(document).ready(function () {
-        
-        $scope.updateFloorLabel();
-        pokeGame.viewLoaded = true;
-    
+    // Update floor label on scroll
+    appWindow.bind('scroll', function () {     
+        var view = game.getView();       
+        if (view === 'monitor') {
+            $scope.updateFloorLabel();
+        }
     });
     
     
     
+    /* -------------------- //
+    Drag and Drop Functionality
+    // -------------------- */
     
-    //    //game.initMonitor();
-    //    game.monitor.initCanvas();
-    //    game.monitor.createMonitorBackground();
-    //    game.monitor.createGrid();
-    //    game.monitor.drawMonitor();
+    //////////////////////
+    // Mouse events
+    //////////////////////
     
-    $scope.touchStartMonitor = function() {
-       
-        var touches = $scope.touchevent.originalEvent.touches;
-        
-        
-        $scope.startDrag(touches[0], 'TOUCH');
-        $scope.clickPointer();
-    };
-    
-    $scope.touchMoveMonitor = function() {
-        
-        var touches = $scope.touchevent.originalEvent.touches; 
-        $scope.movePointer(touches[0], 'TOUCH');
-
-    };
-    
-    $scope.touchEndMonitor = function() {
-        $scope.endDrag();
-    };
-    
-    
+    // Mouse down on monitor starts dragging
     $scope.startDrag = function($event, action) {
-        
-        //alert('started dragging');
-        
-        game.setMonitorPointer($event, action);
-        
+        game.setMonitorPointer($event, action);      
         game.startPlayerDrag($event);
         game.startPointMarkerDrag($event);
         
     };
     
-    // For both hovering and dragging
+    // Mouse move on monitor reposition pointer
     $scope.movePointer = function(event, type) {
-        
-        game.setMonitorPointer(event, type);    
-        console.log('hovering');  
-        
+        game.setMonitorPointer(event, type);            
     };
     
+    // Mouse end stops dragging of player and point markers
     $scope.endDrag = function($event) {
-        console.log("At first, pathfinder state was: " + game.pathfinder.PATH_STATE);
-        
-        console.log('finished dragging');
         game.endPlayerDrag();
-        game.endPointMarkerDrag();
-        
-        console.log("Now it's: " + game.pathfinder.PATH_STATE);
-        
+        game.endPointMarkerDrag();        
     };
  
-    
-    $scope.clickPointer = function() { 
-        console.log('I just clicked the monitor');
-        game.CLICKED = true; 
+    // Clicking updates CLICKED flag
+    $scope.clickMonitor = function() { 
+        game.clickMonitor(true);
     };     
     
+    //////////////////////
+    // Touch events
+    //////////////////////
+    
+    // Touch start on monitor starts dragging and
+    // updates CLICKED flag
+    $scope.touchStartMonitor = function() {       
+        var touches = $scope.touchevent.originalEvent.touches;       
+        $scope.startDrag(touches[0], 'TOUCH');
+        $scope.clickPointer();
+    };
+    
+    // Touch move on monitor updates pointer
+    $scope.touchMoveMonitor = function() {     
+        var touches = $scope.touchevent.originalEvent.touches; 
+        $scope.movePointer(touches[0], 'TOUCH');
+    };
+    
+    // Touch end on monitor ends dragging
+    $scope.touchEndMonitor = function() {
+        $scope.endDrag();
+    };    
+    
+    /* -------------------- //
+    Floor Label
+    // -------------------- */
+    
+    // Update floor label
     $scope.updateFloorLabel = function() {
         
+        // Get location of 'anchors' on monitor
+        // Anchors are boundaries of each floor
         var anchors = game.getMonitorAnchors();
         
+        // Aquire the floor label DOM element
         var $floor_label = $('.floor-label');
-        var monitor_offset = $('.monitor.background').offset();
         
+        // Aquire and measure monitor DOM element
+        var monitor_offset = $('.monitor.background').offset();
         var top = monitor_offset.top;
         var left = monitor_offset.left - 80;
         
+        // Update left position of floor label
         $floor_label.css('left', left);
         
+        // Update top position of floor label (based on scroll through page)
         var label_position = $floor_label.position();
-        var scrollTop = $(window).scrollTop();
-        
+        var scrollTop = $(window).scrollTop();       
         label_position.top += scrollTop;
         
+        // Loop through anchors
         for (let a in anchors) {
             
+            // If floor label sits within bounds of floor, update label text
             if (label_position.top > anchors[a].top + monitor_offset.top &&
                     label_position.top < anchors[a].bottom + monitor_offset.top) {
                 $scope.currentFloor = a;
                 break;
             }
-        }  
-        
-    };
-    
-    
-    
-    
+        }         
+    };     
 });
