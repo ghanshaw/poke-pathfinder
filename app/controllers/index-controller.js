@@ -43,14 +43,14 @@ pokemonApp.controller('indexController', function($scope, $log, $location, $wind
     View Switcher
     // -------------------- */
     
-    $scope.view;
+    $scope.views = pokeGame.views;
     
     // Get initial view on load
     var path = $location.path();
     if (path === '/monitor/') {
-        $scope.view = 'monitor';
+        $scope.views.active = 'monitor';
     } else {
-        $scope.view = 'gameboy';        
+        $scope.views.active = 'gameboy';        
     }
     
     // Control visibility of view switcher
@@ -63,8 +63,8 @@ pokemonApp.controller('indexController', function($scope, $log, $location, $wind
         
         pokeGame.viewLoaded = false;
         
-        // Chang view in DOM when slider changes
-        if ($scope.view === 'gameboy') {
+        // Change view in DOM when slider changes
+        if ($scope.views.active === 'gameboy') {
             $location.path('/');
         } else {
             $location.path('/monitor/');
@@ -73,9 +73,10 @@ pokemonApp.controller('indexController', function($scope, $log, $location, $wind
     };
     
     // Watch for change in slider
-    $scope.$watch('view', function(newValue, oldValue) {
-        pokeGame.setView(newValue);        
-    });
+    $scope.$watch('views', function(newValue, oldValue) {
+        let view = $scope.views.active;
+        pokeGame.setView(view);        
+    }, true);
     
     // Change view and view switcher depending on window size
     $scope.updateView = function() {
@@ -87,8 +88,8 @@ pokemonApp.controller('indexController', function($scope, $log, $location, $wind
         if (screenWidth < $scope.breakpoints.sm) {
             
             // Switch view to gameboy
-            if ($scope.view !== 'gameboy') {
-                $scope.view = 'gameboy';
+            if ($scope.views.active !== 'gameboy') {
+                $scope.views.active = 'gameboy';
                 $scope.switchViews();
             } 
             

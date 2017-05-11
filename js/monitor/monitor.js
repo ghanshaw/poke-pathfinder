@@ -1,28 +1,41 @@
 var Monitor = function(game) {
     
+    // Attach game objects
     this.map = game.map;
     this.game = game;
-    this.width;
+    
+    // Size of floor borders
     this.floorborder = {
         rows: 2,
         cols: 2
     };
     
+    // Store pointer
     this.pointer = null;
     
+    // Store dimensions of each floor
     this.floorDimensions = {
         'F1': {},
         'F2': {},
         'F3': {}
     };
     
+    // Store layers, details for each floor
     this.floors = {};
     
+    // Canvas objects
+    this.screen = {
+        background: {},
+        foreground: {}
+    }
     this.background = {};
     this.foreground = {};
+    
+    // Bitmap images
     this.rocklayer = {};
     this.transitionlayer = {};
     
+    // Z-indeces dictate how layers overlap
     this.zIndex = {
         rocklayer: 5,
         waterlayer: 10,
@@ -30,7 +43,7 @@ var Monitor = function(game) {
             background: 15,
             foreground: 25
         },        
-        frame: {
+        screen: {
             background: 20,
             foreground: 30
         },
@@ -44,16 +57,22 @@ var Monitor = function(game) {
         }
     };
     
-    
+    // Current active waterlayer
     this.currentLayer = 0;
-    
-    
-    
+
     // Define the order in which floors appear
     this.relativeOrder = [ 'F2', 'F1', 'BF1' ];
     
-    this.rockGreen = '#4CAF50';
+    // Colors of various canvas elements
+    this.colors = {
+        rock: '#4CAF50',
+        grid: '#96fff4',
+        circle: '#FF5722',
+        square: "rgba(233, 30, 99, .7)",
+        star: '#a472ff'
+    };
     
+    // Monitor anchors for floor label
     this.anchors = {};
 };
 
@@ -65,79 +84,90 @@ var Monitor = function(game) {
 
 Monitor.prototype._________INITIALIZATION_________ = function() {};
 
+// Initiaize monitor
 Monitor.prototype.init = function() {
   
     this.initRockLayer();
     this.initFloors();
-    this.initFrame();
+    this.initScreen();
 
 };
 
+// Initialize Rock Layer
 Monitor.prototype.initRockLayer = function() {
   
     var game = this.game;
     
+    // If rocklayer already exists, attach to DOM
     if (this.rocklayer.img) { 
         this.appendImgToDom(this.rocklayer.img);
         return; 
     }
     
+    // Get rocklayer from Map
     var rocklayer = game.getRockLayer();  
     
+    // Store rocklayer and relevant information
     this.rocklayer['img'] = $(rocklayer.img).clone();
     this.rocklayer.rows = rocklayer.rows;
     this.rocklayer.cols = rocklayer.cols;
     
-    var width = this.tile_size * this.rocklayer.cols; 
-    
+
+    // Update css of rocklayer DOM element
     $(this.rocklayer.img).addClass('layer');
     $(this.rocklayer.img).css('z-index', this.zIndex.rocklayer);
-    this.appendImgToDom(this.rocklayer.img);
     
+    // Add rocklayer to DOM
+    this.appendImgToDom(this.rocklayer.img);
 };
 
 
+// Initialize Transition Layer
 Monitor.prototype.initTransitionLayer = function() {
 
     var game = this.game;
     
+    // If monitor already has transition layer, attach to DOM
     if (this.transitionlayer.img) { 
         this.appendImgToDom(this.transitionlayer.img);
         return; 
     }
     
+    // Get transition layer from map
     var transitionlayer = game.getTransitionLayer();  
     
+    //Store transiton layer on monitor object
     this.transitionlayer['img'] = $(transitionlayer.img).clone();
     
-//    var width = this.frame.background; 
-//    
-//    $(this.rocklayer.img).addClass('layer');
-//    $(this.rocklayer.img).css('z-index', this.zIndex.rocklayer);
+    
+    // Update css of transition layer
     $(this.transitionlayer.img).addClass('layer');
     $(this.transitionlayer.img).css('z-index', this.zIndex.transitionlayer.inactive);
+    
+    // Attach transition layer to DOM
     this.appendImgToDom(this.transitionlayer.img);
 
 };
 
-
+// Initialize Grid
 Monitor.prototype.initGrid = function() {
+    
+    var game = this.game;
+    
+    // Create blank canvas, ctx
+    var canvasSize = {
+        width: this.screen.background.canvas.width,
+        height: this.screen.background.canvas.height
+    };
+   
+    this.grid = game.createCanvasCtx(canvasSize);
 
-    // Create reusable context
-    var canvas = document.createElement('canvas');
-    var ctx = canvas.getContext('2d');
+    // Update grid ctx
+    var canvas = this.grid.canvas;
+    var ctx = this.grid.ctx;
+    ctx.strokeStyle = this.colors.grid;
     
-    ctx.mozImageSmoothingEnabled = false;
-    ctx.webkitImageSmoothingEnabled = false;
-    ctx.msImageSmoothingEnabled = false;
-    ctx.imageSmoothingEnabled = false;
-    
-    
-    canvas.width = this.frame.background.canvas.width;
-    canvas.height = this.frame.background.canvas.height;
-    ctx.strokeStyle = '#96fff4';
-
-    
+    // Create rows and columns with loops
     for (let r = 0; r <= this.rows; r++) {
      
         ctx.beginPath();
@@ -157,22 +187,10 @@ Monitor.prototype.initGrid = function() {
         ctx.stroke();
         
     };
-
-//    this.fillStyle = 'blue';
-//    this.ctx.fillRect(0, 0, 700, 1000);
-
-    canvas.id = 'gridCanvas';
-    ctx.id = 'gridCanvas';
-    
-    this.grid = {
-        canvas: canvas,
-        ctx: ctx
-    };
-
 };
 
 // Screen consists of background and foreground canvas
-Monitor.prototype.initFrame = function() {
+Monitor.prototype.initScreen = function() {
    
     var game = this.game;
     
@@ -181,7 +199,8 @@ Monitor.prototype.initFrame = function() {
     // Define canvas objects
     var canvas;
     var ctx;
-    
+
+    // Get and store foreground canvas in DOM
     canvas = $('.monitor.foreground')[0];
     ctx = canvas.getContext('2d');   
     var foreground = {
@@ -194,6 +213,7 @@ Monitor.prototype.initFrame = function() {
     ctx.msImageSmoothingEnabled = false;
     ctx.imageSmoothingEnabled = false;
     
+    // Get and store background canvas in DOM
     canvas = $('.monitor.background')[0];
     ctx = canvas.getContext('2d');   
     var background = {
@@ -204,10 +224,13 @@ Monitor.prototype.initFrame = function() {
     ctx.mozImageSmoothingEnabled = false;
     ctx.webkitImageSmoothingEnabled = false;
     ctx.msImageSmoothingEnabled = false;
-    ctx.imageSmoothingEnabled = false;
+    ctx.imageSmoothingEnabled = false; 
     
+    //////////////////////
+    // Get size of monitor
+    //////////////////////
     
-    // Max number of cols in a floor
+    // Find max number of cols in a floor
     // Sum of rows in floor
     var floors = game.getFloors();
     var cols = Number.NEGATIVE_INFINITY;
@@ -224,39 +247,32 @@ Monitor.prototype.initFrame = function() {
     this.cols = cols;
     
     // Update z-index of each frame
-    $(foreground.canvas).css('z-index', this.zIndex.frame.foreground);
-    $(background.canvas).css('z-index', this.zIndex.frame.background);
+    $(foreground.canvas).css('z-index', this.zIndex.screen.foreground);
+    $(background.canvas).css('z-index', this.zIndex.screen.background);
     
     foreground.canvas.id = 'foreground';
     background.canvas.id = 'background';
     
-    // Append canvas objects to DOM
-//    this.appendImgToDom(foreground.canvas);
-//    this.appendImgToDom(background.canvas);
-    
-    this.frame = {
+    this.screen = {
         foreground: foreground,
         background: background
     };
     
 };
 
+// Initialize floors
 Monitor.prototype.initFloors = function() {
   
     var game = this.game;
-    var mapFloors = game.getFloors();
-    var floorOffsets = this.floorOffsets;
-    var prev_height = 0;
-    
-    var tile_size = this.tile_size;
-    
+    var mapFloors = game.getFloors();    
    
-    
+    // Loop through mapfloors
     for (let f in mapFloors) {
-        
-        
-        
+               
+        // If corresponding Monitor floor already exists
         if (this.floors[f]) { 
+            
+            // Append to DOM
             let floor = this.floors[f];
             this.appendImgToDom(floor.background.img);
             this.appendImgToDom(floor.foreground.img);
@@ -267,7 +283,10 @@ Monitor.prototype.initFloors = function() {
             continue;
         }
         
+        // Get map floor
         let mapFloor = mapFloors[f];
+        
+        // Define floor object
         let floor = {
             width: 0,
             height: 0,
@@ -280,7 +299,7 @@ Monitor.prototype.initFloors = function() {
             }
         };
         
-       
+        // Get background and foreground bitmap images from Map
         floor.background.img = $(mapFloor.background.img).clone();
         floor.background.img.css('z-index', this.zIndex.floor.background);
         floor.background.img.addClass('layer');
@@ -290,19 +309,21 @@ Monitor.prototype.initFloors = function() {
         floor.foreground.img.css('z-index', this.zIndex.floor.foreground);
         floor.foreground.img.addClass('layer');
 
-        
+        // If floor has water
         if (game.floorHasWater(f)) {
         
+            // Get waterbitmap  images from Map
             let waterlayer = game.getWaterLayer();
             for (let imgWater of waterlayer.img) {
+                
+                // Clone each water image, and add to array of waterlayers
                 let img = $(imgWater).clone();
                 img.addClass('layer');
                 img.css('z-index', this.zIndex.waterlayer);
                 floor.waterlayer.img.push(img);
             }
             floor.waterlayer.rows = waterlayer.rows;
-            floor.waterlayer.cols = waterlayer.cols;
-            
+            floor.waterlayer.cols = waterlayer.cols;           
         };
         
         // Append all the elements to the monitor
@@ -312,36 +333,13 @@ Monitor.prototype.initFloors = function() {
             this.appendImgToDom(img);
         }
         
-        this.floors[f] = floor;
-        
-
-        
-
-        //        $('.monitor-screen').append(img);
-        //
-        //        $('.monitor-screen').css('width', 'auto');
-        //        
-        //        let floor = floors[f];
-        //        
-        //        var width = floor.cols * this.tile_size;
-        //        var height = floor.rows * this.tile_size;
-        //        
-        //        var offset_top = this.floorborder.rows * this.tile_size + prev_height;
-        //        
-        //        var max_floor_cols = this.cols - (this.floorborder.cols * 2);
-        //        var offset_left = (max_floor_cols - floor.cols)/2 + this.floorborder.cols;
-        //        offset_left *= this.tile_size;
-        //        
-        //
-
-        //
-        //        this.ctx.drawImage(floor.frame.canvas, offset_left, offset_top, width, height);
-        //        prev_height += height + (this.floorborder.rows * this.tile_size);
-        
+        this.floors[f] = floor;       
     };
-    
-    console.log(this.floors);
-    
+};
+
+// Append an image to the DOM
+Monitor.prototype.appendImgToDom = function(img) {
+    $('.monitor.screen').append(img);  
 };
 
 //-------------------------------------//
@@ -352,101 +350,79 @@ Monitor.prototype.initFloors = function() {
 
 Monitor.prototype._________RESIZE_METHODS_________ = function() {};
 
+// Resize monitor
 Monitor.prototype.resize = function() {
     
-    this.resizeFrame();
+    this.resizeScreen();
     this.resizeFloors();
     this.resizeRockLayer();
     
-    // These rely on dimensions of frame
+    // These rely on dimensions of screen
     this.initGrid();
     this.initTransitionLayer();
     
 };
 
-
-
-Monitor.prototype.resizeRockLayer = function() {
+// Resize screen
+Monitor.prototype.resizeScreen = function() {
     
-    var width = this.tile_size * this.rocklayer.cols;   
-    $(this.rocklayer.img).css('width', width);
-    
-    
-  
-    //    var monitorScreen = $('.monitor-screen');
-    //    var monitorFrame = $('.monitor-frame');
-    //    
-    //    // Compute tile size (based on canvas size, or fixed)
-    //    var monitorFrameWidth = monitorFrame.width();
-    //    var monitorScreenWidth = monitorScreen.width();
-    //    this.tile_size = Math.floor(monitorFrameWidth / this.cols);
-    //    if (this.tile_size % 2 !== 0) {
-    //        this.tile_size--;
-    //    }
-    //    
-    //    var tile_size = this.tile_size;
-    //    
-    //      // Update canvas height
-    //    this.canvas.width = tile_size * this.cols;
-    //    this.canvas.height = tile_size * this.rows;
-    //    
-    
-};
-
-
-Monitor.prototype.appendImgToDom = function(img) {
-
-    $('.monitor.screen').append(img);
-    
-};
-
-
-
-Monitor.prototype.resizeFrame = function() {
-    
+    // Define screen as 90% of its parent
     $('.monitor.screen').css('width', '90%');
+    
     
     var monitorScreen = $('.monitor.screen');
     var monitorFrame = $('.monitor-frame');
     
-    // Compute tile size (based on canvas size, or fixed)
+    // Compute tile size (either based on canvas size, or fixed)
     var monitorFrameWidth = monitorFrame.width();
     var monitorScreenWidth = monitorScreen.width();
+    
     this.tile_size = Math.floor(monitorFrameWidth / this.cols);
     if (this.tile_size % 2 !== 0) {
         this.tile_size--;
     }
     
+    //var tile_size = 16;
     var tile_size = this.tile_size;
     
-    // Update canvas height
+    // Update canvas dimensions
+    this.screen.foreground.canvas.width = tile_size * this.cols;
+    this.screen.foreground.canvas.height = tile_size * this.rows;
     
-    this.frame.foreground.canvas.width = tile_size * this.cols;
-    this.frame.foreground.canvas.height = tile_size * this.rows;
+    this.screen.background.canvas.width = tile_size * this.cols;
+    this.screen.background.canvas.height = tile_size * this.rows;
     
-    this.frame.background.canvas.width = tile_size * this.cols;
-    this.frame.background.canvas.height = tile_size * this.rows;
-    
-    $('.monitor.screen').css('width', 'auto');
-    
+    // Update screen width to auto
+    $('.monitor.screen').css('width', 'auto');  
 };
 
 
+// Resize Rock Layer
+Monitor.prototype.resizeRockLayer = function() {
+    
+    // Update width of Rock Layer based on tile size
+    var width = this.tile_size * this.rocklayer.cols;   
+    $(this.rocklayer.img).css('width', width);
+    
+};
+
+// Resize floor layers
 Monitor.prototype.resizeFloors = function() {
     
-    
+    // Get game objects
     var game = this.game;
-    
-    //this.bitmap['overlaylayer'] = null;
-    
     var mapFloors = game.getFloors();
-    var floorOffsets = this.floorOffsets;
-    var prev_height = 0;
-    var floors = this.floors;
+    
+    // Get tile size
     var tile_size = this.tile_size;
     
+    // Height of previous floor (for looping)
+    var prev_height = 0;
+    
+    // For floor in relative order
     for (let f of this.relativeOrder) {
         
+        // Get map floor and monitor floor
         let mapFloor = mapFloors[f];
         let floor = this.floors[f];
         
@@ -454,16 +430,17 @@ Monitor.prototype.resizeFloors = function() {
         let rows = mapFloor.rows;
         let cols = mapFloor.cols;
         
+        // Get width and height
         let width = cols * tile_size;
         let height = rows * tile_size;
 
         // Determine top and left of floor
         var offset_top = this.floorborder.rows * this.tile_size + prev_height;
-        
         var max_floor_cols = this.cols - (this.floorborder.cols * 2);
         var offset_left = (max_floor_cols - cols)/2 + this.floorborder.cols;
         offset_left *= this.tile_size;
         
+        // Update monitor floor with dimensions
         floor.rows = rows;
         floor.cols = cols;
         
@@ -486,25 +463,19 @@ Monitor.prototype.resizeFloors = function() {
         $(background.img).css('top', floor.top);
         $(background.img).css('left', floor.left);
         
-        
+        // Update dimenions of water layer 
+        // Water layer is slightly smaller than floor layer to prevent peeking
         let waterWidth = (floor.cols - .5) * this.tile_size;
         let waterHeight = (floor.rows - .5) * this.tile_size;
-        let fromTop = 0;
-        let fromRight = waterWidth - width;
-        let fromBottom = waterHeight - height;
-        let fromLeft = 0;
-        let clipPath = 'inset(' + fromTop + 'px ' + fromRight + 'px ' + fromBottom + 'px ' + fromLeft + 'px )';
         
-        //.clip-path: inset(0px 320px 112px 0px);
-        
-        // Update the css of each water layer (include clip-path)
+        // Update the css of each water layer
         for (let img of waterlayer.img) {
             $(img).css('width', waterWidth);
             $(img).css('top', floor.top);
             $(img).css('left', floor.left);
-            $(img).css('clip-path', clipPath);
         };
         
+        // Update floor anchors (top and bottom boundaries of each floor)
         this.anchors[f] = {
             top: prev_height,
             bottom: prev_height + height + (this.floorborder.rows * this.tile_size)
@@ -513,21 +484,7 @@ Monitor.prototype.resizeFloors = function() {
         // Store height for next floor
         prev_height += height + (this.floorborder.rows * this.tile_size);
         
-        
-
-        //        // Update dimensions of floor on monitor
-        //        this.floorDimensions[f] = {
-        //            top: offset_top,
-        //            left: offset_left,
-        //            height: height,
-        //            width: width
-        //        };
-
-        //this.ctx.drawImage(floor.frame.canvas, offset_left, offset_top, width, height);
-        
-        
-    };
-    
+    }; 
 };
 
 
@@ -539,6 +496,7 @@ Monitor.prototype.resizeFloors = function() {
 
 Monitor.prototype._________TILE_METHODS_________ = function() {};
 
+// Get top, left offsts from tile
 Monitor.prototype.getXYFromTile = function(tile) {
        
     var floorId = tile.floor.id;
@@ -557,7 +515,7 @@ Monitor.prototype.getXYFromTile = function(tile) {
     
 };
 
-
+// Get tile from pointer
 Monitor.prototype.getTileFromPointer  = function() {
     
     var pointer = this.pointer;
@@ -566,29 +524,32 @@ Monitor.prototype.getTileFromPointer  = function() {
         return;
     }
     
+    // Get pointer top, left
     var top = pointer.y;
     var left = pointer.x;
-    //var floorDimensions =  this.floorDimensions;
-
+    
+    // Loop through floor
     for (var f in this.floors) {
         let floor = this.floors[f];
-
-
         
+        // If top, left intersect with floors borders
         if (top > floor.top && 
                 top < (floor.top + floor.height) &&
                 left > floor.left &&
                 left < (floor.left + floor.width)) {
-
+            
+            // Computer top and left relative to floor and break
             top -= floor.top;
             left -= floor.left;
             break;
         }
-
+        
     }
-
+    
+    // Get tile size
     var tile_size = this.tile_size;
-
+    
+    // Use top, left to get row, col
     var col = Math.floor(left / tile_size);
     var row = Math.floor(top / tile_size);
     
@@ -597,8 +558,8 @@ Monitor.prototype.getTileFromPointer  = function() {
     var tile = this.game.getTileFromId(tileId);
     
     return tile;
-    
 };
+
 
 //-------------------------------------//
 /////////////////////////////////////////
@@ -606,71 +567,65 @@ Monitor.prototype.getTileFromPointer  = function() {
 /////////////////////////////////////////
 //-------------------------------------//
 
+
 Monitor.prototype._________DRAWING_METHODS_________ = function() {};
 
-
+// Draw, update layers belonging to monitor
 Monitor.prototype.drawMonitor = function() {
-    
-    
     
     // Update water layer
     this.updateWaterlayer();
-    
-    // Draw Floor Frames
-    //this.drawFloorFrames();
 
     // Draw grid
     this.drawGrid();
-    
-    // Draw player drag icon
-    //this.drawPlayerDrag();
 
     //Draw transition layer
     this.drawTransitionLayer();
 };
 
+// Draw shape to screen
+Monitor.prototype.drawShapeToScreen = function(shape, floorId, tile) {
 
-
-Monitor.prototype.drawShapeToScreen = function(shape, floorId, tile, color) {
-
-
+    // Get 
     var dof = tile.dof;
-    
     var tile_size = this.tile_size;    
-    var frame = this.frame;
+    var screen = this.screen;
     
     var xy = this.getXYFromTile(tile);
     
     var ctx;
     if (dof === 'BACKGROUND') {
-        ctx = frame.background.ctx;
+        ctx = screen.background.ctx;
     } else if (dof === 'FOREGROUND') {
-        ctx = frame.foreground.ctx;
+        ctx = screen.foreground.ctx;
     }
     
-    
+    // If shape is a circle
     if (shape.toUpperCase() === 'CIRCLE') {
+        
+        // Draw circle 
         
         xy.x += (1/2) * tile_size;
         xy.y += (1/2) * tile_size;
         
-        ctx.fillStyle = '#FF5722';
+        ctx.fillStyle = this.colors.circle;
         ctx.beginPath();
         ctx.arc(xy.x, xy.y, tile_size/3, 0, Math.PI * 2);
         ctx.fill();
         ctx.closePath();
-    }
+    };
     
+    // If shape is a square
     if (shape.toUpperCase() === 'SQUARE') {
-        //frame.ctx.beginPath();
-        ctx.strokeStyle = "rgba(233, 30, 99, .7)";
+        ctx.strokeStyle = this.colors.square;
         ctx.lineWidth = tile_size / 10;
         ctx.strokeRect(xy.x, xy.y, tile_size, tile_size);
-    }
+    };
     
+    // If shape is a star 
     if (shape.toUpperCase() === 'STAR') {
         
-        ctx.fillStyle = '#a472ff';
+        ctx.fillStyle = this.colors.star;
         
         let radius = tile_size / 2.5;
         let points = 5;
@@ -692,265 +647,285 @@ Monitor.prototype.drawShapeToScreen = function(shape, floorId, tile, color) {
         }
         ctx.fill();
         ctx.restore();
-    
-    }
-    
+    };    
 };
 
 
-
-Monitor.prototype.drawImageToFrame = function(options) {
+// Draw image directly to screen
+Monitor.prototype.drawImageToScreen = function(options) {
     
+    var game = this.game;
     
-    //img, option, floorId, dof, tile, span=1, alpha=1
+    // Function accepts various arguments stored in an options array
+    // img, option, floorId, dof, tile, span=1, alpha=1, spriteOptions
     
     // Draw image at present location of pointer
     if (options.target === 'pointer') {
         
-        let span = options.span;
         let image = options.image;
+        let span = options.span;
         
-        let ctx = this.frame.foreground.ctx;
+        
+        let sX;
+        let sY;
+        let sWidth;
+        let sHeight;
+               
+        // If image is 'spritesheet', get image object from spritesheet
+        // using sprite options
+        if (image === 'spritesheet') {
+            
+            let spriteOptions = options.spriteOptions;
+            let sXsY = game.getSpriteSheetXY(spriteOptions);
+            let sheetCanvas = game.getSpriteSheetCanvas();
+            let sprite_size = game.getSpriteSize();
+            
+            sX = sXsY.x;
+            sY = sXsY.y;
+            
+            sWidth = sprite_size;
+            sHeight = sprite_size;
+            
+            image = sheetCanvas;
+        } 
+        
+        // Source dimentions are just dimentions of image
+        else {
+            
+            sX = 0;
+            sY = 0;
+
+            sWidth = image.width;
+            Height = image.height;
+        }
+        
         let tile_size = this.tile_size;
         let offset = (1 - span)/2;
-        ctx.drawImage(image, this.pointer.x - tile_size, this.pointer.y - tile_size, tile_size * span, tile_size * span);
+        
+        // Compute destination dimensions
+        let dX = this.pointer.x - tile_size;
+        let dY = this.pointer.y - tile_size;
+        let dWidth = tile_size * span;
+        let dHeight = tile_size * span;
+        
+        // Draw diretion to foreground
+        let ctx = this.screen.foreground.ctx;
+
+        ctx.drawImage(image, sX, sY, sWidth, sHeight, dX, dY, dWidth, dHeight);
         return;
     }
     
+    // Draw image onto a tile
     if (options.target === 'tile') {
         
-        var floorId = options.floorId;
-        var tile = options.tile;
-        var dof = options.dof;
-        var image = options.image;
-        var span = options.span;
+        // Get various variables from arguments object
+        let image = options.image;
+        let tile = options.tile;
+        let floorId = options.floorId;
+        let dof = options.dof;
+        let span = options.span;
+        let floor = this.floors[floorId];
         
-        var floor = this.floors[floorId];
-        var frame = this.frame;
         
-        var xy = this.getXYFromTile(tile);
+        // Compute destination dimensions
+        let tile_size = this.tile_size;
+        let offset = (1 - span)/2;
         
-        //var dof = tile.dof;
-        var tile_size = this.tile_size;
+        let xy = this.getXYFromTile(tile);
         
-        var offset = (1 - span)/2;
+        let dX = xy.x + (offset * tile_size);
+        let dY = xy.y + (offset * tile_size);  
         
-        xy.x += offset * tile_size;
-        xy.y += offset * tile_size;   
+        let dWidth = tile_size * span;
+        let dHeight = tile_size * span;
         
-        var ctx;
+        let screen = this.screen;
+        
+        // Get context based on depth-of-field
+        let ctx;
         if (dof === 'BACKGROUND') {
-            ctx = frame.background.ctx;
+            ctx = screen.background.ctx;
         } else if (dof === 'FOREGROUND') {
-            ctx = frame.foreground.ctx;
+            ctx = screen.foreground.ctx;
         }
         
-        ctx.drawImage(image, xy.x, xy.y, tile_size * span, tile_size * span);
+        // Compute source dimensions       
+        let sX;
+        let sY;       
+        let sWidth;
+        let sHeight;
+        
+        if (image === 'spritesheet') {
+            
+            // Get image from spritesheet
+            let spriteOptions = options.spriteOptions;
+            let sXsY = game.getSpriteSheetXY(spriteOptions);
+            let sheetCanvas = game.getSpriteSheetCanvas();
+            let sprite_size = game.getSpriteSize();
+            
+            sX = sXsY.x;
+            sY = sXsY.y;
+            
+            sWidth = sprite_size;
+            sHeight = sprite_size;
+            
+            image = sheetCanvas;
+        } else {
+            
+            sX = 0;
+            sY = 0;
+            
+            sWidth = image.width;
+            sHeight = image.height;
+        }
+        
+        // Draw image to screen
+        ctx.drawImage(image, sX, sY, sWidth, sHeight, dX, dY, dWidth, dHeight);
+       
         return;
     }
     
     if (options.target === 'floor') {
-        
-        
-        var frame = this.frame;
-        let alpha = options.alpha;
-        
+
+        // Get various variables from options argument object
+        let alpha = options.alpha;      
         let floorId = options.floorId;
         let image = options.image;
         let dof = options.dof;
+              
+        let screen = this.screen;
         
-        
-        var ctx;
+        let ctx;
         if (dof === 'BACKGROUND') {
-            ctx = frame.background.ctx;
+            ctx = screen.background.ctx;
         } else if (dof === 'FOREGROUND') {
-            ctx = frame.foreground.ctx;
+            ctx = screen.foreground.ctx;
         }
-        
-        var floor = this.floors[floorId];
-        
+
+        // Update opacity of layer of alpha argument is provided
         if (alpha) {
-            console.log(alpha);
             ctx.globalAlpha = 1 - alpha;
         }
+        
+        // Get floor for dimensions
+        let floor = this.floors[floorId];
+        
+        // Draw image to screen
         ctx.drawImage(image, floor.left, floor.top, floor.width, floor.height);
+        
+        // Restore opacity
         ctx.globalAlpha = 1;
-
         return;
-    }
-    
+    }  
 };
 
 
-
-
-
-
-
-Monitor.prototype.drawFloorFrames = function() {
-    
-    
-    var game = this.game;
-    
-    var canvas = document.createElement('canvas');
-    var ctx = canvas.getContext('2d');
-    
-    ctx.mozImageSmoothingEnabled = false;
-    ctx.webkitImageSmoothingEnabled = false;
-    ctx.msImageSmoothingEnabled = false;
-    ctx.imageSmoothingEnabled = false;
-    
-    canvas.width = this.cols * this.tile_size;
-    canvas.height = this.rows * this.tile_size;
-    
-    //this.bitmap['overlaylayer'] = null;
-    
-    var floors = game.getFloors();
-    var floorOffsets = this.floorOffsets;
-    var prev_height = 0;
-    
-    for (let f of this.relativeOrder) {
-        
-        let floor = floors[f];
-        
-        var width = floor.cols * this.tile_size;
-        var height = floor.rows * this.tile_size;
-        
-        var offset_top = this.floorborder.rows * this.tile_size + prev_height;
-        
-        var max_floor_cols = this.cols - (this.floorborder.cols * 2);
-        var offset_left = (max_floor_cols - floor.cols)/2 + this.floorborder.cols;
-        offset_left *= this.tile_size;
-        
-
-        // Update dimensions of floor on monitor
-        this.floorDimensions[f] = {
-            top: offset_top,
-            left: offset_left,
-            height: height,
-            width: width
-        };
-
-        //this.ctx.fillRect(0, 0, 500, 500);
-        
-        this.ctx.drawImage(floor.frame.canvas, offset_left, offset_top, width, height);
-        prev_height += height + (this.floorborder.rows * this.tile_size);
-        
-    };
-    
-};
-
-
-Monitor.prototype.drawPlayerDrag = function() {
-    
-    var game = this.game;
-    var tile_size = this.tile_size;
-    
-    if (game.getPlayerMoveState() === 'DRAG') {
-        
-        this.pointer;
-        var sprite = game.getPlayerDragSprite();
-        this.ctx.drawImage(sprite.canvas, this.pointer.x - tile_size, this.pointer.y - tile_size, tile_size * 2, tile_size * 2);
-        
-    } 
-    
-};
-
+// Draw transition layer
 Monitor.prototype.drawTransitionLayer = function() {
     
     var game = this.game;
     
-    if (game.getPlayerMoveState() === 'LADDER') {
+    // If player is climbing ladder
+    if (game.getPlayerState() === 'LADDER') {
         
+        // Get opacity of layer from game
         let opacity = game.getTransitionOpacity();
         
+        // Update css of transition layer
         $(this.transitionlayer.img).css('z-index', this.zIndex.transitionlayer.active);
         $(this.transitionlayer.img).css('opacity', opacity);
-        return;
-    
+        return;   
     }
     
+    // Revert css of transition layer, send to back
     $(this.transitionlayer.img).css('z-index', this.zIndex.transitionlayer.inactive);
 };
 
 
 
-
+// Draw grid
 Monitor.prototype.drawGrid = function() {
+    
+    // If grid is visible
     if (this.game.isGridVisible()) {
-        let width = this.frame.foreground.canvas.width;
-        let height = this.frame.foreground.canvas.height;
-        this.frame.foreground.ctx.drawImage(this.grid.canvas, 0, 0, width, height);
+        
+        // Get screen width and height
+        let width = this.screen.foreground.canvas.width;
+        let height = this.screen.foreground.canvas.height;
+        
+        // Draw grid to screen
+        this.screen.foreground.ctx.drawImage(this.grid.canvas, 0, 0, width, height);
     }
+    
 };
 
-
+// Update water layers based on time
 Monitor.prototype.updateWaterlayer = function() {
     
     var game = this.game;
-    
     var ticks = game.getTicks();
     
-    let i = Math.floor( (ticks/16) % 8 );  
+    var i = Math.floor( (ticks/16) % 8 );  
     
+    // After a certain number of ticks
     if (i !== this.currentLayer) {   
+        // Loop through floors
         for (let f in this.floors) {
-
+            
+            // Get floor
             let floor = this.floors[f];  
             
             // Skip floors without water
             if (floor.waterlayer.img.length === 0) { continue; }
             
+            // Update water layer, hiding one layer and exposing another
             floor.waterlayer.img[this.currentLayer].hide(0);
             floor.waterlayer.img[i].show(0);
 
         }    
         this.currentLayer = i;
-    }
-    
+    }  
 };
 
+
+// Prepare monitor based on Map state
 Monitor.prototype.prepareMonitor = function(state) {
   
-    // Draw cave background
-//    if (this.game.getMapState() === 'GRAPHIC') {
-//        this.frame.background.ctx.fillStyle = this.rockGreen;
-//        this.frame.background.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-//    }
-    
+    // If Map state is Graphic
     if (state === 'GRAPHIC') {
     
         // Give canvas background color;
-        $(this.frame.background.canvas).css('background-color', this.rockGreen);
+        $(this.screen.background.canvas).css('background-color', this.rockGreen);
 
-        // Move frame forward
-        $(this.frame.background.canvas).css('z-index', this.zIndex.graphic.background);
-        $(this.frame.foreground.canvas).css('z-index', this.zIndex.graphic.foreground);
+        // Move screen forward
+        $(this.screen.background.canvas).css('z-index', this.zIndex.graphic.background);
+        $(this.screen.foreground.canvas).css('z-index', this.zIndex.graphic.foreground);
     
-    } else if (state === 'BITMAP') {
+    } 
+    // If Map state is Bitmap
+    else if (state === 'BITMAP') {
         
         // Remove canvas background color
-        $(this.frame.background.canvas).css('background-color', 'transparent');
+        $(this.screen.background.canvas).css('background-color', 'transparent');
 
         // Return images to original z-index
-        $(this.frame.background.canvas).css('z-index', this.zIndex.frame.background);
-        $(this.frame.foreground.canvas).css('z-index', this.zIndex.frame.foreground);
-        
-    }
-    
-    
+        $(this.screen.background.canvas).css('z-index', this.zIndex.screen.background);
+        $(this.screen.foreground.canvas).css('z-index', this.zIndex.screen.foreground);       
+    } 
 };
 
-
+// Clear screen
 Monitor.prototype.clearScreen = function() {
   
-    var frame = this.frame;
+    var screen = this.screen;
     
-    var width = frame.background.canvas.width;
-    var height = frame.background.canvas.height;
+    // Get width and heigh to screen
+    var width = screen.background.canvas.width;
+    var height = screen.background.canvas.height;
     
-    frame.background.ctx.clearRect(0, 0, width, height);
-    frame.foreground.ctx.clearRect(0, 0, width, height);
+    // Clear screen
+    screen.background.ctx.clearRect(0, 0, width, height);
+    screen.foreground.ctx.clearRect(0, 0, width, height);
     
 };
 
@@ -1092,5 +1067,73 @@ Monitor.prototype.clearScreen = function() {
 //    };
 //    
 //    this.monitorbackground = monitorbackground;
+//    
+////};
+//
+//Monitor.prototype.drawPlayerDrag = function() {
+//    
+//    var game = this.game;
+//    var tile_size = this.tile_size;
+//    
+//    if (game.getPlayerState() === 'DRAG') {
+//        
+//        this.pointer;
+//        var sprite = game.getPlayerDragSprite();
+//        this.ctx.drawImage(sprite.canvas, this.pointer.x - tile_size, this.pointer.y - tile_size, tile_size * 2, tile_size * 2);
+//        
+//    } 
+//    
+////};
+//
+//Monitor.prototype.drawFloorFrames = function() {
+//    
+//    
+//    var game = this.game;
+//    
+//    var canvas = document.createElement('canvas');
+//    var ctx = canvas.getContext('2d');
+//    
+//    ctx.mozImageSmoothingEnabled = false;
+//    ctx.webkitImageSmoothingEnabled = false;
+//    ctx.msImageSmoothingEnabled = false;
+//    ctx.imageSmoothingEnabled = false;
+//    
+//    canvas.width = this.cols * this.tile_size;
+//    canvas.height = this.rows * this.tile_size;
+//    
+//    //this.bitmap['overlaylayer'] = null;
+//    
+//    var floors = game.getFloors();
+//    var floorOffsets = this.floorOffsets;
+//    var prev_height = 0;
+//    
+//    for (let f of this.relativeOrder) {
+//        
+//        let floor = floors[f];
+//        
+//        var width = floor.cols * this.tile_size;
+//        var height = floor.rows * this.tile_size;
+//        
+//        var offset_top = this.floorborder.rows * this.tile_size + prev_height;
+//        
+//        var max_floor_cols = this.cols - (this.floorborder.cols * 2);
+//        var offset_left = (max_floor_cols - floor.cols)/2 + this.floorborder.cols;
+//        offset_left *= this.tile_size;
+//        
+//
+////        // Update dimensions of floor on monitor
+////        this.floorDimensions[f] = {
+////            top: offset_top,
+////            left: offset_left,
+////            height: height,
+////            width: width
+////        };
+//
+//        //this.ctx.fillRect(0, 0, 500, 500);
+//        
+//        this.ctx.drawImage(floor.screen.canvas, offset_left, offset_top, width, height);
+//        prev_height += height + (this.floorborder.rows * this.tile_size);
+//        
+//    };
 //    
 //};

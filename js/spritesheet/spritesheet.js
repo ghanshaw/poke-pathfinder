@@ -1,148 +1,146 @@
-var SpriteSheet = function(spritesheet_data) {
+// SpriteSheet constructor
+var SpriteSheet = function(game, spritesheet_data) {
+    
+    this.game = game;
+    
+    // Get data from sprite_sheet data file
     this.player = spritesheet_data.player();
     this.pokemon = spritesheet_data.pokemon();
     this.dust = spritesheet_data.dust();
     this.head = spritesheet_data.head();
     this.flag = spritesheet_data.flag();
-    //this.mewtwo = spritesheet_data.mewtwo();
     this.obstacle = spritesheet_data.obstacle();
     this.tile = spritesheet_data.tile();
     this.spritesheet_data = spritesheet_data;
-    
     this.rows =  spritesheet_data.rows();
     this.cols =  spritesheet_data.cols();
     
+    this.spritesheet_data = spritesheet_data;
     
-    // Objects to hold both spritesheet canvases
+    /*
+     * Spritesheet object consists of 
+     * - Bitmap spritesheet image (loaded by DOM)
+     * - Canvas dervied from spritesheet image
+     * - Small reusable canvas, size of individual sprite
+     */
+    
+    // Object to hold spritesheet canvas
+    this.sheet = {}; 
+    
+    // Object to hold individual sprite canvas
     this.sprite = {};
-    this.sheet = {};  
- 
+   
 };
 
-
+// Initialize spritesheet
 SpriteSheet.prototype.init = function() {
     
+    // Initialize bitmap image
     this.initImage();
-    var self = this;
     
+    
+    // If image has loaded, initialize canvas and sprite
+    var self = this;   
     if (this.img.complete) {
         
         this.initCanvas();
         this.initSprite();
         
-    } else {
-        
+    } 
+    // Otherwise, attach event handler and wait
+    else {       
         $(this.img).on('load', function() {           
             
+            // Then initialize
             self.initCanvas();
             self.initSprite();
             
-        });
-        
-    }
-       
-    this.initCanvas();
-    this.initSprite();
-    
+        });  
+    }  
 };
 
-
+// Initialize spritesheet image
 SpriteSheet.prototype.initImage = function() {
   
-    // Select either color or black/white spritesheet
+    // Get image from DOM, attach to object
     var imgId = 'spritesheet';
     this.img = document.getElementById(imgId);    
     
 };
 
-SpriteSheet.prototype.initCanvas = function(type = 'color') {
+// Initialize spritesheet canvas
+SpriteSheet.prototype.initCanvas = function() {
     
-    var spritesheet_data = this.spritesheet_data;
+    var canvasSize = {
+        width: this.img.width,
+        height: this.img.height
+    };
     
-    // Define canvas objects
-    var canvas = document.createElement('canvas');
-    var ctx = canvas.getContext('2d');
+    // Create blank canvas, context
+    // Attach to object
+    this.sheet = this.game.createCanvasCtx(canvasSize);
     
-    ctx.mozImageSmoothingEnabled = false;
-    ctx.webkitImageSmoothingEnabled = false;
-    ctx.msImageSmoothingEnabled = false;
-    ctx.imageSmoothingEnabled = false;
-
-    
-//    console.log('Has the spritesheet been loaded completely?');
-//    console.log(spritesheet_img.complete);
-    
-    canvas.width = this.img.width;
-    canvas.height = this.img.height;
-    
+    var canvas = this.sheet.canvas;
     console.log('Spritesheet: ' + this.img.width + ', ' + this.img.height);
     console.log('Canvas: ' + canvas.width + ', ' + canvas.height);
     
-    ctx.drawImage(this.img, 0, 0);
-   
-    this.sheet.canvas = canvas;
-    this.sheet.ctx = ctx;
-   
-//    this[type] = {
-//        canvas: canvas,
-//        ctx: ctx
-//    };
+    // Draw bitmap spritesheet image to canvas sheet
+    this.sheet.ctx.drawImage(this.img, 0, 0);
 
 };
 
+// Intialize sprite canvas
 SpriteSheet.prototype.initSprite = function() {
     
-    var canvas = document.createElement('canvas');
-    var ctx = canvas.getContext('2d');
+    // Compute sprite size based on size of bitmap spritesheet
+    this.sprite_size = this.img.width / this.spritesheet_data.cols();
     
-    ctx.mozImageSmoothingEnabled = false;
-    ctx.webkitImageSmoothingEnabled = false;
-    ctx.msImageSmoothingEnabled = false;
-    ctx.imageSmoothingEnabled = false;
-    
-    this.sprite_size = this.sheet.canvas.width / spritesheet_data.cols();
-    
-    canvas.width = this.sprite_size;
-    canvas.height = this.sprite_size;
-    
-    this.sprite = {
-       canvas: canvas,
-       ctx: ctx
+    // Define size of canvas
+    var canvasSize = {
+        width: this.sprite_size,
+        height: this.sprite_size
     };
-
+    
+    // Create blank canvas, context
+    this.sprite = this.game.createCanvasCtx(canvasSize);
+   
 };
 
-SpriteSheet.prototype.getSprite = function(spriteOptions, color=true) {
+
+// Get sprite canvas based on sprite options
+SpriteSheet.prototype.getSprite = function(spriteOptions) {
     
+    // Return if image has not yet loaded
     if (!this.img.complete) { return; }
     
+    // Get sprite size and sprite sheet
     var sprite_size = this.sprite_size;
+    var sheet = this.sheet;
     
+    // Clear sprite canvas
     this.sprite.ctx.clearRect(0, 0, sprite_size, sprite_size);
     
-    // Get correct spritesheet
-    var sheet = this.sheet;
-//    if (!color) {
-//        spritesheet = this.bw;
-//    }
-    
+    // Turn sprite options into an array, if not already
     if (!Array.isArray(spriteOptions)) {
         spriteOptions = [spriteOptions];
     }
     
+    // Loop through sprite options of each sprite
+    // User might request multiple sprites be drawn at same time
     for (let options of spriteOptions) {
-        var xy = this.getXY(options);
         
-//        console.log('has the spritesheet been loaded?');
-//        var spritesheetImg = document.getElementById('spritesheet-color');
-//        console.log(spritesheetImg.isConnected);
-        
+        // Get x,y of sprite in spritesheet
+        let xy = this.getXY(options);
+
+        // Draw sprite from spritesheet to sprite canvas
         this.sprite.ctx.drawImage(sheet.canvas, xy.x, xy.y, sprite_size, sprite_size, 0, 0, sprite_size, sprite_size);     
     }
     
+    // Return sprite canvas/context
     return this.sprite;
 };
 
+// Get row, column of sprite in spritesheet based on sprite options
 SpriteSheet.prototype.getRowCol = function(spriteOptions) {
       
     // Sprite is a player (has a gender)
@@ -191,10 +189,6 @@ SpriteSheet.prototype.getRowCol = function(spriteOptions) {
         return rowcol;
     }
     
-//    // Sprite is Mewtwo
-//    if (spriteOptions.TYPE === 'MEWTWO') {
-//        return this.mewtwo;
-//    }
     
     // Sprite is obstacle
     if (spriteOptions.TYPE === 'OBSTACLE') {
@@ -202,18 +196,22 @@ SpriteSheet.prototype.getRowCol = function(spriteOptions) {
         return this.obstacle[LABEL];
     }
     
+    
     // Sprite is surface tile (water or rock)
     if (spriteOptions.TYPE === 'TILE') {
         var SURFACE = spriteOptions.SURFACE;
         var NUM = spriteOptions.NUM;
         return this.tile[SURFACE][NUM];
-    }
-        
+    }       
 };
 
+// Get x,y of sprite in spritesheet based on sprite options
 SpriteSheet.prototype.getXY = function(spriteOptions) {
     
+    // Get row and column location of sprite
     var rowcol = this.getRowCol(spriteOptions); 
+    
+    // Get x,y using sprite size
     var y = rowcol[0] * this.sprite_size;
     var x = rowcol[1] * this.sprite_size;
     
@@ -223,5 +221,3 @@ SpriteSheet.prototype.getXY = function(spriteOptions) {
     };
     
 };
- 
-

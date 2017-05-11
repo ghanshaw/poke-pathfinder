@@ -1,28 +1,9 @@
 var Player = function(game) {
     
-    this.game = game;
-    
-    this.start = null;
-    this.end = null;
-    this.time = {};
-    this.dir = {};
-    this.tile = null;
-    
-    
-    
-    this.headOptions = {
-        TYPE: 'HEAD',
-        GENDER: 'BOY',
-        FACING: 'DOWN'
-    };   
-    
-    this.shape = {};
-    
-    // Bitmap options
-    // gender: boy/girl
-    // activity: walk, surf, jump
-    // direction: up, down, left, right
-    
+    // Attach game object
+    this.game = game;   
+  
+    // Sprite options for player
     this.playerOptions = {
         TYPE: 'PLAYER',
         GENDER: 'BOY',
@@ -31,24 +12,31 @@ var Player = function(game) {
         ORIENTATION: 'STRAIGHT'
     };
     
+    // Sprite options for surfing pokemon
     this.pokemonOptions = {
         TYPE: 'POKEMON',
         FACING: 'DOWN',
         ORIENTATION: 'DOWN'
     };
     
+    // Sprite options for dust
     this.dustOptions = {
         TYPE: 'DUST',
         STAGE: 1
     };
     
+    // Sprite options for head (for dragging)
+    this.headOptions = {
+        TYPE: 'HEAD',
+        GENDER: 'BOY',
+        FACING: 'DOWN'
+    };   
+    
     // Variables for different movements;
     this.walkSpeed = 3.5;
-    //this.walkSpeed = 1;
     this.steps = 0;
     
     this.surfSpeed = 5;
-    //this.surfSpeed = 1;
     this.surfTicks = 0;
     
     this.jumpSpeed = 1;
@@ -56,29 +44,31 @@ var Player = function(game) {
     this.turnSpeed = 17.5;
     this.ladderSpeed = 1.5;
     
+    // Location of player
+    this.tile = {};   
     
-    // Time measures used to account for movement
+    // Time measures used for interpolation
     this.time = {
         start: null,
         total: null,
         delta: null,
         percent: null
     };
-    
-    
+      
     // Location variables used for interpolation
     this.start = {
         row: null,
         col: null
     };
     
+    // Exact world position of player (can in between tiles)
     this.current = {
         row: null,
         col: null,
         floor: null
     };
     
-    this.MOVE_STATE = 'STILL';
+    this.STATE = 'STILL';
     
 };
 
@@ -90,84 +80,70 @@ var Player = function(game) {
 
 Player.prototype._________INITIALIZATION_________ = function() {};
 
-Player.prototype.initShape = function() {
-    //var img = new Image();
-    
-    var canvas = document.createElement('canvas');
-    var ctx = canvas.getContext('2d');
-    
-    var size = canvas.width = canvas.height = 100;
-    //    
-    ctx.fillStyle = 'pink';
-    ctx.beginPath();
-    ctx.arc(size/2, size/2, size/3, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.closePath();
-    
-    this.shape.canvas = canvas;
-    
+// Initialize player object
+Player.prototype.init = function(initial) {
+   
+    // Define player's initial location
+    this.setTile(initial);   
 };
 
 //-------------------------------------//
 /////////////////////////////////////////
-// Move
+// Mov
 /////////////////////////////////////////
 //-------------------------------------//
 
 Player.prototype._________MOVE_METHODS_________ = function() {};
 
-
+// Player update method
 Player.prototype.updatePlayer = function() {
     
     var game = this.game;
-    var MOVE_STATE = this.MOVE_STATE;
+    var STATE = this.STATE;
     
-    if (MOVE_STATE === 'DRAG') {
+    // Update Player in Drag state
+    if (STATE === 'DRAG') {
         this.updateDrag();
         return;
     }
     
-    if (MOVE_STATE === 'STILL' ||
-            this.MOVE_STATE === 'WALL WALK') { 
+    // Allow new move if player is standing still, or walking into wall
+    if (STATE === 'STILL' ||
+            STATE === 'WALL WALK') { 
         
-        
+        // Get direction from game
         if (game.getDirection()) {
-            // console.log(this.KEYPRESS);
+            // Begin move
             this.setupMove();
-        };
-        
+        };     
     }
     
-    if (MOVE_STATE === 'WALK' || 
-            MOVE_STATE === 'SURF' || 
-            MOVE_STATE === 'JUMP ON' ||
-            MOVE_STATE === 'JUMP OFF' ||
-            MOVE_STATE === 'TURN' ||
-            MOVE_STATE === 'WALL WALK' ||
-            MOVE_STATE === 'LADDER') {
+    // If player is currently moving
+    if (STATE === 'WALK' || 
+            STATE === 'SURF' || 
+            STATE === 'JUMP ON' ||
+            STATE === 'JUMP OFF' ||
+            STATE === 'TURN' ||
+            STATE === 'WALL WALK' ||
+            STATE === 'LADDER') {
         
-        if (MOVE_STATE === 'LADDER') {
-            console.log('climb  baby climb');
-        }
-        
+        // Continue interpolating move
         this.interpolateMove();
     } 
     
-    //    if (game.getPathfinderState() === 'PATHER') {
-    //        game.KEYPRESS = null;
-    //    }
-    this.updateSpriteOptions();
-    
+    // Update sprites to match current condition of player
+    this.updateSpriteOptions();    
 };
 
-
+// Setup player move
 Player.prototype.setupMove = function() {
     
     var game = this.game;
-    var direction = game.getDirection();
-    //var KEYPRESS = game.getKeypress();
-    //var graph = this.graph;
     
+    // Get direction of input (or from Pathfinder)
+    var direction = game.getDirection();
+
+    // Get tile variables
     var startTile = this.tile;
     var floor = startTile.floor;
     var row = startTile.row;
@@ -192,282 +168,291 @@ Player.prototype.setupMove = function() {
         displacement.col = +1;
     }
     
-    // ----- 0. Climbing ladder ----- //
+    //////////////////////
+    // Consider each move state
+    //////////////////////
+    
+    // ----- 1. Climbing ladder ----- //
     // You were sent here by the end of another move
-    if (this.MOVE_STATE === 'LADDER') {
-        
-        
-        
+    if (this.STATE === 'LADDER') {
+
+        // Get start and stop tiles
         this.startTile = startTile;
         this.stopTile = game.getTileOtherEndLadder(startTile);
         
-        //this.map.resetPath()
-        //
+        
+        // If Pathfinder is in 'FOLLOW PATH' mode
         if (game.getPathfinderMode() === 'FOLLOW PATH') {
-            // Throw out unneccessary input move
+            
+            // Discard this move on input list
             this.game.pathfinder.inputDirectionList.shift();
         }
         
-        
+        // Update speed and time variables for interpolation
         var speed = this.getSpeed();
         this.time.total = 1/speed;
         this.time.start = new Date();
+        
+        // Interpolate move
         this.interpolateMove();
         return;        
     }
     
-    // ----- 1. Turning ----- //
+    // ----- 2. Turning ----- //
     // If player is still, and user direction does not match player direction
-    // and game not currently following path
-    if (this.MOVE_STATE === 'STILL' && game.getPathfinderMode() === 'OFF') {
+    // and Pathfinder is not active
+    if (this.STATE === 'STILL' && game.getPathfinderMode() === 'OFF') {
         
-        //console.info('about to turn');
+        // A turn changes the direction of the player, but does not change his tile
         
+        // Input direction and player direction are different
         if (direction !== this.playerOptions.FACING) {
-            console.info('turn');
-            this.MOVE_STATE = 'TURN';
+            
+            // Update player state
+            this.STATE = 'TURN';
+            
+            // Update player's direction
             this.changeDirection(direction);
             
             // Reset surf counter
             this.surfTicks = 0;
             
+            // Get start and stop tiles
             this.startTile = startTile;
             this.stopTile = startTile;
             
+            // Update speed and time variables for interpolation
             var speed = this.getSpeed();
             this.time.total = 1/speed;
             this.time.start = new Date();
-            this.interpolateMove();
             
+            // Interpolate move
+            this.interpolateMove(); 
             return;
         }
     }
     
     
-    // ----- 2a. Walking into Walls ----- //
-    // If user direction is same as current direction, continue walking into wall
+    // ----- 3a. Walking into Walls ----- //
+    // If input direction is same as current player direction, continue walking into wall
     // Otherwise, interrupt and process user input
-    if (this.MOVE_STATE === 'WALL WALK') {
-        
-        if (direction === this.playerOptions.FACING) {
-            //this.interpolateMove();
-            return;
-        }
-        
+    if (this.STATE === 'WALL WALK') {      
+        if (direction === this.playerOptions.FACING) { return; }      
     }
-    
+      
     // Determine final tile
     var stopTile = game.getTile(floor, row + displacement.row, col + displacement.col);
     
-    // If startTile is a ladder
-    
-    // If stopTile is a ladder
-    //    if (stopTile.ladder) {
-    //        // Redirect player, move to ladder instead
-    //        stopTile = this.getOtherEndLadder(stopTile);
-    //    }        
-    //    
     // If tile is reachable
     if (stopTile 
             && game.hasEdge(startTile, stopTile) 
             && !stopTile.obstacle) {
         
         // Movement is admissable, begin interpolation 
+        
+        // Change player's direction
         this.changeDirection(direction);
+        
+        // Attach variables to object for interpolation
         this.startTile = startTile;
         this.stopTile = stopTile;
-        
-        
         this.start.row = row;
         this.start.col = col;
-        
         this.displacement = displacement;
         
-        // Set move state, determine time allotted for move
+        // Set move state and determine time allotted for move
         var speed;
-        // ----- 3. Jumping onto water pokemon ----- //
+        
+        // ----- 4. Jumping onto water pokemon ----- //
         if (startTile.type === 'LAND' && stopTile.type === 'WATER') {
-            this.MOVE_STATE = 'JUMP ON';    
+            this.STATE = 'JUMP ON';    
         } 
-        // ----- 4. Jumping off of water pokemon ----- //
+        
+        // ----- 5. Jumping off of water pokemon ----- //
         else if (startTile.type === 'WATER' && stopTile.type === 'LAND') {      
-            this.MOVE_STATE = 'JUMP OFF';
-        }
-        // ----- 5. Walking on land ----- //
-        else if (startTile.type === 'LAND') {
-            this.MOVE_STATE = 'WALK';
-        }
-        // ----- 6. Surfing on water ----- //
-        else if (startTile.type === 'WATER') {         
-            this.MOVE_STATE = 'SURF';
+            this.STATE = 'JUMP OFF';
         }
         
+        // ----- 6. Walking on land ----- //
+        else if (startTile.type === 'LAND') {
+            this.STATE = 'WALK';
+        }
+        
+        // ----- 7. Surfing on water ----- //
+        else if (startTile.type === 'WATER') {         
+            this.STATE = 'SURF';
+        }
+        
+        // Update speed and time variables for interpolation
         var speed = this.getSpeed();
         this.time.total = 1/speed;
         this.time.start = new Date();
-        this.interpolateMove();
         
+        // Interpolate move
+        this.interpolateMove();   
     }
     
-    // ----- 2b. Walking into walls ----- //
+    // ----- 3b. Walking into walls ----- //
+    
     // Animate walking against wall
     else if (stopTile 
             && (!game.hasEdge(startTile, stopTile) || stopTile.obstacle)) {
         
         // Only animate walking into walls on land
         if(startTile.type === 'LAND') {
+
+            // Update state
+            this.STATE = 'WALL WALK';
             
-            this.MOVE_STATE = 'WALL WALK';
+            // Change player's direction
             this.changeDirection(direction);
             
-            this.changeDirection(direction);
+            // Get variables for interpolation
             this.startTile = startTile;
             this.stopTile = startTile;
             
+            // Update speed and time variables
             var speed = this.getSpeed();
             this.time.total = 1/speed;
             this.time.start = new Date();
+            
+            // Interpolate move
             this.interpolateMove();
-        }
-        
-    }
-    
+        }       
+    }   
 };
 
 
-Player.prototype.parabolicMove = function(x) {
-    //-8.16\left(x-\ .35\right)^{2\ }+\ 1
+// Interpolate various moves
+Player.prototype.interpolateMove = function() {
     
-    // If you're jumping on, use a predictable parabola to define movement
+    // Get progress through time
+    var time = this.time;    
+    this.time.delta = (new Date() - time.start)/1000;
+    this.time.percent = time.delta/time.total;
+    
+    // If process is less than 100%
+    if (this.time.percent < 1) {
+        
+        // If player is walking or surfing
+        if (this.STATE === 'WALK' || this.STATE === 'SURF') {        
+            this.interpolateWalkSurf();        
+        }
+        
+        // If player is jumping
+        else if (this.STATE === 'JUMP ON' || this.STATE === 'JUMP OFF') {          
+            this.interpolateJump();           
+        }
+        
+        // If player is climbing ladder
+        if (this.STATE === 'LADDER') {
+            this.interpolateLadder();
+        }
+    }
+    
+    //If progress is greater than 100% (interpolation is finished)
+    else {
+        
+        // If player just finished jumping onto pokemon
+        // Surf is begnning, reset surf ticks
+        if (this.STATE === 'JUMP ON') {
+            // Reset surf counter 
+            this.surfTicks = 0;
+        }
+        
+        // Increment player steps
+        this.steps += 1;
+       
+        // Update player tile to stop tile
+        this.setTile(this.stopTile);
+       
+        // If player just walked onto a ladder
+        if (this.stopTile.ladder && !this.startTile.ladder) {
+            
+            // Begin ladder mode
+            this.STATE = 'LADDER';
+                     
+            // Setup new move
+            this.setupMove();
+            return;
+        }
+      
+        // Update player state
+        this.STATE = 'STILL';
+        
+        // Redirect to Pathfinder, in case 'FOLLOW PATH' mode is actve
+        this.game.updatePathfinder();
+        
+        // Redirect to player's update method, in case there's direction input from User
+        this.updatePlayer();
+        return;
+    }       
+};
+
+// Parabolic functions used for specific interpolaton procedures
+Player.prototype.parabolicMove = function(x) {
+    
+    // If you're jumping on, use a straightforward parabola to define movement
     // If you're jumping off, jumping should occur before 70% of move time
     
     // First parabolic function is also used to change opacity during floor transition
     
     var y;
-    if (this.MOVE_STATE === 'JUMP ON' || this.MOVE_STATE === 'LADDER') {
+    if (this.STATE === 'JUMP ON' || this.STATE === 'LADDER') {
         y = -4*Math.pow((x - 0.5),2) + 1;
     }
-    else if (this.MOVE_STATE === 'JUMP OFF') {
+    else if (this.STATE === 'JUMP OFF') {
         y = Math.max((-8.16*Math.pow((x - 0.35),2) + 1), 0);
     }
     
     return y;  
 };
 
-Player.prototype.interpolateMove = function() {
-    
-    var time = this.time;
-    //    var start = this.start;
-    //    var current = this.current;
-    //    var displacement = this.displacement;
-    
-    this.time.delta = (new Date() - time.start)/1000;
-    this.time.percent = time.delta/time.total;
-    
-
-    if (this.time.percent < 1) {
-        
-        if (this.MOVE_STATE === 'WALK' || this.MOVE_STATE === 'SURF') {        
-            this.interpolateWalkSurf();        
-        }
-        
-        else if (this.MOVE_STATE === 'JUMP ON' || this.MOVE_STATE === 'JUMP OFF') {          
-            this.interpolateJump();           
-        }
-        
-        if (this.MOVE_STATE === 'LADDER') {
-            this.interpolateLadder();
-        }
-
-    }
-    
-    else {
-        // If player just finished jumping onto pokemon
-        // Surf is begnning, reset surf ticks
-        if (this.MOVE_STATE === 'JUMP ON') {
-            // Reset surf counter 
-            this.surfTicks = 0;
-        }
-        
-
-        this.steps += 1;
-       
-       
-        //this.startTile.floor.graphic.path.getContext('2d').moveTo();
-        
-
-        
-        if (this.stopTile.ladder && !this.startTile.ladder) {
-            
-            this.MOVE_STATE = 'LADDER';
-            
-            
-            //let endB = this.map.getOtherEndLadder(this.stopTile);
-            this.setTile(this.stopTile);    
-            this.setupMove();
-            return;
-        }
-        
-//        // After using ladder, reset path on floor
-//        if (this.MOVE_STATE === 'LADDER') {
-//            this.game.resetPathPointer(this.startTile);
-//        }
-        
-        //        // If path is still being followed
-        //        if (this.game.STATE === 'PATHFINDING') {
-        //            this.map.spoofDirection();
-        //        }
- 
-        this.setTile(this.stopTile); 
-        
-        
-        
-        this.MOVE_STATE = 'STILL';
-        this.game.updatePathfinder();
-        this.updatePlayer();
-        console.log('I stopped moving');
-         
-        return;
-    }    
-    
-};
-
-
+// Interpolate walking and surfing
 Player.prototype.interpolateWalkSurf = function() {
     
+    // Get current tile (current location of player in between tiles)
     var current = this.current;
+    
+    // Get starting tile
     var start = this.start;
+    
+    // Update current position based on starting tile, displacement and time
     var displacement = this.displacement;
     var time = this.time;
-    
-    
+
     current.row = start.row + (displacement.row * time.percent);
-    current.col = start.col + (displacement.col * time.percent);
-    
+    current.col = start.col + (displacement.col * time.percent);    
 };
 
 
-
+// Interpoalte jumping onto and off of pokemon
 Player.prototype.interpolateJump = function() {
     
+    // Get current tile (current location of player in between tiles)
     var current = this.current;
+    
+    // Get starting tile
     var start = this.start;
     var displacement = this.displacement;
     var time = this.time;
     
+    // Percentage through move
+    var formula_x = time.percent;  
     
-    var formula_x = time.percent;   // Percentage through move
-    var formula_y = this.parabolicMove(formula_x);    // Height w.r.t. time
+    // Height w.r.t. time
+    var formula_y = this.parabolicMove(formula_x);    
+    
+    // Is displacement positive or negative
     var sign = displacement.row + displacement.col;
     
-    if (this.MOVE_STATE === 'JUMP ON') {
-       
+    // If player is jumping on
+    if (this.STATE === 'JUMP ON') {     
         var horizontal_displacement = sign * time.percent;
         var vertical_displacement = formula_y;
-
     }
-  
-    else if (this.MOVE_STATE === 'JUMP OFF') {
+    // If player is jumping off
+    else if (this.STATE === 'JUMP OFF') {
         
         // If you're jumping off, increase horizontal displacement to compensate shortened jump
         // Player must spend last 30% of move standing still
@@ -480,7 +465,6 @@ Player.prototype.interpolateJump = function() {
     if (displacement.row !== 0) {
            
         current.row = start.row + horizontal_displacement - vertical_displacement;
-        //current.row = start.row + (displacement.row * time.percent) - vertical_displacement;
         current.col = start.col;
             
     } 
@@ -490,44 +474,45 @@ Player.prototype.interpolateJump = function() {
         current.col = start.col + horizontal_displacement;
         current.row = start.row - vertical_displacement;
             
-    }
-    
+    }   
 };
 
+// Interpolate using a ladder
 Player.prototype.interpolateLadder = function() {
     
+    // Get time variable
     var time = this.time;
     
-    var formula_x = time.percent;   // Percentage through move
+    // Percentage through move
+    var formula_x = time.percent;   
     
     // Transparency of transiton layer follows parabola
     var formula_y = this.parabolicMove(formula_x);   
     
+    // Update opacity of transition layer on game
+    // Used by monitor and gameboyw
     this.game.setTransitionOpacity(formula_y);
-    //this.game.setTransitionAlpha(formula_y);   
     
+    // Move player to stop tile at halfway point
     if (time.percent > .5 && (this.tile.id !== this.stopTile.id)) {
         this.setTile(this.stopTile);
-    }
-    
+    }  
 };
 
+// Get player's speed based on state and speed setting
 Player.prototype.getSpeed = function() {
     
-    // Get speed corresponding to MOVE_STATE, increase by speed factor
-    switch (this.MOVE_STATE) {
+    // Get speed corresponding to STATE, increase by speed factor
+    switch (this.STATE) {
             
         case 'WALK':
             return this.walkSpeed * this.factorSpeed;
-        //return this.walkSpeed;
             
         case 'JUMP ON':
             return this.jumpSpeed * this.factorSpeed;
-        //return this.jumpSpeed;
         
         case 'JUMP OFF':
             return this.jumpSpeed * this.factorSpeed;
-        //return this.jumpSpeed;
             
         case 'SURF':
             return this.surfSpeed * this.factorSpeed;
@@ -539,13 +524,11 @@ Player.prototype.getSpeed = function() {
             return this.turnSpeed * this.factorSpeed;
         
         case 'LADDER':
-            return this.ladderSpeed;
-    
-    }
-        
+            return this.ladderSpeed;   
+    }        
 };
 
-
+// Change player's direction
 Player.prototype.changeDirection = function(direction) {
     this.playerOptions.FACING = direction;
 };
@@ -559,9 +542,13 @@ Player.prototype.changeDirection = function(direction) {
 Player.prototype._________TILE_METHODS_________ = function() {};
 
 
+// Set tile of player
 Player.prototype.setTile = function(tile) {
+    
+    // Store previous tile
     var prevTile = this.tile;
     
+    // Update current tile
     this.tile = tile;
     this.current.row = tile.row;
     this.current.col = tile.col;
@@ -574,6 +561,7 @@ Player.prototype.setTile = function(tile) {
     
 };
 
+// Get current tile
 Player.prototype.getCurrentTile = function() {
     return {
         row: this.current.row,
@@ -585,28 +573,6 @@ Player.prototype.getCurrentTile = function() {
 
 
 
-
-//Player.prototype.initCanvas = function() {
-//    //var img = new Image();
-//    var game = this.game;
-//    
-//    var avatar = game.createCanvasCtx();
-//    
-//    avatar.canvas.width = game.getSpriteSize();
-//    avatar.canvas.height = game.getSpriteSize();
-//    
-//    this.avatar = avatar;
-//    
-//};
-//
-//
-//
-//Player.prototype.drawToAvatarCanvas = function(img) {
-//    
-//    this.avatar.ctx.drawImage(img, 0, 0);
-//    
-//};
-
 //-------------------------------------//
 /////////////////////////////////////////
 // Draw Methods
@@ -615,171 +581,153 @@ Player.prototype.getCurrentTile = function() {
 
 Player.prototype._________DRAW_METHODS_________ = function() {};
 
-
-Player.prototype.drawPlayer = function(floor) {
+// Draw player to screen
+Player.prototype.drawPlayer = function() {
  
     var game = this.game;
     
-    if (this.MOVE_STATE === 'DRAG') {
+    if (this.STATE === 'DRAG') {
         this.drawDrag();
         return;
     }
  
-    // Hide player during flood-fill
+    // Hide player when Pathfinder is in FRONTIER mode
     if (this.game.getPathfinderMode() === 'FRONTIER') {
         return;
     }
  
-
+    // If map is in GRAPHIC state
     if (this.game.getMapState() === 'GRAPHIC') {
+        
+        // Get tile information
         let currentTile = this.getCurrentTile();
         let floorId = currentTile.floor.id;
         let dof = currentTile.dof;
+        
+        // Draw shape to screen
         game.drawShapeToScreen('circle', floorId, currentTile);
         return;
     }
 
+    // If map is in BITMAP state
     else if (this.game.getMapState() === 'BITMAP') {
 
+        // Get tile information
         var tile = this.tile;
         var floorId = tile.floor.id;
 
         var row = this.current.row;
         var col = this.current.col;     
-        
-        //        var tile_size = this.game.getTileSize();
-        
-        //let sprite_size = this.spritesheet.sprite_size;
-        
+       
+       
         // Draw surf pokemon sprite
         if (this.pokemonOptions.SHOW) {
             
             let row;
             let col;
             
-            // If he's jumping on, pokemon appear on end tile
-            if (this.MOVE_STATE === 'JUMP ON') {
-                let sprite = game.getSprite(this.pokemonOptions);
+            // If he's jumping on, pokemon appears on stop tile
+            if (this.STATE === 'JUMP ON') {
+                
+                // Get depth-of-field
                 let dof = this.stopTile.dof;
                 
                 let options = {
-                    image: sprite.canvas, 
+                    image: 'spritesheet', 
                     target: 'tile',
                     floorId: floorId,
                     dof: dof,
                     tile: this.stopTile,
-                    span: 2
+                    span: 2,
+                    spriteOptions: this.pokemonOptions
                 };
+                
                 game.drawImageToScreen(options);
-                //game.drawSprite(this.pokemonOptions, this.stopTile);
             }    
             
             // If he's jumping off, pokemon appears on start tile
-            else if (this.MOVE_STATE === 'JUMP OFF') {
-                let sprite = game.getSprite(this.pokemonOptions);
+            else if (this.STATE === 'JUMP OFF') {
+                
+                // Get depth-of-field
                 let dof = this.startTile.dof;
-                //game.drawSprite(this.pokemonOptions, this.startTile);
                 
                 let options = {
-                    image: sprite.canvas, 
+                    image: 'spritesheet', 
                     target: 'tile',
                     floorId: floorId,
                     dof: dof,
                     tile: this.startTile,
-                    span: 2
+                    span: 2,
+                    spriteOptions: this.pokemonOptions
                 };
                 
                 game.drawImageToScreen(options);
-            }
-              
+            }            
         }
         
-        // Draw player sprite
-        // Draw player on interpolated location
+        // Draw player sprite at interpolated location
         let currentTile = this.getCurrentTile();
-        let sprite = game.getSprite(this.playerOptions);
         let dof = currentTile.dof;
         
+        // Move player to foreground if current or stop tile is 'pre-stairs'
+        // Player should be on foreground if tile is in front of stairs (which are foreground)
+        // Improves visuals for Pathfinder Path and Frontier layers
         if (this.tile.prestairs || (this.stopTile && this.stopTile.prestairs)) {
             dof = 'FOREGROUND';
         }
-        //        
-        ////        // this.playerOptions.FACING = 'RIGHT';
-        //        this.playerOptions.ORIENTATION = 'RIGHT';
-        ////        // this.playerOptions.GENDER = 'GIRL';
-        //        this.playerOptions.ACTIVITY = 'RUN';
-        ////        //this.playerOptions.ACTIVITY = 'SURF';
-        //        
+        
         let options = {
-            image: sprite.canvas, 
+            image: 'spritesheet',
             target: 'tile',
             floorId: floorId,
             dof: dof,
             tile: currentTile,
-            span: 2
+            span: 2,
+            spriteOptions: this.playerOptions
         };
 
         game.drawImageToScreen(options);
-        //        this.dustOptions.STAGE = 3;
-        //        game.gameboy.drawSprite(this.playerOptions);
-        //        game.gameboy.drawSprite(this.dustOptions);
         
-        // Draw dust sprite  
+        // Draw dust sprite on tile payer is jumping to
         if (this.dustOptions.SHOW) { 
-            // Draw dust on tile player is jumping to
-            let sprite = game.getSprite(this.dustOptions);
+            
             let dof = this.stopTile.dof;
             
             let options = {
-                image: sprite.canvas, 
+                image: 'spritesheet', 
                 target: 'tile',
                 floorId: floorId,
                 dof: dof,
                 tile: this.stopTile,
-                span: 2
+                span: 2,
+                spriteOptions: this.dustOptions
             };
+            
             game.drawImageToScreen(options);
-            //.game.drawImageToScreen(sprite.canvas, 'tile',  floorId, dof, this.stopTile, 2);
-            //game.drawSprite(this.dustOptions, this.stopTile);
-            
-            
         }
     }  
 };
 
 
-
 // Update the attributes associated with player that dictate sprite in use
 Player.prototype.updateSpriteOptions = function() {
     
+    ////////////////////////////////////////////////////
     // Update spriteOptions of various sprites
     // Player Options: GENDER - ACTIVITY - FACING - ORIENTATION
     // Pokemon Options: FACING - ORIENTATON
     // Dust Options: STAGE
+    ////////////////////////////////////////////////////
+    
     var playerOptions = this.playerOptions;
     var pokemonOptions = this.pokemonOptions;
     var dustOptions = this.dustOptions;
     
-    // Update sprite gender
-    //options.GENDER = this.game.GENDER;
-    //playerOptions.GENDER = 'BOY'; 
+    // Show player by  
     playerOptions.SHOW = true;
-    
-    if (this.MOVE_STATE === 'USER MOVE') {
-        playerOptions.SHOW = false;
-        return;
-    }
-    
-    if (this.MOVE_STATE === 'CLIMB') {
-        
-        // Hide dust and pokemon
-        dustOptions.SHOW = false;
-        pokemonOptions.SHOW = false;
-        
-    }
-
-    
-    if (this.MOVE_STATE === 'JUMP ON') {
+   
+    // If jumping onto pokemon
+    if (this.STATE === 'JUMP ON') {
         
         // Hide dust
         dustOptions.SHOW = false;
@@ -790,12 +738,11 @@ Player.prototype.updateSpriteOptions = function() {
         
         // Update player sprite options
         playerOptions.ACTIVITY = 'JUMP'; 
-        playerOptions.ORIENTATION = 'STRAIGHT';
-        
+        playerOptions.ORIENTATION = 'STRAIGHT';        
     }
     
-    
-    else if (this.MOVE_STATE === 'JUMP OFF') {
+    // If player is jumping off
+    else if (this.STATE === 'JUMP OFF') {
         
         // Update pokemon sprite options
         pokemonOptions.SHOW = true;
@@ -813,8 +760,10 @@ Player.prototype.updateSpriteOptions = function() {
         playerOptions.ACTIVITY = 'JUMP'; 
         playerOptions.ORIENTATION = 'STRAIGHT';
         
-        
-        // Refine dust, player and sprite based on progress through move
+        //////////////////
+        // Refine dust, player and sprite 
+        // based on progress through move
+        //////////////////
         
         // Dust shown/pokemon presence is based on progress through jump move
         if (this.time.percent < .7) {  
@@ -842,32 +791,32 @@ Player.prototype.updateSpriteOptions = function() {
             playerOptions.ACTIVITY = 'WALK';
             pokemonOptions.SHOW = false;
         }
-        
-        console.log(pokemonOptions.SHOW);
-        
     }
     
-
+    // If player is on land
     else if (this.tile.type === 'LAND') {
         
         // Hide dust and pokemon
         dustOptions.SHOW = false;
         pokemonOptions.SHOW = false;
         
-        if (this.MOVE_STATE === 'STILL') {
+        // If he's still
+        if (this.STATE === 'STILL') {
                      
             playerOptions.ACTIVITY = 'WALK'; 
             playerOptions.ORIENTATION = 'STRAIGHT';
             
         }    
         
-        else if (this.MOVE_STATE === 'WALK' ||
-                this.MOVE_STATE === 'WALL WALK' ||
-                this.MOVE_STATE === 'TURN') {
+        // Otherwise
+        else if (this.STATE === 'WALK' ||
+                this.STATE === 'WALL WALK' ||
+                this.STATE === 'TURN') {
             
             playerOptions.ACTIVITY = 'WALK';
             
-            if (this.MOVE_STATE === 'WALK' && this.factorSpeed > 1) {
+            // Use run sprite if speed is high
+            if (this.STATE === 'WALK' && this.factorSpeed > 1) {
                 playerOptions.ACTIVITY = 'RUN';
             }
             
@@ -883,10 +832,10 @@ Player.prototype.updateSpriteOptions = function() {
             else {
                 playerOptions.ORIENTATION = 'STRAIGHT';
             }
-        }
-        
+        }   
     }
         
+    // If he's on water
     else if (this.tile.type === 'WATER') { 
         
         // Hide dust and pokemon
@@ -895,6 +844,7 @@ Player.prototype.updateSpriteOptions = function() {
         
         playerOptions.ACTIVITY = 'SURF';         
     
+        // Orientation based on surf ticks
         if (this.surfTicks < 60) {
             playerOptions.ORIENTATION = 'UP';
         } else {
@@ -902,15 +852,10 @@ Player.prototype.updateSpriteOptions = function() {
         }
         
         this.surfTicks ++;
-        //console.log(this.surfTicks, this.game.ticks/60);
         this.surfTicks %= 120;
     
-    };
-    
-    
-    
+    }; 
 };
-
 
 
 //-------------------------------------//
@@ -919,39 +864,44 @@ Player.prototype.updateSpriteOptions = function() {
 /////////////////////////////////////////
 //-------------------------------------//
 
+
 Player.prototype._________DRAG_METHODS_________ = function() {};
 
 
-Player.prototype.startDrag = function($event) {
+// Start player drag
+Player.prototype.startDrag = function() {
 
     var game = this.game;
 
-    if (this.MOVE_STATE === 'STILL' &&
+    // If player is STILl and Pathfinder is OFF
+    if (this.STATE === 'STILL' &&
             game.getPathfinderMode() === 'OFF') {
         
-        //game.setMonitorPointer($event);
+        // Get tile from monitor pointer
         let pointerTile = game.getTileFromMonitorPointer();
         
-        
+        // Start drag if pointer and player location are the same
         if (this.tile.id === pointerTile.id) {
-            this.MOVE_STATE = 'DRAG';
+            this.STATE = 'DRAG';
         };     
-    }
-    
+    }   
 };
 
+// Update player drag
 Player.prototype.updateDrag = function() {
     
     var game = this.game;
     
+    // Get tile from monitor pointer
     var tile = game.getTileFromMonitorPointer();
  
+    // If tile is valid
     if (tile 
             && tile.type !== "ROCK"
             && !tile.obstacle) {
         
-        this.dragTile = tile;
-        
+        // Update drag tile to that tile
+        this.dragTile = tile;       
     }
     else {
         this.dragTile = null;
@@ -959,24 +909,23 @@ Player.prototype.updateDrag = function() {
     
 };
 
-
+// End player drag
 Player.prototype.endDrag = function() {
     
-    // Update sprite to hovertile (ie to draggie)
-    if (this.MOVE_STATE === 'DRAG') {
+    // Update sprite to dragTile
+    if (this.STATE === 'DRAG') {
         
         if (this.dragTile) {
             this.setTile(this.dragTile);
         }
         
-        this.MOVE_STATE = 'STILL';
-        
+        // End Drag state
+        this.STATE = 'STILL';        
     }
-    
 };
 
 
-
+// Draw drag animation
 Player.prototype.drawDrag = function() {
   
     // The player does not draw the drag sprite. It must be drawn by the monitor
@@ -984,27 +933,25 @@ Player.prototype.drawDrag = function() {
   
     // So, instead, aquire the sprite that the monitor will use;
     this.headOptions.GENDER = this.playerOptions.GENDER;
-  
-    var dragSprite = this.game.getSprite(this.headOptions);
-    
+ 
+    // And send to screen to draw
     let options = {
-        image: dragSprite.canvas,
+        image: 'spritesheet',
+        spriteOptions: this.headOptions,
         target: 'pointer', 
         span: 2
-    }
+    };
     
     this.game.drawImageToScreen(options);
-
-    //this.dragSprite = dragSprite;
   
     // However, can draw indicating square
     if (this.dragTile) {
-        //this.game.drawShape('circle', this.dragTile);
         let dof = this.dragTile.dof;
         this.game.drawShapeToScreen('square', this.dragTile.floor.id, this.dragTile);
-    }
-    
+    };
 };
+
+
 
 
 
@@ -1021,7 +968,7 @@ Player.prototype.drawDrag = function() {
 //    
 //    var tile_size = this.game.getTileSize();
 //    
-//    if (this.MOVE_STATE === 'USER MOVE') {
+//    if (this.STATE === 'USER MOVE') {
 //        return;
 //    }
 //    
@@ -1043,13 +990,13 @@ Player.prototype.drawDrag = function() {
 //            let col;
 //            
 //            // If he's jumping on, pokemon appear on stop tile
-//            if (this.MOVE_STATE === 'JUMP ON') {
+//            if (this.STATE === 'JUMP ON') {
 //                let sprite = game.getSprite(this.pokemonOptions);
 //                spriteArray.push([sprite, this.stopTile]);
 //            }    
 //            
 //            // If he's jumping off, pokemon appears on start tile
-//            else if (this.MOVE_STATE === 'JUMP OFF') {
+//            else if (this.STATE === 'JUMP OFF') {
 //                let sprite = game.getSprite(this.pokemonOptions);
 //                spriteArray.push([sprite, this.startTile]); 
 //            }
@@ -1064,9 +1011,25 @@ Player.prototype.drawDrag = function() {
 //        
 //                
 //
-//        // Draw dust sprite  
-//        if (this.dustOptions.SHOW) { 
-//            // Draw dust on tile player is jumping to
+////        // Draw dust sprite  
+////        if (this.dustOptions.SHOW) { 
+////       Player.prototype.initShape = function() {
+//    //var img = new Image();
+//    
+//    var canvas = document.createElement('canvas');
+//    var ctx = canvas.getContext('2d');
+//    
+//    var size = canvas.width = canvas.height = 100;
+//    //    
+//    ctx.fillStyle = 'pink';
+//    ctx.beginPath();
+//    ctx.arc(size/2, size/2, size/3, 0, Math.PI * 2);
+//    ctx.fill();
+//    ctx.closePath();
+//    
+//    this.shape.canvas = canvas;
+//    
+//};     // Draw dust on tile player is jumping to
 //            let sprite = game.getSprite(this.dustOptions);
 //            spriteArray.push([this.dustOptions, this.stopTile]);
 //            

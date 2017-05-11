@@ -1,25 +1,24 @@
 // Floor object Constructor
 var Floor = function(game, floor_data) {
     
+    // Attach game object
     this.game = game;
     
+    // Get data from floor data file
     this.id = floor_data.id();
     this.rows = floor_data.rows();
     this.cols = floor_data.cols();
     this.floor_data = floor_data;
    
-    // Create canvas objects
-    this.frame = null;
-    this.waterlayer = null;
+    // Bitmap objects from DOM
     this.background = {};
     this.foreground = {};
     
-//    this.bitmap = {};
-//    this.graphic = {};
-//    this.rowscols = {};
-    
-    
-    // Initialize all the tiles with a type of 'l' (land)
+    // Floorlayer canvas object
+    this.floorlayer = {};
+
+    // Create 2-day array of tiles
+    // All tiles initialized with type 'Land'
     this.tiles = new Array(this.rows);
     for (let row = 0; row < this.rows; row++){
         this.tiles[row] = new Array(this.cols);
@@ -30,7 +29,13 @@ var Floor = function(game, floor_data) {
     
     this.tile_size = game.getTileSize();
     
-    console.log(this.tiles);
+    this.colors = { 
+        land: '#ccc', 
+        rock:  '#4CAF50',
+        water: '#337ab7',
+        ladder: '#f3f379',
+        border: '#555'
+    };
 };
 
 //-------------------------------------//
@@ -44,34 +49,36 @@ Floor.prototype._________INITIALIZATION_________ = function() {};
 
 Floor.prototype.init = function(graph) {
   
+    // Add floor data to floor
     this.addFloorData();
+    
+    // Update graph with floor data
     this.addFloorToGraph(graph);
     
+    // Aquire background and foreground bitmap images
     this.initBackgroundandForeground();
-    //this.createFrame();
     
 };
 
-
+// Initialize background and foreground
 Floor.prototype.initBackgroundandForeground = function() {
     
-    // Get floor map png from html img
+    // Get floor background bitmap image from DOM
     var imgId = this.floor_data.imgBackground();
     this.background['img'] = document.getElementById(imgId);
     
-    // Get floor map png from html img
+    // Get floor foreground bitmap image from DOM
     imgId = this.floor_data.imgForeground();
     // Return if there is not foreground layer
     if (!imgId) { this.foregroudImg = null; }
     this.foreground['img'] = document.getElementById(imgId);           
-  
-    //this.tile_size = this.background.img.width/this.cols;
+
 };
 
-
-// Create Floor layer of Grid view
+// Create Floor layer for GRAPHIC state
 Floor.prototype.initFloorLayer = function() {
     
+    // Create blank canvas object
     var canvas = document.createElement('canvas');
     var ctx = canvas.getContext('2d');
 
@@ -81,58 +88,73 @@ Floor.prototype.initFloorLayer = function() {
     var rows = this.rows;
     var cols = this.cols;
     
+    // Loop through all tiles
     for (let r = 0; r < rows; r++) {
         for (let c = 0; c < cols; c++) {
      
+            // Get tile and tile type
             let tile = this.getTile(r, c);
             let type = this.getTileType(r, c);
             
+            // Color tile based on certain conditions
             if (type === 'LAND') {
-               ctx.fillStyle = '#ccc';
+               ctx.fillStyle = this.colors.land;
             }
 
             if (type === 'ROCK') {
-               ctx.fillStyle = '#4CAF50';
+               ctx.fillStyle = this.colors.rock;
             }
 
             if (type === 'WATER') {
-               ctx.fillStyle = '#337ab7';
+               ctx.fillStyle = this.colors.water;
             }
             
             if (tile.ladder) {
-                ctx.fillStyle = '#f3f379';
+                ctx.fillStyle = this.colors.ladder;
             }
 
-      
+            // Fill tile accordingly
             let tile_size = this.tile_size;
             let y = r * tile_size;
             let x = c * tile_size;
             ctx.fillRect(x, y, tile_size, tile_size);
             
+            // If tile is type rock, continue
             if (type === 'ROCK') { continue; }
             
+            //////////////////////
+            // Draw borders between tiles of different
+            // depths-of-field
+            //////////////////////
+            
+            // Get neighbors of tile
             let neighbors = [];
             neighbors.push([r-1, c]);
             neighbors.push([r+1, c]);
             neighbors.push([r, c-1]);
             neighbors.push([r, c+1]);
             
-            //ctx.strokeStyle = '#503a19';
-            ctx.strokeStyle = '#555';
+            // Update context
+            ctx.strokeStyle = this.colors.border;
             ctx.lineWidth = Math.floor(this.tile_size / 10);
             
+            // Loop through neighbors
             for (let neigh of neighbors) {
+                
+                // Get tile object for neighbors
                 let row = neigh[0];
                 let col = neigh[1];
-                
                 let nTile = this.getTile(row, col);
                 
+                // If DOF of tiles differ, 
+                // and neither is a rock
+                // and neither is a staircase
                 if (nTile.dof !== tile.dof &&
                         nTile.type !== 'ROCK' && tile.type !== 'ROCK' &&
                         nTile.floor.id === tile.floor.id &&
                         !nTile.stairs && !tile.stairs) {
                     
-                    
+                        // Determine where to draw border
                         let delta_row = nTile.row - tile.row;
                         let delta_col = nTile.col - tile.col;
 
@@ -158,13 +180,14 @@ Floor.prototype.initFloorLayer = function() {
                             ctx.lineTo(x + tile_size, y + tile_size);
                         }
 
+                   // Draw border line
                    ctx.stroke();     
                 }
             }
         }
     }
     
-    // Attach rocklayer to floor via graphic object
+    // Attach floorlayer to floor
     var floorlayer = {
         canvas: canvas,
         ctx: ctx
@@ -173,44 +196,108 @@ Floor.prototype.initFloorLayer = function() {
     this.floorlayer = floorlayer;
 };
 
-// Create key tile indicators
-Floor.prototype.createKeyTiles = function() {
 
-    var canvas = document.createElement('canvas');
-    var ctx = canvas.getContext('2d');
+
+// Update tiles in floor to reflect map details
+Floor.prototype.addFloorData = function() {
     
-    canvas.width = this.cols * this.tile_size;
-    canvas.height = this.rows * this.tile_size;
+    var floor_data = this.floor_data;
     
-    // Semi-transparent yellow
-    ctx.fillStyle = 'rgba(255, 193, 7, .3)';
-
-    var tile_size = this.tile_size;
-      
-    for (let ladder of this.floor_data.ladders()) {
-        
-        let tile_arr = ladder.tile;
-
-        let row = tile_arr[0];
-        let col = tile_arr[1];
-        
-        let y = row * tile_size;
-        let x = col * tile_size;
-        
-        ctx.fillRect(x, y, tile_size, tile_size);
-        //this.ctx.fillRect(this.offset_x + x, this.offset_y + y, tile_size, tile_size);
+    var rocks = floor_data.rocks();
+    var water = floor_data.water();
+    var foreground = floor_data.foreground();
+    var stairs = floor_data.stairs();
+    
+    // Update rock tiles
+    for (let i of Object.keys(rocks)) {  
+        for (let j of rocks[i]) {
+            this.tiles[i][j].type = "ROCK";
+        }    
     }
     
-    this.keytiles.canvas = canvas;
-    this.keytiles.ctx = ctx;
-
+    // Update water tiles
+    for (let i of Object.keys(water)) {  
+        for (let j of water[i]) {
+            this.tiles[i][j].type = "WATER";   
+        }    
+    }
+    
+    // Differentiate foreground and background
+    for (let i of Object.keys(foreground)) {  
+        for (let j of foreground[i]) {
+            this.tiles[i][j].dof = "FOREGROUND";   
+        }    
+    }
+    
+    // Update stairs and generate 'pre-stairs'
+    // 'Pre-stairs' are the tiles right in front of stairs
+    for (let s of stairs) {  
+        let row = s[0];
+        let col = s[1];
+        this.tiles[row][col].stairs = true;  
+        this.tiles[row + 1][col].prestairs = true;  
+    }
 };
+
+// Add data from floor to Graph
+Floor.prototype.addFloorToGraph = function(graph) {
+    
+    // Add nodes to graph
+    for (let r = 0; r < this.rows; r++) {
+        for (let c = 0; c < this.cols; c++) {
+            
+            let tile = this.tiles[r][c];
+            
+            graph.addNode(tile.id);
+           
+            // Don't add edges to rock tiles
+            if (tile.type === "ROCK") {
+                continue;
+            }
+            
+            // Get neighbors
+            let neighbors = [];
+            neighbors.push([r-1, c]);
+            neighbors.push([r+1, c]);
+            neighbors.push([r, c-1]);
+            neighbors.push([r, c+1]);
+            
+            // Loop through neighbors
+            for (let neigh of neighbors) {
+                
+                // Get tile from row and column
+                let row = neigh[0];
+                let col = neigh[1];             
+                let nTile = this.getTile(row, col);
+                
+                // If tile is valid
+                if (nTile) {
+                    
+                    // Don't add edges between tiles of different depths of field
+                    // (background or foreground)
+                    // unless one of the tiles is a staircase
+                    if (nTile.dof !== tile.dof && !nTile.stairs && !tile.stairs) {
+                        continue;
+                    }
+                    
+                    // Don't add edges to rock tiles
+                    if (nTile.type === 'LAND' ||
+                            nTile.type === 'WATER') {
+                        graph.addEdge(tile.id, nTile.id);
+                    }
+                }        
+            }
+        }
+    }      
+};
+
 
 //-------------------------------------//
 /////////////////////////////////////////
 // Drawing
 /////////////////////////////////////////
 //-------------------------------------//
+
 
 Floor.prototype._________DRAW_METHODS_________ = function() {};
 
@@ -226,180 +313,14 @@ Floor.prototype.drawFloorLayer = function() {
 };
 
 
-
-
-
-// Create key tile indicators
-Floor.prototype.createKeyTiles = function() {
-
-    var canvas = document.createElement('canvas');
-    var ctx = canvas.getContext('2d');
-    
-    canvas.width = this.cols * this.tile_size;
-    canvas.height = this.rows * this.tile_size;
-    
-    // Semi-transparent yellow
-    ctx.fillStyle = 'rgba(255, 193, 7, .3)';
-
-    var tile_size = this.tile_size;
-      
-    for (let ladder of this.floor_data.ladders()) {
-        
-        let tile_arr = ladder.tile;
-
-        let row = tile_arr[0];
-        let col = tile_arr[1];
-        
-        let y = row * tile_size;
-        let x = col * tile_size;
-        
-        ctx.fillRect(x, y, tile_size, tile_size);
-        //this.ctx.fillRect(this.offset_x + x, this.offset_y + y, tile_size, tile_size);
-    }
-    
-    this.keytiles.canvas = canvas;
-    this.keytiles.ctx = ctx;
-
-};
-
-
-
-// Update floor to reflect map details
-Floor.prototype.addFloorData = function() {
-    
-    var floor_data = this.floor_data;
-    
-    var rocks = floor_data.rocks();
-    var water = floor_data.water();
-    var foreground = floor_data.foreground();
-    var stairs = floor_data.stairs();
-    
-    // Update rock tiles
-    for (let i of Object.keys(rocks)) {  
-        for (let j of rocks[i]) {
-            //console.log(i, j);
-            this.tiles[i][j].type = "ROCK";
-        }    
-    }
-    
-    // Update water tiles
-    for (let i of Object.keys(water)) {  
-        for (let j of water[i]) {
-            //console.log(i, j);
-            this.tiles[i][j].type = "WATER";   
-        }    
-    }
-    
-    // Differentiate foreground and background
-    for (let i of Object.keys(foreground)) {  
-        for (let j of foreground[i]) {
-            //console.log(i, j);
-            this.tiles[i][j].dof = "FOREGROUND";   
-        }    
-    }
-    
-    // Update stairs and generate 'pre-stairs'
-    // 'Pre-stairs' are the tiles right in front of stairs
-    for (let s of stairs) {  
-        let row = s[0];
-        let col = s[1];
-        this.tiles[row][col].stairs = true;  
-        this.tiles[row + 1][col].prestairs = true;  
-    }
-    
-    
-};
-
-
-// Add data from floor to Graph
-Floor.prototype.addFloorToGraph = function(graph) {
-    
-    // Create graph with tile data
-    for (let r = 0; r < this.rows; r++) {
-        for (let c = 0; c < this.cols; c++) {
-            let tile = this.tiles[r][c];
-            graph.addNode(tile.id);
-            //vertex = [floor.id, r, c];
-            //graph.addNode(vertex);
-            
-            // Don't add edges to rock tiles
-            if (tile.type === "ROCK") {
-                continue;
-            }
-            
-            let neighbors = [];
-            neighbors.push([r-1, c]);
-            neighbors.push([r+1, c]);
-            neighbors.push([r, c-1]);
-            neighbors.push([r, c+1]);
-            
-            for (let neigh of neighbors) {
-                let row = neigh[0];
-                let col = neigh[1];
-                
-                let nTile = this.getTile(row, col);
-                //let type_neigh = this.getTileType(row, col);
-                
-                // If type is valid
-                if (nTile) {
-                    
-                    // Don't add edges between tiles off different depths of field
-                    // (background or foreground)
-                    // unless one of the tiles is a staircase
-                    if (nTile.dof !== tile.dof && !nTile.stairs && !tile.stairs) {
-                        continue;
-                    }
-                    
-                    if (nTile.type === 'LAND' ||
-                            nTile.type === 'WATER') {
-                        graph.addEdge(tile.id, nTile.id);
-                    }
-                    
-//                    // Add weight to 'LAND' tiles
-//                    if (nTile.type === "LAND") {
-//                        let weight = this.game.getWeight('LAND');
-//                        graph.addEdge(tile.id, nTile.id, weight);
-//                    }
-//                    // Add weight to 'WATER' tiles
-//                    else if (nTile.type === "WATER") {
-//                        let weight = this.game.getWeight('WATER');
-//                        graph.addEdge(tile.id, nTile.id, weight);
-//                    }
-                    
-                    
-                }        
-            }
-        }
-    }  
-    
-    
-    
-//    // Remove egdes between certain tiles
-//    for (let stair of this.floor_data.stairs()) {
-//        let row = stair[0];
-//        let col = stair[1];
-//        
-//        let sTile = this.getTile(row, col);
-//        
-//        
-//        
-//        let uTile = this.getTile(u[0], u[1]);
-//        let vTile = this.getTile(v[0], v[1]);
-//        graph.removeEdge(uTile.id, vTile.id); 
-//        graph.removeEdge(vTile.id, uTile.id); 
-//    }
-    
-};
-
-
 //-------------------------------------//
 /////////////////////////////////////////
 // Tile Methods
 /////////////////////////////////////////
 //-------------------------------------//
 
-Floor.prototype._________TILE_METHODS_________ = function() {};
 
+Floor.prototype._________TILE_METHODS_________ = function() {};
 
 
 // Check if row/col is in bounds
@@ -432,23 +353,10 @@ Floor.prototype.getTileType = function(row, col) {
         return null;
     }
     
-    return this.tiles[row][col].type;
-    
+    return this.tiles[row][col].type;  
 };
 
-Floor.prototype.getXY = function(row, col) {
-    
-    var x = (col + this.left_offset) * this.tile_size;
-    var y = (row + this.top_offset) * this.tile_size;
-
-    return {
-        x: x,
-        y: y
-    };
-};        
-
-
-
+ // Indicate if floor has water
 Floor.prototype.hasWater = function() {
     var water = this.floor_data.water();
     return Object.keys(water).length !== 0;
@@ -1150,7 +1058,7 @@ Floor.prototype.hasWater = function() {
 //    var y = player.current.row * this.tile_size;
 //    
 //    // Adjust path during jump on/jump off
-//    if (player.MOVE_STATE === 'JUMP ON' || player.MOVE_STATE === 'JUMP OFF') {
+//    if (player.STATE === 'JUMP ON' || player.STATE === 'JUMP OFF') {
 //        if (player.current.row < player.stopTile.row && player.playerOptions.FACING !== 'DOWN') {
 //            var y = player.stopTile.row * this.tile_size;
 //        }
@@ -1215,3 +1123,84 @@ Floor.prototype.hasWater = function() {
 //    
 //
 //};
+
+
+//// Create key tile indicators
+//Floor.prototype.createKeyTiles = function() {
+//
+//    var canvas = document.createElement('canvas');
+//    var ctx = canvas.getContext('2d');
+//    
+//    canvas.width = this.cols * this.tile_size;
+//    canvas.height = this.rows * this.tile_size;
+//    
+//    // Semi-transparent yellow
+//    ctx.fillStyle = 'rgba(255, 193, 7, .3)';
+//
+//    var tile_size = this.tile_size;
+//      
+//    for (let ladder of this.floor_data.ladders()) {
+//        
+//        let tile_arr = ladder.tile;
+//
+//        let row = tile_arr[0];
+//        let col = tile_arr[1];
+//        
+//        let y = row * tile_size;
+//        let x = col * tile_size;
+//        
+//        ctx.fillRect(x, y, tile_size, tile_size);
+//        //this.ctx.fillRect(this.offset_x + x, this.offset_y + y, tile_size, tile_size);
+//    }
+//    
+//    this.keytiles.canvas = canvas;
+//    this.keytiles.ctx = ctx;
+//
+//};
+
+//
+//
+//// Create key tile indicators
+//Floor.prototype.createKeyTiles = function() {
+//
+//    var canvas = document.createElement('canvas');
+//    var ctx = canvas.getContext('2d');
+//    
+//    canvas.width = this.cols * this.tile_size;
+//    canvas.height = this.rows * this.tile_size;
+//    
+//    // Semi-transparent yellow
+//    ctx.fillStyle = 'rgba(255, 193, 7, .3)';
+//
+//    var tile_size = this.tile_size;
+//      
+//    for (let ladder of this.floor_data.ladders()) {
+//        
+//        let tile_arr = ladder.tile;
+//
+//        let row = tile_arr[0];
+//        let col = tile_arr[1];
+//        
+//        let y = row * tile_size;
+//        let x = col * tile_size;
+//        
+//        ctx.fillRect(x, y, tile_size, tile_size);
+//        //this.ctx.fillRect(this.offset_x + x, this.offset_y + y, tile_size, tile_size);
+//    }
+//    
+//    this.keytiles.canvas = canvas;
+//    this.keytiles.ctx = ctx;
+//
+//};
+//
+//
+//Floor.prototype.getXY = function(row, col) {
+//    
+//    var x = (col + this.left_offset) * this.tile_size;
+//    var y = (row + this.top_offset) * this.tile_size;
+//
+//    return {
+//        x: x,
+//        y: y
+//    };
+//};       

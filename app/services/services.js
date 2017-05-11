@@ -20,10 +20,16 @@ pokemonApp.service('pokeGame', function($log, $document, $window, $location, $ti
     };
     
     // Access User Console Controller Scope
+    // Wrap in timeout to retrieve after all controllers and directives have loaded
     var userConsoleScope;
-    angular.element(document).ready(function () {       
-        userConsoleScope = angular.element('.user-console-wrapper').scope();
-    });
+    $timeout(function() {
+        userConsoleScope = angular.element('.side-panel').scope();
+    }, 0);
+    
+    // Object to manage active view
+    this.views = {
+        active: 'gameboy'
+    };
     
     // Get this value (for inside of game loop)
     var that = this;
@@ -36,7 +42,19 @@ pokemonApp.service('pokeGame', function($log, $document, $window, $location, $ti
             
             let start_time = performance.now();
             
+            // ----- Update View in Game ----- //
+            
+            let path = $location.path();
+            if (path === '/monitor/') {
+                that.views.active = 'monitor';
+                game.setView('monitor');
+            } else {
+                that.views.active = 'gameboy';
+                game.setView('gameboy');
+            }
+            
             // ----- Update User Console Settings ----- // 
+            
             game.userConsole.updateSettings();
             if (userConsoleScope) {
                 userConsoleScope.$apply();

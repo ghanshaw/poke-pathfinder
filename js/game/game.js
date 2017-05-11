@@ -44,7 +44,7 @@ Game.prototype.initGame = function() {
 
 // Initialize Spritesheet
 Game.prototype.initSpritesheet = function() {
-    this.spritesheet = new SpriteSheet(spritesheet_data);
+    this.spritesheet = new SpriteSheet(this, spritesheet_data);
     this.spritesheet.init();   
 };
 
@@ -80,7 +80,7 @@ Game.prototype.initPlayer = function() {
     
     // Defne player's initial location
     var entrance = this.map.keyTiles[0].tile;
-    this.player.setTile(entrance); 
+    this.player.init(entrance);
 };
 
 // Initialize User Console
@@ -155,7 +155,7 @@ Game.prototype.renderGame = function() {
     
     //////////////////////
     // Start rendering
-    /////////////////////
+    //////////////////////
     
      // Draw floor layer (if in graphic mode)
     map.drawFloorLayer(MAP_STATE);
@@ -241,7 +241,7 @@ Game.prototype.drawImageToScreen = function(options) {
     var view = this.getView();
     
     if (view === "monitor") {
-        this.monitor.drawImageToFrame(options);
+        this.monitor.drawImageToScreen(options);
     } else if (view === "gameboy") {
         this.gameboy.drawImageToScreen(options);
     }
@@ -296,6 +296,17 @@ Game.prototype.getSprite = function(spriteOptions) {
 Game.prototype.getSpriteSize = function() {
     return this.spritesheet.sprite_size;
 };
+
+// Get canvas of spritesheet
+Game.prototype.getSpriteSheetCanvas = function() {
+    return this.spritesheet.sheet.canvas;
+};
+
+// Get x, y coordinates of sprite on the spritesheet
+Game.prototype.getSpriteSheetXY = function(spriteOptions) {
+   return this.spritesheet.getXY(spriteOptions);
+};
+
 
 //-------------------------------------//
 /////////////////////////////////////////
@@ -405,12 +416,12 @@ Game.prototype.getPlayerDOF = function() {
 // Player State Getter/Setter
 // -------------------------->
 
-Game.prototype.getPlayerMoveState = function() {
-    return this.player.MOVE_STATE;
+Game.prototype.getPlayerState = function() {
+    return this.player.STATE;
 };
 
-Game.prototype.setPlayerMoveState = function(state) {
-    this.player.MOVE_STATE = state;
+Game.prototype.setPlayerState = function(state) {
+    this.player.STATE = state;
 };
 
 // -------------------------->
@@ -1111,7 +1122,7 @@ Game.prototype.interpolateColor = function(color1, color2, alpha, percent) {
 
 
 //Game.prototype.drawTransition = function() {
-//    if (this.player.MOVE_STATE === 'LADDER') {
+//    if (this.player.STATE === 'LADDER') {
 //        this.map.drawMapTransitionLayer();
 //    }
 //};

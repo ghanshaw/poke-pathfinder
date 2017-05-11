@@ -1,10 +1,18 @@
+// Priority Queue constructor
 var PriorityQueue = function() {
+    
+    /*
+     * Priority queue is constructed with binary heap. 
+     * Consists of array of arrays.
+     * Each smaller array stores element in index 0 and priority in index 1
+     */
     
     this.arr = [];
     this.size = 0;
-    
 };
 
+
+// Insert elements into priority queue
 PriorityQueue.prototype.insert = function(item) {
     
     this.arr.push(item);
@@ -12,11 +20,12 @@ PriorityQueue.prototype.insert = function(item) {
     this.heapifyUp(this.size - 1);
 };
 
-
+// Return priority at given index
 PriorityQueue.prototype.priority = function(index) {
     return this.arr[index][1];
 };
 
+// Indicate if element at index1 has higher or lower priority
 PriorityQueue.prototype.higherPriority = function(index1, index2) {
     
     if (index1 >= this.size || index2 >= this.size) {
@@ -29,6 +38,7 @@ PriorityQueue.prototype.higherPriority = function(index1, index2) {
     return false;
 };
 
+// Heapify up
 PriorityQueue.prototype.heapifyUp = function(index) {
     
     var item = this.arr[index];
@@ -56,7 +66,7 @@ PriorityQueue.prototype.heapifyUp = function(index) {
     
 };
 
-
+// Heapify down
 PriorityQueue.prototype.heapifyDown = function(index) {
     
     var item = this.arr[index];
@@ -99,10 +109,12 @@ PriorityQueue.prototype.heapifyDown = function(index) {
     
 };
 
+// Get size of priority queue
 PriorityQueue.prototype.getSize = function() {
     return this.size;
 };
 
+// Delete element with lowest priority
 PriorityQueue.prototype.deleteMin = function() {
     
     if (this.size === 0) {
@@ -122,16 +134,3 @@ PriorityQueue.prototype.deleteMin = function() {
     return min;   
     
 };
-
-
-var pq = new PriorityQueue();
-pq.insert(['greer', 26]);
-pq.insert(['dalton', 17]);
-pq.insert(['mommy', 64]);
-pq.insert(['daddy', 55]);
-pq.insert(['soraya', 30]);
-pq.deleteMin();
-pq.getSize();
-
-
-

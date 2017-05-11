@@ -4,11 +4,14 @@ General
 --------------------
 ***/
 html, body, h1, h2, h3, h4, h5, h6, p, label, button {
-  font-family: 'Montserrat', 'Open-Sans', sans-serif;
+  font-family: 'Nunito-Sans', 'Open-Sans', sans-serif;
   font-weight: 100; }
 
 body {
   background-color: #eee; }
+  body.no-scroll-mobile {
+    position: relative;
+    overflow: hidden; }
 
 img, canvas {
   image-rendering: -moz-crisp-edges;
@@ -62,10 +65,9 @@ header {
 .navbar {
   margin: 0;
   z-index: 2000; }
-  .navbar.centered .brand-container {
-    margin: 0 auto; }
-  .navbar.centered .links-container {
-    margin: 0; }
+  .navbar.fixed {
+    position: fixed;
+    width: 100%; }
   .navbar .container-fluid {
     width: 100%;
     display: flex;
@@ -88,6 +90,13 @@ header {
         list-style: none; }
         .navbar .container-fluid .links-container ul.links a {
           font-weight: 700; }
+  .navbar.centered .brand-container {
+    margin: 0 auto; }
+    .navbar.centered .brand-container a {
+      padding: 0; }
+  .navbar.centered .links-container {
+    margin: 0;
+    margin-left: initial; }
 
 .navbar-right {
   float: right; }
@@ -316,6 +325,7 @@ About
   z-index: 1000;
   background-color: rgba(255, 255, 255, 0.97);
   position: absolute;
+  position: fixed;
   width: 100%;
   height: 100%;
   left: 0;
@@ -345,8 +355,7 @@ About
     position: relative;
     opacity: 1;
     overflow-y: scroll;
-    font-size: 16px;
-    padding-bottom: 5em; }
+    font-size: 16px; }
     .about .container .parent .row {
       margin: 0; }
     .about .container .parent .content {
@@ -363,7 +372,8 @@ About
         margin: 0 auto;
         width: 400px;
         image-rendering: auto;
-        max-width: 100%; }
+        max-width: 100%;
+        margin-top: 120px; }
       .about .container .parent .content section {
         margin: 40px 0px;
         position: relative;
@@ -596,88 +606,6 @@ Gameboy
   bottom: 14%;
   width: 100%;
   left: 0px; }
-
-/*** D-pad Buttons ***/
-/*
-.pad-container {
-    
-    .dpad {
-        
-        
-        &.perspective-container {
-            perspective-origin: center;
-            perspective: 400px;
-        }
-        
-        
-        &.touch-target {       
-            ;
-        }
-        
-        &.press-right {
-            transform: rotateY(30deg);
-        }
-        
-        &.press-left {
-            transform: rotateY(-30deg);
-        }
-        
-        &.press-up {
-            transform: rotateX(30deg);
-        }
-        
-        &.press-down {
-            transform: rotateX(-30deg);
-        }
-
-    }
-    
-    .a-button {
-        
-        &.touch-target {
-            width: 9rem;
-            height: 14rem;
-            left: 6.5rem;    
-            top: -4.5rem;
-            border: 1px solid black;
-            position: absolute;
-        } 
-    }
-    
-    .b-button {
-        
-        &.touch-target {
-            width: 9rem;
-            height: 14rem;
-            left: -2.5rem;
-            top: -4.5rem;
-            border: 1px solid black;
-            position: absolute;
-        }
-    }
-}
-
-
-
-
-.system-container#gbasp {
-    
-}
-
-.d-pad,
-.d-pad-perspective-container,
-.d-pad .up,
-.d-pad .down,
-.d-pad .left,
-.d-pad .right {
-    cursor: pointer;
-    user-select: none;
-    -webkit-user-select: none;
-}
-
-** A/B Buttons **
-
-
 
 /***
 --------------------

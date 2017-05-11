@@ -296,7 +296,7 @@ Pathfinder.prototype.updatePathfinder = function() {
         } 
         
         if (vcrCommand === 'STEP') {
-            vcrCommand = 'PAUSE';
+            userConsole.setVCRCommand('PAUSE');
             return;
         }
         
@@ -572,7 +572,7 @@ Pathfinder.prototype.startDragMode = function($event) {
     var userConsole = this.userConsole;
 
     // If Pathfinder is off and player isn't moving
-    if (game.getPlayerMoveState() === 'STILL' &&
+    if (game.getPlayerState() === 'STILL' &&
             this.MODE === 'OFF') {
         
         // Get tile associated with pointer on monitor
@@ -806,7 +806,7 @@ Pathfinder.prototype.startFrontierFollowPathMode = function(mode) {
     
 
     // Move player to source tile
-    game.setPlayerMoveState('STILL');
+    game.setPlayerState('STILL');
     game.setPlayerTile(this.source.tile);
     
     // Make player face down
@@ -1123,7 +1123,7 @@ Pathfinder.prototype.updateFollowPathMode = function() {
     
     // Player is already in the middle of moving
     // or Pathfinder has been cancelled, return
-    if (this.game.getPlayerMoveState() !== 'STILL' || this.MODE === 'OFF') {       
+    if (this.game.getPlayerState() !== 'STILL' || this.MODE === 'OFF') {       
         return;
     }
     
@@ -2749,7 +2749,7 @@ Pathfinder.prototype.astar_step = function() {
 //    var f = pTile.floor.id;
 //    
 //    var tile_size = this.floors[f].tile_size;
-//    var MOVE_STATE = game.getPlayerMoveState();
+//    var STATE = game.getPlayerState();
 //    
 //    var row = pTile.row;
 //    var col = pTile.col;
@@ -2757,7 +2757,7 @@ Pathfinder.prototype.astar_step = function() {
 //    
 //    
 //    //    // Adjust path during jump on/jump off
-//    //    if (MOVE_STATE === 'JUMP ON' || MOVE_STATE === 'JUMP OFF') {
+//    //    if (STATE === 'JUMP ON' || STATE === 'JUMP OFF') {
 //    //        if (row < player.stopTile.row && player.playerOptions.FACING !== 'DOWN') {
 //    //            var y = player.stopTile.row * this.tile_size;
 //    //        }
@@ -2825,7 +2825,7 @@ Pathfinder.prototype.astar_step = function() {
 //    
 //    // Player is already in the middle of moving
 //    // or Pathfinder has been cancelled, return
-//    if (game.getPlayerMoveState() !== 'STILL' || this.MODE === 'OFF') {       
+//    if (game.getPlayerState() !== 'STILL' || this.MODE === 'OFF') {       
 //        return;
 //    };
 //    

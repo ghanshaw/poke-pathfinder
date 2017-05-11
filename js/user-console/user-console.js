@@ -1133,10 +1133,18 @@ UserConsole.prototype.drawWeightLayers = function(floorId) {
         dof = 'BACKGROUND';
     }
     
-    this.game.drawImageToScreen(layer.canvas, 'floor', floorId, dof, '', '', alpha);
+    let options = {
+        image: layer.canvas,
+        target: 'floor',
+        floorId: floorId,
+        dof: dof,
+        alpha: alpha
+    };
+    
+    this.game.drawImageToScreen(options);
 
     if (time.percent >= .95) {
-//        this.WEIGHT_CHANGE = null;
+        this.WEIGHT_CHANGE = null;
     }
 };
 

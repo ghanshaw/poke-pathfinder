@@ -1,13 +1,13 @@
+// Add class when element reaches top of window
+// Used to fix side panel
 pokemonApp.directive('setClassWhenAtTop', function ($window) {
     var $win = angular.element($window); // wrap window object as jQuery object
     
     return {
         restrict: 'A',
         link: function (scope, element, attrs) {
-            console.info('directive running');
             
             var topClass = attrs.setClassWhenAtTop, // get CSS class from directive's attribute value
-            //offsetTop = element.offset().top; // get element's offset top relative to document
             offsetTop = $('nav.navbar').height();
             
             $win.on('scroll', function (e) {
@@ -21,58 +21,19 @@ pokemonApp.directive('setClassWhenAtTop', function ($window) {
     };
 });
 
+// User Console (side panel) directive
 pokemonApp.directive('userConsole', function ($window) {
     return {
         restrict: 'A',
         templateUrl: 'app/pages/user-console.html',
         controller: 'userConsoleController',
-        link: function (scope, element, attrs) {
-            console.info('directive running');
-            
+        link: function (scope, element, attrs) {            
         }
     };
 });
 
-//
-//pokemonApp.directive('sidebarDrawer', function ($window) {
-//    var $win = angular.element($window); // wrap window object as jQuery object
-//
-//    return {
-//        restrict: 'A',
-//        link: function (scope, element, attrs) {
-//        
-//            //element.bind('click');
-//        
-//            console.log('clicked menu button!');
-//            //  x.classList.toggle("change");
-//            $('.side-bar').toggleClass('console-open');
-//            $('.side-bar').toggleClass('console-closed');
-//        
-//            angular.element(element).onClick;
-//        
-//        
-//            console.log('sidebar directive!');
-//        
-//            //      var topClass = attrs.setClassWhenAtTop, // get CSS class from directive's attribute value
-//            //          //offsetTop = element.offset().top; // get element's offset top relative to document
-//            //          offsetTop = $('nav.navbar').height();
-//            //
-//            //      $win.on('scroll', function (e) {
-//            //        if ($win.scrollTop() >= offsetTop) {
-//            //          element.addClass(topClass);
-//            //        } else {
-//            //          element.removeClass(topClass);
-//            //        }
-//            //      });
-//      
-//      
-//        }
-//    };
-//});
-//
 
-
-
+// Adds touch start functionality
 pokemonApp.directive('touchStartDirective', function ($window, $location) {
     
     return {
@@ -86,7 +47,6 @@ pokemonApp.directive('touchStartDirective', function ($window, $location) {
                 
                 scope.touchstart = event;
                 
-                //console.log(event);
                 scope.$apply(function() { 
                     // Invoke touchstart
                     scope.$eval(attr.touchStartDirective); 
@@ -99,6 +59,7 @@ pokemonApp.directive('touchStartDirective', function ($window, $location) {
     };
 });
 
+// Adds touch move functionality
 pokemonApp.directive('touchMoveDirective', function ($window) {
     
     return {
@@ -113,46 +74,17 @@ pokemonApp.directive('touchMoveDirective', function ($window) {
                 scope.touchmove = event;
                 console.log(event);
                 
-                //console.log(event);
                 scope.$apply(function() { 
                     // Invoke touchstart
                     scope.$eval(attr.touchMoveDirective); 
                 });
-            });
-            
-            
-            
+            });            
         }
     };
 });
 
 
-
-
-
-pokemonApp.directive('touchLeaveDirective', function ($window, $location) {
-    
-    return {
-        restrict: 'A',
-        link: function (scope, element, attr) {
-            
-            element.on('touchleave', function(event) {
-                
-                event.preventDefault();
-                event.stopPropagation();
-                
-                scope.touchleave = event;
-                
-                scope.$apply(function() { 
-                    // Invoke touchend
-                    scope.$eval(attr.touchLeaveDirective); 
-                });
-            });
-        }
-    };
-});
-
-
+// Adds touch end functionality
 pokemonApp.directive('touchEndDirective', function ($window) {
     
     return {
@@ -181,6 +113,8 @@ pokemonApp.directive('touchEndDirective', function ($window) {
 });
 
 
+// Triggers after ng-repeat
+// Used to update height of activity log
 pokemonApp.directive("repeatEnd", function() {
     return {
         restrict: "A",

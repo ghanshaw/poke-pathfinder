@@ -398,7 +398,7 @@ body {
                 left: -6rem;
                 height: 20rem;
                 top: -4.5rem;
-                border: 1px solid black;
+                /*border: 1px solid black;*/
                 
             }
             
@@ -408,7 +408,8 @@ body {
                 left: 7rem;
                 height: 14rem;
                 top: -4.5rem;
-                border: 1px solid black;
+                /*border: 1px solid black;*/
+                border: none;
             }
             
             &.b-button {
@@ -416,8 +417,9 @@ body {
                 height: 14rem;
                 left: -2.5rem;
                 top: -4.5rem;
-                border: 1px solid black;
+                /*border: 1px solid black;*/
                 position: absolute;
+                border: none;
                 
             }
         }
@@ -537,6 +539,12 @@ body {
         }
     }
     
+}
+
+@media (min-width: 400px){
+    html {
+        font-size: 2.15vw;
+    }
 }
 
 @media (min-width: 480px){

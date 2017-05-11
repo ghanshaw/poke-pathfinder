@@ -8,12 +8,17 @@ $darkred: #cb2d3e;
 $lightred: #f33246;
 
 html, body, h1, h2, h3, h4,h5, h6, p, label, button {
-    font-family: 'Montserrat', 'Open-Sans', sans-serif;   
+    font-family: 'Nunito-Sans', 'Open-Sans', sans-serif;   
     font-weight: 100;
 }
 
 body {
     background-color: #eee;
+    
+    &.no-scroll-mobile {
+        position: relative;
+        overflow: hidden;            
+    }
 }
 
 img, canvas {
@@ -90,17 +95,12 @@ header {
     margin: 0;
     z-index: 2000;
     
-    &.centered {
-        
-        .brand-container {
-            margin: 0 auto;
-        }
-        
-        .links-container {
-            margin: 0;
-        }
-        
+    &.fixed {
+        position: fixed;
+        width: 100%;
     }
+    
+    
     
     .container-fluid {
         width: 100%;
@@ -139,6 +139,21 @@ header {
                 }
             }            
         } 
+    }
+    &.centered {
+        
+        .brand-container {
+            margin: 0 auto;
+            
+            a {
+                padding: 0;
+            }
+        }
+        
+        .links-container {
+            margin: 0;
+            margin-left: initial;
+        }
     }    
 }
 
@@ -356,7 +371,7 @@ Info popup
             width: 4.5rem;
             height: 4.5rem;
             font-size: 3rem;
-           
+            
         }       
         
     }
@@ -452,6 +467,7 @@ About
         z-index: 1000;
         background-color: rgba(255, 255, 255, 0.97);
         position: absolute;
+        position: fixed;
         width: 100%;
         height: 100%;
         left: 0;
@@ -493,7 +509,7 @@ About
             opacity: 1;
             overflow-y: scroll;
             font-size: 16px;
-            padding-bottom: 5em;
+            
             
             .row {
                 margin: 0;
@@ -523,6 +539,7 @@ About
                     width: 400px;
                     image-rendering: auto; 
                     max-width: 100%;
+                    margin-top: 120px;
                 }
                 
                 section {
@@ -850,87 +867,6 @@ Gameboy
     left: 0px;
 }
 
-/*** D-pad Buttons ***/
-/*
-.pad-container {
-    
-    .dpad {
-        
-        
-        &.perspective-container {
-            perspective-origin: center;
-            perspective: 400px;
-        }
-        
-        
-        &.touch-target {       
-            ;
-        }
-        
-        &.press-right {
-            transform: rotateY(30deg);
-        }
-        
-        &.press-left {
-            transform: rotateY(-30deg);
-        }
-        
-        &.press-up {
-            transform: rotateX(30deg);
-        }
-        
-        &.press-down {
-            transform: rotateX(-30deg);
-        }
-
-    }
-    
-    .a-button {
-        
-        &.touch-target {
-            width: 9rem;
-            height: 14rem;
-            left: 6.5rem;    
-            top: -4.5rem;
-            border: 1px solid black;
-            position: absolute;
-        } 
-    }
-    
-    .b-button {
-        
-        &.touch-target {
-            width: 9rem;
-            height: 14rem;
-            left: -2.5rem;
-            top: -4.5rem;
-            border: 1px solid black;
-            position: absolute;
-        }
-    }
-}
-
-
-
-
-.system-container#gbasp {
-    
-}
-
-.d-pad,
-.d-pad-perspective-container,
-.d-pad .up,
-.d-pad .down,
-.d-pad .left,
-.d-pad .right {
-    cursor: pointer;
-    user-select: none;
-    -webkit-user-select: none;
-}
-
-** A/B Buttons **
-
-
 
 /***
 --------------------
@@ -982,7 +918,7 @@ User Console
     left: 0px;
     
     >.row {
-       margin: 0px;
+        margin: 0px;
     }
     
     &.fix-to-top {
@@ -1055,7 +991,7 @@ User Console
     }
 }
 
-    
+
 
 .console-closed {
     /*width: 0px;*/
@@ -1158,7 +1094,7 @@ User Console
     font-size: .8em;
     position: relative;
     overflow: hidden;
- 
+    
     @media all and (max-width: 960px) {
         font-size: .6em
     }
@@ -1621,10 +1557,10 @@ User Console
     overflow-x: hidden;
     height: 100vh;
     background-color: #e6e6e6;
-     padding-right: 3rem; 
-     padding-top: 3rem; 
+    padding-right: 3rem; 
+    padding-top: 3rem; 
     overflow: hidden;
-     direction: rtl; 
+    direction: rtl; 
     padding: 1.5em;
     box-shadow: 10px 0px 10px #ccc;
     

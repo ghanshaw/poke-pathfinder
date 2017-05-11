@@ -329,20 +329,22 @@ body {
         left: -6rem;
         height: 20rem;
         top: -4.5rem;
-        border: 1px solid black; }
+        /*border: 1px solid black;*/ }
       body .system-container#gbasp .touch-target.a-button {
         width: 9rem;
         left: 7rem;
         height: 14rem;
         top: -4.5rem;
-        border: 1px solid black; }
+        /*border: 1px solid black;*/
+        border: none; }
       body .system-container#gbasp .touch-target.b-button {
         width: 9rem;
         height: 14rem;
         left: -2.5rem;
         top: -4.5rem;
-        border: 1px solid black;
-        position: absolute; }
+        /*border: 1px solid black;*/
+        position: absolute;
+        border: none; }
     body .system-container#gbasp .a-button.button {
       left: 7.6rem; }
     body .system-container#gbasp .power-container {
@@ -425,6 +427,9 @@ body {
     body .system-container#gbasp .power-light + .power-light {
       top: 8.0rem; }
 
+@media (min-width: 400px) {
+  html {
+    font-size: 2.15vw; } }
 @media (min-width: 480px) {
   html {
     font-size: 2.5vw; } }

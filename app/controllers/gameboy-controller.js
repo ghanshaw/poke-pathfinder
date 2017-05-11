@@ -18,6 +18,8 @@ pokemonApp.controller('gameboyController', function($scope, $log, $window, $docu
     // Resize gameboy when window resizes
     var appWindow = angular.element($window);
     appWindow.bind('resize', function () {
+        var view = game.getView();
+        
         if (view === 'gameboy') {
             gameboy.resize();
         }

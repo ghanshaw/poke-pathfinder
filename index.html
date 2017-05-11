@@ -5,7 +5,7 @@
         <link rel='shortcut icon' type='image/x-icon' href='/favicon.ico' />
         <meta http-equiv="X-UA-Compatible" content="IE=Edge">
         <meta charset="UTF-8">
-        <meta content="width=device-width, height=device-height, initial-scale=1, user-scalable=no" name="viewport">
+        <meta content="width=width, height=height, initial-scale=1, user-scalable=no" name="viewport">
             
         <!-- Bootstrap -->
         <!-- Latest compiled and minified CSS -->
@@ -75,10 +75,10 @@
     
     <body 
         ng-app="pokemonApp" 
-        ng-controller="indexController">
+        ng-controller="indexController"
+        ng-class="{ 'no-scroll-mobile': about.visible }">
         <div 
-            class="body-container"
-            ng-class="{ 'no-scroll': interface.gameboy.locked }">
+            class="body-container">
             <!-- 
                 /* (GH) Extra extra small devices (portrait) (phones, less than 480px) */
                     
@@ -103,7 +103,7 @@
             
             <nav 
                 class="navbar navbar-default"
-                ng-class="{ 'centered' : !viewswitcher.visible }">
+                ng-class="{ 'centered' : !viewswitcher.visible, 'fixed': about.visible }">
                 <div class="container-fluid">
                     <div class="menu-container" 
                          ng-class="{ 'clicked' : panel.open }"
@@ -114,7 +114,7 @@
                         <div class="bar4"></div>
                     </div>
                     <div class="brand-container">
-                        <a class="navbar-brand" href="#"><img class="header logo" src="images/logo-poke-pathfinder.png" alt=""/></a>
+                        <a class="navbar-brand" href="#/"><img class="header logo" src="images/logo-poke-pathfinder.png" alt=""/></a>
                         
                     </div>
                     <div class="links-container">
@@ -192,12 +192,12 @@
                                  ng-show="viewswitcher.visible">
                                 <span 
                                     class="view-name"
-                                    ng-class="{ active: view === 'gameboy' }">Gameboy</span>
+                                    ng-class="{ active: views.active === 'gameboy' }">Gameboy</span>
                                 <!-- Rounded switch -->
                                 <label class="switch">
                                     <input 
                                         type="checkbox"
-                                        ng-model="view"
+                                        ng-model="views.active"
                                         ng-change="switchViews()"
                                         ng-false-value="'gameboy'"
                                         ng-true-value="'monitor'">
@@ -205,7 +205,7 @@
                                 </label>
                                 <span 
                                     class="view-name"
-                                    ng-class="{ active: view === 'monitor' }">Monitor</span>
+                                    ng-class="{ active: views.active === 'monitor' }">Monitor</span>
                             </div>
                             
                             <div class="view-animate-container">
@@ -239,6 +239,7 @@
                             </div>
                         </div> -->
                     </div>
+                </div>
                 
             </footer>
             
