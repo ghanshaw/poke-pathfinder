@@ -3,9 +3,9 @@
 General
 --------------------
 ***/
-html, body, h1, h2, h3, h4, h5, h6, p, label, button {
-  font-family: 'Nunito-Sans', 'Open-Sans', sans-serif;
-  font-weight: 100; }
+html, body, h1, h2, h3, h4, h5, h6, p, label, button, li {
+  font-family: 'Open Sans', sans-serif;
+  font-weight: 500; }
 
 body {
   background-color: #eee; }
@@ -109,7 +109,6 @@ header {
   /* padding: 15px 0px; */
   line-height: 50px;
   font-weight: 500;
-  font-family: 'Open Sans';
   font-size: 16px; }
 
 .navbar a:hover {
@@ -278,14 +277,14 @@ Info popup
     border: 5px solid #f8f8f8; }
     .info-box .how-to-play h3 {
       text-align: center;
-      font-family: 'Nunito Sans';
+      /*font-family: 'Nunito Sans';*/
       font-weight: bolder;
       margin-bottom: 3rem;
       /* text-transform: uppercase; */
       font-weight: 100;
       /* letter-spacing: 1px; */ }
     .info-box .how-to-play li {
-      font-family: 'Nunito Sans';
+      /*font-family: 'Nunito Sans';*/
       margin: 1.5rem 0rem;
       font-size: 1em; }
 
@@ -361,10 +360,9 @@ About
     .about .container .parent .content {
       padding: 0px 30px; }
       .about .container .parent .content .paragraph, .about .container .parent .content ol, .about .container .parent .content li {
-        font-family: 'Nunito Sans', sans-serif; }
+        /*font-family: 'Nunito Sans', sans-serif;*/ }
       .about .container .parent .content li {
-        font-size: 1.3em;
-        font-weight: 900; }
+        font-size: 1.3em; }
       .about .container .parent .content a {
         color: #cb2d3e;
         font-weight: bold; }
@@ -381,17 +379,17 @@ About
         .about .container .parent .content section .section-heading {
           text-align: center;
           margin-bottom: 30px;
-          font-weight: 500; }
+          font-weight: 700; }
           .about .container .parent .content section .section-heading:hover {
             /*text-decoration: underline;*/
             color: #cb2d3e; }
         .about .container .parent .content section .paragraph {
           line-height: 1.5;
-          font-family: 'Nunito Sans';
+          /*font-family: 'Nunito Sans';*/
           padding: .7em 0em; }
         .about .container .parent .content section p {
           font-size: 1em;
-          font-family: 'Nunito Sans';
+          /*font-family: 'Nunito Sans';*/
           margin: 25px 40px 25px 0px; }
 
 /***
@@ -667,7 +665,7 @@ User Console
         /*left: 10px;*/ }
       .side-panel.panel-open .user-console-wrapper {
         opacity: 1; } }
-  @media (max-width: 768px) {
+  @media (max-width: 500px) {
     .side-panel {
       width: 75%; }
       .side-panel.panel-closed {
@@ -718,11 +716,10 @@ User Console
   border-left-width: 1px; }
 
 .marker-buttons label {
-  position: relative;
-  bottom: 5px;
-  left: 6px;
   font-size: 13px;
-  font-weight: lighter; }
+  font-weight: lighter;
+  position: relative;
+  transform: translate(50%, -40%); }
 
 /*** Hiding PointMarker Buttons ***/
 .move-pointmarker-container {
@@ -875,7 +872,7 @@ span.view-name {
 
 span.view-name:nth-of-type(2) {
   right: 0px;
-  left: 4px; }
+  left: -12px; }
 
 span.view-name.active {
   font-weight: 700;

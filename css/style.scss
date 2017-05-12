@@ -7,9 +7,9 @@ General
 $darkred: #cb2d3e;
 $lightred: #f33246;
 
-html, body, h1, h2, h3, h4,h5, h6, p, label, button {
-    font-family: 'Nunito-Sans', 'Open-Sans', sans-serif;   
-    font-weight: 100;
+html, body, h1, h2, h3, h4,h5, h6, p, label, button, li {
+    font-family: 'Open Sans', sans-serif;   
+    font-weight: 500;
 }
 
 body {
@@ -172,7 +172,6 @@ header {
     /* padding: 15px 0px; */
     line-height: 50px;
     font-weight: 500;
-    font-family: 'Open Sans';
     font-size: 16px;
     
 }
@@ -399,7 +398,7 @@ Info popup
         
         h3 {
             text-align: center;
-            font-family: 'Nunito Sans';
+            /*font-family: 'Nunito Sans';*/
             font-weight: bolder;
             margin-bottom: 3rem;
             /* text-transform: uppercase; */
@@ -408,7 +407,7 @@ Info popup
         }
         
         li {
-            font-family: 'Nunito Sans';
+            /*font-family: 'Nunito Sans';*/
             margin: 1.5rem 0rem;
             font-size: 1em;
         }
@@ -519,12 +518,11 @@ About
                 padding: 0px 30px;
                 
                 .paragraph, ol, li {
-                    font-family: 'Nunito Sans', sans-serif;
+                    /*font-family: 'Nunito Sans', sans-serif;*/
                 }
                 
                 li {
                     font-size: 1.3em;
-                    font-weight: 900;
                 }
                 
                 a {
@@ -550,9 +548,8 @@ About
                     
                     .section-heading {
                         text-align: center;
-                        
                         margin-bottom: 30px;
-                        font-weight: 500;
+                        font-weight: 700;
                         
                         &:hover {
                             /*text-decoration: underline;*/
@@ -562,13 +559,13 @@ About
                     
                     .paragraph {
                         line-height: 1.5;
-                        font-family: 'Nunito Sans';
+                        /*font-family: 'Nunito Sans';*/
                         padding: .7em 0em;
                     }
                     
                     p {
                         font-size: 1em;
-                        font-family: 'Nunito Sans';
+                        /*font-family: 'Nunito Sans';*/
                         margin: 25px 40px 25px 0px;
                     }      
                 }
@@ -956,7 +953,7 @@ User Console
     }
     
     /* Below small (ie, xs)*/
-    @media (max-width: 768px) {
+    @media (max-width: 500px) {
         
         width: 75%;
         
@@ -1035,11 +1032,10 @@ User Console
 }
 
 .marker-buttons label {
-    position: relative;
-    bottom: 5px;
-    left: 6px;
     font-size: 13px;
     font-weight: lighter;
+    position: relative;
+    transform: translate(50%, -40%);
 }
 
 
@@ -1246,7 +1242,7 @@ span.view-name {
 
 span.view-name:nth-of-type(2) {
     right: 0px;
-    left: 4px;
+    left: -12px;
 }
 
 span.view-name.active {

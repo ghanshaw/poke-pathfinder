@@ -68,11 +68,11 @@ still in the Open List. This means that they have been added to the queue, but t
 Uses can toggle the layers produced by the Pathfinder, or erase them with the 'Clear' button.
 
 ## Technologies
-+AngularJS
-+JavaScript
-+Twitter Bootstrap 3
-+jQuery 2
-+Sass 3
++ AngularJS
++ JavaScript
++ Twitter Bootstrap 3
++ jQuery 3
++ Sass 3
 
 This game was built with JavaScript and AngularJS. The logic of the game, including the 
 game loop, spritesheet, graph, priority queue, player movement, etc., was written in JavaScript.
@@ -91,7 +91,7 @@ such as the player, the paths, the dragging effects, and the source and target m
 depicts the map more closely to the way it is stored in the graph. Tiles are colored based on their type. This is rendered
 entirely in canvas. 
 
-The Game Boy shell was created by [Josh Collinsworth][2].
+The CSS Game Boy shell was created by [Josh Collinsworth][2].
 
 [1]: https://en.wikipedia.org/wiki/Pathfinding
 [2]: https://codepen.io/joshuajcollinsworth/
