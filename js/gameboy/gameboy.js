@@ -949,7 +949,7 @@ Gameboy.prototype.prepareGameboy = function(state) {
     if (state === 'GRAPHIC') {
     
         // Give canvas background color;
-        $(this.screen.background.canvas).css('background-color', this.colors.green);
+        $(this.screen.background.canvas).css('background-color', this.colors.rock);
 
         // Move screen forward
         $(this.screen.background.canvas).css('z-index', this.zIndex.screen.graphic.background);

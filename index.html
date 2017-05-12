@@ -5,7 +5,7 @@
         <link rel='shortcut icon' type='image/x-icon' href='/favicon.ico' />
         <meta http-equiv="X-UA-Compatible" content="IE=Edge">
         <meta charset="UTF-8">
-        <meta content="width=width, height=height, initial-scale=1, user-scalable=no" name="viewport">
+        <meta content="width=device-width, height=device-height, initial-scale=1, user-scalable=no" name="viewport">
             
         <!-- Bootstrap -->
         <!-- Latest compiled and minified CSS -->
@@ -246,5 +246,11 @@
             
             
         </div>
-    </body>    
+    </body>   
+    
+    <script>
+        $(window).on('load', function() {
+            console.log('The window just finished loading');
+        })
+        </script>
 </html>

@@ -15,18 +15,30 @@ pokemonApp.controller('gameboyController', function($scope, $log, $window, $docu
     Event handlers
     // -------------------- */
     
-    // Resize gameboy when window resizes
+    // When document has loaded
+    angular.element(document).ready(function() { 
+        $scope.defineDpadTouchTarget(); 
+        pokeGame.viewLoaded = true;
+    });    
+    
+    // On resize
     var appWindow = angular.element($window);
     appWindow.bind('resize', function () {
         var view = game.getView();
         
         if (view === 'gameboy') {
             gameboy.resize();
+            $scope.defineDpadTouchTarget();
+            
         }
     });
     
-    // Indicate that view has finished loading
-    pokeGame.viewLoaded = true;
+    // On orientation change
+    window.addEventListener("orientationchange", function() {
+        gameboy.resize();
+        $scope.defineDpadTouchTarget();
+    }, false);
+   
     
     /* -------------------- //
     Wait overlay
@@ -96,10 +108,7 @@ pokemonApp.controller('gameboyController', function($scope, $log, $window, $docu
         return css;
     };
     
-    // Define touch target when DOM has loaded
-    angular.element(document).ready(function() { 
-        $scope.defineDpadTouchTarget(); 
-    });
+    
     
     
     // Store interaction details

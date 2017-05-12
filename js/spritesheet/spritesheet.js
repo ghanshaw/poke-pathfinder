@@ -29,6 +29,9 @@ var SpriteSheet = function(game, spritesheet_data) {
     
     // Object to hold individual sprite canvas
     this.sprite = {};
+    
+    // Flag indicating whether spritesheet images have loaded
+    this.loaded = false;
    
 };
 
@@ -45,7 +48,7 @@ SpriteSheet.prototype.init = function() {
         
         this.initCanvas();
         this.initSprite();
-        
+        this.loaded = true;
     } 
     // Otherwise, attach event handler and wait
     else {       
@@ -54,6 +57,7 @@ SpriteSheet.prototype.init = function() {
             // Then initialize
             self.initCanvas();
             self.initSprite();
+            self.loaded = true;
             
         });  
     }  

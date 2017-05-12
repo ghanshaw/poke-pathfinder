@@ -6,6 +6,8 @@ pokemonApp.service('pokeGame', function($log, $document, $window, $location, $ti
     Create game object
     // -------------------- */
     
+    console.log('is spritesheet done loading? :' + $('#spritesheet')[0].complete);
+    
     // Initialize a new Game object
     var game = new Game();
     game.initGame();
@@ -18,6 +20,13 @@ pokemonApp.service('pokeGame', function($log, $document, $window, $location, $ti
     this.setView = function(view) {
         game.setView(view);
     };
+    
+    // Indicate whether view has fully loaded
+    // Set by Gameboy and Monitor controllers respectively
+    this.hasViewLoaded = function() {
+        return this.viewLoaded;
+    };
+    
     
     // Access User Console Controller Scope
     // Wrap in timeout to retrieve after all controllers and directives have loaded
@@ -37,8 +46,9 @@ pokemonApp.service('pokeGame', function($log, $document, $window, $location, $ti
     // Run game loop
     var gameLoop = function() {
         
-        // If view has finished loading
-        if (that.viewLoaded) { 
+        // Check that spritesheet and view have both loaded
+        if (game.hasSpriteSheetLoaded() &&
+                that.hasViewLoaded()) {
             
             let start_time = performance.now();
             

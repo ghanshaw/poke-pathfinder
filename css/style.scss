@@ -865,6 +865,11 @@ Gameboy
     bottom: 14%;
     width: 100%;
     left: 0px;
+    
+    /* On very small devices */
+    @media (max-width: 410px) {
+        bottom: 16%;
+    }
 }
 
 

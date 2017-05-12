@@ -605,7 +605,11 @@ Gameboy
   position: absolute;
   bottom: 14%;
   width: 100%;
-  left: 0px; }
+  left: 0px;
+  /* On very small devices */ }
+  @media (max-width: 410px) {
+    .logo-container {
+      bottom: 16%; } }
 
 /***
 --------------------

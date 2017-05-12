@@ -14,13 +14,13 @@ pokemonApp.controller('monitorController', function($scope, $log, $location, $do
     Event handlers
     // -------------------- */
     
-    // Update floor label when document has loaded
+    // When document is ready
     angular.element($document).ready(function() {     
         $scope.updateFloorLabel();
         pokeGame.viewLoaded = true;
     });
     
-    // Resize monitor when window resizes
+    // On window resize
     var appWindow = angular.element($window);
     appWindow.bind('resize', function () {       
         var view = game.getView();
@@ -30,8 +30,17 @@ pokemonApp.controller('monitorController', function($scope, $log, $location, $do
         }
     });
     
+    // On orientation change
+    window.addEventListener("orientationchange", function() {
+        var view = game.getView();
+        if (view === 'monitor') {
+            $scope.monitor.resize();
+            $scope.updateFloorLabel();
+        }
+    }, false);
     
-    // Update floor label on scroll
+    
+    // On scroll
     appWindow.bind('scroll', function () {     
         var view = game.getView();       
         if (view === 'monitor') {
@@ -80,14 +89,14 @@ pokemonApp.controller('monitorController', function($scope, $log, $location, $do
     // Touch start on monitor starts dragging and
     // updates CLICKED flag
     $scope.touchStartMonitor = function() {       
-        var touches = $scope.touchevent.originalEvent.touches;       
+        var touches = $scope.touchstart.originalEvent.touches;       
         $scope.startDrag(touches[0], 'TOUCH');
-        $scope.clickPointer();
+        $scope.clickMonitor();
     };
     
     // Touch move on monitor updates pointer
     $scope.touchMoveMonitor = function() {     
-        var touches = $scope.touchevent.originalEvent.touches; 
+        var touches = $scope.touchmove.originalEvent.touches; 
         $scope.movePointer(touches[0], 'TOUCH');
     };
     

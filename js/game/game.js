@@ -307,6 +307,10 @@ Game.prototype.getSpriteSheetXY = function(spriteOptions) {
    return this.spritesheet.getXY(spriteOptions);
 };
 
+// Indicated whether spritesheet images have fully loaded
+Game.prototype.hasSpriteSheetLoaded = function() {
+    return this.spritesheet.loaded;
+};
 
 //-------------------------------------//
 /////////////////////////////////////////

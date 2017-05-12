@@ -199,7 +199,10 @@ pokemonApp.controller('userConsoleController', function($scope, $log, $location,
     
     $scope.leaveGridButton = function() { $scope.gridButton.hover = false; };
     
-    $scope.clickGridButton = function() { $scope.gridButton.click = !$scope.gridButton.click; };
+    $scope.clickGridButton = function() { 
+        $scope.gridButton.click = !$scope.gridButton.click; 
+        $scope.gridButton.hover = false;
+    };
     
     // Update view when button object changes
     $scope.$watch('gridButton', function(newValue, oldValue) {
