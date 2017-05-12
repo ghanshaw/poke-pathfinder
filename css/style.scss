@@ -7,6 +7,20 @@ General
 $darkred: #cb2d3e;
 $lightred: #f33246;
 
+@mixin flex() {
+    display: -webkit-flex;
+    display: -ms-flexbox;
+    display: flex;
+}
+
+@mixin image-rendering() {
+    image-rendering: -moz-crisp-edges;
+    image-rendering: -webkit-crisp-edges;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+}
+
+
 html, body, h1, h2, h3, h4,h5, h6, p, label, button, li {
     font-family: 'Open Sans', sans-serif;   
     font-weight: 500;
@@ -21,14 +35,9 @@ body {
     }
 }
 
-img, canvas {
-    
-    image-rendering: -moz-crisp-edges;
-    image-rendering: -webkit-crisp-edges;
-    image-rendering: pixelated;
-    image-rendering: crisp-edges;
-    display: block;
-    
+img, canvas {   
+    @include image-rendering();
+    display: block;    
 }
 
 ul {
@@ -100,13 +109,13 @@ header {
         width: 100%;
     }
     
-    
-    
     .container-fluid {
         width: 100%;
-        display: flex;
+        /*display: flex;*/
         align-items: center;
         height: 70px;
+        
+        @include flex();
         
         .brand-container {
             
@@ -177,7 +186,7 @@ header {
 }
 
 .navbar a:hover {
-    color: #cb2d3e;
+    color: $darkred;
     font-weight: bold;   
     text-decoration: none;
 }
@@ -277,7 +286,7 @@ button:focus {
 
 .button-flat {
     color: #fff;
-    background-color: #cb2d3e;
+    background-color: $darkred;
     background-image: linear-gradient(top, #ef473a, #cb2d3e);
     border: none;
     border-radius: 8px;
@@ -299,14 +308,14 @@ button:focus {
 }
 
 .button-flat.hover, .button-flat:hover {
-    border-color: #cb2d3e;
-    color: #cb2d3e;
+    border-color: $darkred;
+    color: $darkred;
 }
 
 .button-flat:active, .button-flat.active {
     box-shadow: inset 0 5px 30px #7b4d53;
-    border-color: #cb2d3e;
-    color: #cb2d3e;
+    border-color: $darkred;
+    color: $darkred;
     transform: translate(0px, 2px);
 }
 
@@ -345,7 +354,7 @@ Info popup
         height: 3.5rem;
         font-size: 1.8rem;
         border: 1px solid black;
-        display: flex;
+        @include flex();
         justify-content: center;
         align-items: center;
         border-radius: 100%;
@@ -382,7 +391,7 @@ Info popup
         /* max-width: 90%; */
         padding: 2rem 2rem 3rem 1rem;
         margin-top: 7rem;
-        border: 1rem solid #cb2d3e;
+        border: 1rem solid $darkred;
         /* float: right; */
         right: 0;
         position: absolute;
@@ -809,7 +818,7 @@ Gameboy
         background-color: rgba(112, 128, 144, 0.4);
         z-index: 100;
         color: white;
-        display: flex;
+        @include flex();
         align-items: center;
         justify-content: center;
         padding: 2em;   
@@ -964,7 +973,6 @@ User Console
     }
 }
 
-
 .user-console-wrapper {
     
     &.container-fluid {
@@ -992,8 +1000,6 @@ User Console
         }
     }
 }
-
-
 
 .console-closed {
     /*width: 0px;*/
@@ -1026,7 +1032,6 @@ User Console
 }
 
 
-
 .marker-buttons .button-flat {
     border-left-width: 1px;
 }
@@ -1037,8 +1042,6 @@ User Console
     position: relative;
     transform: translate(50%, -40%);
 }
-
-
 
 
 /*** Hiding PointMarker Buttons ***/
@@ -1125,13 +1128,10 @@ User Console
             
             .results {
                 font-weight: 900;
-                color: #cb2d3e;
+                color: $darkred;
             }
-        }
-        
-        
-    }    
-    
+        }       
+    }       
 }
 
 
@@ -1155,7 +1155,6 @@ i.marker-icon {
 }
 
 
-/*** VCR ***/
 
 /***
 --------------------
@@ -1183,7 +1182,7 @@ View Switcher
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: #cb2d3e;
+    background-color: $darkred;
     -webkit-transition: .4s;
     transition: .4s;
 }
@@ -1201,11 +1200,11 @@ View Switcher
 }
 
 input:checked + .slider {
-    background-color: #cb2d3e;
+    background-color: $darkred;
 }
 
 input:focus + .slider {
-    box-shadow: 0 0 1px #cb2d3e;
+    box-shadow: 0 0 1px $darkred;
 }
 
 input:checked + .slider:before {
@@ -1328,245 +1327,4 @@ Breakpoints Overlay (for design purposes)
 .breakpoints .large {
     background-color: rebeccapurple;
     left: 1200px;
-}
-
-
-/***
---------------------
-User Console
---------------------
-***/
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/*@media all and (max-width: 960px) { 
-    button {
-        font-size: 30px
-    }
-}
-@media all and (max-width: 720px) { 
-    button {
-        font-size: 20px;
-        padding: 10px 30px;
-    }
-}
-@media all and (max-width: 540px) { 
-    section {
-        text-align: center
-    }
-    button {
-        margin: 0 10px 20px 10px;
-        font-size: 16px;
-    }
-}*/
-
-.dropdown select {
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    height: 36px;   
-    /*background: none;*/
-    /*background: url('../images/down-arrow-small.png') no-repeat right center;*/
-    height: 34px;
-    width: 240px;
-    border: 2px solid slategrey;
-    border-radius: 0;
-    padding-left: 10px;
-    
-}
-
-.dropdown {
-    margin-bottom: 30px; 
-    
-}
-
-.dropdown option {
-    padding: 10px 10px;
-}
-
-
-
-.ui-draggable-dragging .drag-icon {
-    opacity: 0;
-}
-
-.btn {
-    margin: 10px 10px 10px 0px;   
-}
-
-
-#player-div {
-    //position: absolute;
-    border: 2px solid turquoise;
-    height: 16px;
-    width: 16px;
-}
-
-.player-draggie {
-    //position: absolute;
-    opacity: 0;
-    width: 100%;
-}
-
-#floor-1F {
-    border: 1px solid grey;
-}
-
-
-.mapWrapper:focus {
-    outline: none;
-}
-
-.button-3D {
-    color: #fff;
-    background-color: #cb2d3e;
-    background-image: linear-gradient(top, #ef473a, #cb2d3e);
-    border: none;
-    border-radius: 8px;
-    margin-bottom: 20px;
-}
-
-.button-3D:hover,
-.button-3D.hover {
-    box-shadow: 5px 5px 15px #777;
-}
-
-.button-3D:active,
-.button-3D.active {
-    box-shadow: inset 0 5px 30px #7b4d53;
-}
-
-
-
-.caveWrapper, .monitor-scree {
-    
-    display: inline-block;
-    display: inline-block;
-    background-color: #333;
-    box-sizing: border-box;
-    border: 0.4rem solid #c6ccd3;
-    border-top-color: #384048;
-    border-right-color: #4e5a65;
-    border-bottom-color: #a9b3bd;
-}
-
-.caveWrapperBackground, .monitor-fram {
-    background-color: slategrey;
-    display: block;
-    position: relative;
-    background-color: #708090;
-    position: relative;
-    border: 0.3rem solid #4e5a65;
-    border-right-color: #a9b3bd;
-    border-top-color: #8d9aa6;
-    display: inline-block;
-    padding-top: 20px;
-    box-shadow: 40px 40px 40px rgba(162, 162, 162, 1);
-    width: 100%;
-}
-
-#test1, #test2, #test3, #test4 {
-    border: 2px solid black;
-    float: right;
-}
-
-
-.mapWrapper {
-    width: 100%;   
-}
-
-.row.is-flex {
-    display: flex;
-    flex-wrap: wrap;
-}
-.row.is-flex > [class*='col-'] {
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-}
-
-
-
-/* The side navigation menu */
-.sidenav {
-    height: 100%; /* 100% Full-height */
-    width: 0; /* 0 width - change this with JavaScript */
-    position: fixed; /* Stay in place */
-    z-index: 1; /* Stay on top */
-    top: 0;
-    left: 0;
-    overflow-x: hidden; /* Disable horizontal scroll */
-    padding-top: 60px; /* Place content 60px from the top */
-    transition: 0.5s; /* 0.5 second transition effect to slide in the sidenav */
-}
-
-/* The navigation menu links */
-.sidenav a {
-    padding: 8px 8px 8px 32px;
-    text-decoration: none;
-    font-size: 25px;
-    color: #818181;
-    display: block;
-    transition: 0.3s
-}
-
-/* When you mouse over the navigation links, change their color */
-.sidenav a:hover, .offcanvas a:focus{
-    color: #f1f1f1;
-}
-
-/* Position and style the close button (top right corner) */
-.sidenav .closebtn {
-    position: absolute;
-    top: 0;
-    right: 25px;
-    font-size: 36px;
-    margin-left: 50px;
-}
-
-/* Style page content - use this if you want to push the page content to the right when you open the side navigation */
-#main {
-    transition: margin-left .5s;
-    padding: 20px;
-}
-
-/* On smaller screens, where height is less than 450px, change the style of the sidenav (less padding and a smaller font size) */
-@media screen and (max-height: 450px) {
-    .sidenav {padding-top: 15px;}
-    .sidenav a {font-size: 18px;}
-}
-
-.consoleWrapper {
-    
-    overflow-x: hidden;
-    height: 100vh;
-    background-color: #e6e6e6;
-    padding-right: 3rem; 
-    padding-top: 3rem; 
-    overflow: hidden;
-    direction: rtl; 
-    padding: 1.5em;
-    box-shadow: 10px 0px 10px #ccc;
-    
-}
-
-.consoleWrapper:hover {
-    /*overflow-y: scroll;*/
 }

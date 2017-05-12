@@ -418,7 +418,9 @@ UserConsole.prototype.updatePathfinderTaskButtonSettings = function() {
     }
     
     // Disable path task button if "all tiles" is target tile
-    if (this.locations.target.id === 5) {
+    // and Pathfinder is not currently in 'FOLLOW PATH' mode
+    if (this.locations.target.id === 5 &&
+            pathfinder.mode !== 'FOLLOW PATH') {
         pathfinder.task.path.button.disabled = true;
     }
     
@@ -1097,11 +1099,7 @@ UserConsole.prototype.initWeightLayers = function() {
         
         this.floors[id] = floor;
         
-    }  
-    
-    console.log('USER CONSOLE');
-    console.log(this.floors);
-    
+    }      
 };
 
 

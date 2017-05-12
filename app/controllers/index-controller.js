@@ -1,6 +1,5 @@
 pokemonApp.controller('indexController', function($scope, $log, $location, $window, $document, pokeGame) {  
     
-    $log.info('*** Index controller has begun.'); 
     var userConsole = pokeGame.userConsole;
     
     /* -------------------- //
@@ -255,6 +254,5 @@ pokemonApp.controller('indexController', function($scope, $log, $location, $wind
     // Attach keydown/keyup events to document
     $document.keydown($scope.triggerKeyboardInput);
     $document.keyup($scope.cancelKeyboardInput);
-    
     
 });

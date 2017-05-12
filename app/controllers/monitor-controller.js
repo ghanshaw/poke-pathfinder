@@ -1,7 +1,5 @@
 pokemonApp.controller('monitorController', function($scope, $log, $location, $document, $window, pokeGame) { 
     
-    $log.info('*** Monitor controller has begun.');
-    
     // Aquire game object
     var game = pokeGame.game;
     

@@ -1,6 +1,4 @@
 pokemonApp.controller('userConsoleController', function($scope, $log, $location, pokeGame) {
-    
-    $log.info('*** User Console controller has begun.');
      
     // Aquire game objects
     var game = pokeGame.game;

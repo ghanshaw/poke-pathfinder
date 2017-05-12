@@ -83,10 +83,7 @@ SpriteSheet.prototype.initCanvas = function() {
     // Create blank canvas, context
     // Attach to object
     this.sheet = this.game.createCanvasCtx(canvasSize);
-    
-    var canvas = this.sheet.canvas;
-    console.log('Spritesheet: ' + this.img.width + ', ' + this.img.height);
-    console.log('Canvas: ' + canvas.width + ', ' + canvas.height);
+
     
     // Draw bitmap spritesheet image to canvas sheet
     this.sheet.ctx.drawImage(this.img, 0, 0);

@@ -2,14 +2,14 @@
     <div class="container ng-hide"
          ng-show="about.visible">
         <div class="pokeball">
-            <img class="" src="../../images/pokeball.png" alt=""/>
+            <img class="" src="../../images/other/pokeball.png" alt=""/>
         </div>
         <div class="parent">
             <div class="row">
                 <div class="col-md-8 col-md-offset-2 content">
                     
                     <section class="logo wrapper">
-                        <img class="logo" src="images/logo-poke-pathfinder.png" alt=""/>
+                        <img class="logo" src="images/logos/logo-poke-pathfinder.png" alt=""/>
                     </section>
                     
                     <section>
@@ -32,11 +32,15 @@
                             
                             <li>Choose a Start Location</li>
                             <p>You can start your player from anywhere in the cave. Move him around in Cave view (tablet and desktop only) by dragging and dropping him. 
-                                Or move around the green start marker to determine where the pathfidner will start from.</p>
+                                Or move around the green source marker to determine where the pathfidner will start from.</p>
                             
                             
                             <li>Choose an End Location</li>
-                            <p>Where should your player go? Choose from one of the available options, or move around the checkered marker to determine his destination. You can drag and drop it, too.</p>
+                            <p>Where should your player go? Choose from one of the available options, 
+                                or move around the checkered marker to determine his destination. 
+                                You can also select <i>All Tiles</i> as the hero's destination. This allows you to visualize the algorithm as it generates paths from
+                            a single tile to all other tiles on the map. Note that you cannot use this option with A* because of the nature of the algorithm. You also
+                            cannot use this option with the <i>Follow Path</i> task.</p>
                             
                             <li>Choose a Task</li>
                             <p>You can elect to follow and construct a path, or generate a frontier.</p>
@@ -57,8 +61,8 @@
                         
                         
                         <h4 class="paragraph">This small game is built entirely in 
-                            JavaScript. The game itself is built in vanilla Javascript, 
-                            with a bit of jQuery. And the website is built on AngularJS and Bootstrap</h4>
+                            JavaScript. The game itself is built in vanilla JavaScript, 
+                            with a bit of jQuery. And the website is built on AngularJS and Bootstrap.</h4>
                         
                         <h4 class="paragraph">The game consists of many of the regular 
                             mechanics that are employed by virtually all full games. The game 
@@ -72,9 +76,9 @@
                         <h4 class="paragraph">The map of the game is implemented with a 
                             combination of bitmap images and canvas objects. The static 
                             parts of the map are bitmap images. They are layered and 
-                            controlled with Javascript in both Cave view and Game Boy view. 
+                            controlled with JavaScript in both Cave view and Game Boy view. 
                             The movement of the water and the foreground/background effect 
-                            (observed when the player is surfing) was achieved using HTML
+                            (observed when the player is surfing) was achieved using CSS
                             and JavaScript to change offsets and z-indeces as necessary.</h4>
                         
                         <h4 class="paragraph">The game also employs canvases to draw the sprite,
@@ -85,7 +89,7 @@
                     </section>
                     
                     <section>
-                        <h3 class="section-heading">Graditute</h3>
+                        <h3 class="section-heading">Gratitude</h3>
                         
                         <h4 class="paragraph">This project was enabled by many great 
                             resources available online. Luckily, the Internet has many highly collaborative

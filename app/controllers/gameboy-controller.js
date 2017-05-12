@@ -1,7 +1,5 @@
 pokemonApp.controller('gameboyController', function($scope, $log, $window, $document, pokeGame) { 
     
-    $log.info('*** Gameboy controller has begun.');
-    
     // Aquire Game objects
     var game = pokeGame.game;
     var userConsole = pokeGame.userConsole;

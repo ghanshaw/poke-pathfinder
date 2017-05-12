@@ -1,12 +1,8 @@
 pokemonApp.service('pokeGame', function($log, $document, $window, $location, $timeout, $interval) {
     
-    $log.info('*** pokeGame service has begun.');
-    
     /* -------------------- //
     Create game object
     // -------------------- */
-    
-    console.log('is spritesheet done loading? :' + $('#spritesheet')[0].complete);
     
     // Initialize a new Game object
     var game = new Game();
@@ -25,8 +21,7 @@ pokemonApp.service('pokeGame', function($log, $document, $window, $location, $ti
     // Set by Gameboy and Monitor controllers respectively
     this.hasViewLoaded = function() {
         return this.viewLoaded;
-    };
-    
+    };  
     
     // Access User Console Controller Scope
     // Wrap in timeout to retrieve after all controllers and directives have loaded
@@ -81,12 +76,11 @@ pokemonApp.service('pokeGame', function($log, $document, $window, $location, $ti
             
             
             let end_time = performance.now();
-
             let total_time = end_time - start_time;
             if (total_time > 6) {
                 //$log.info('Loop Time is over 6ms ' + total_time);
             }
-            //$log.log('Loop Time: ' +  time.total_time);
+            //$log.log('Loop Time: ' +  total_time);
         }
         
         window.requestAnimationFrame(gameLoop);
