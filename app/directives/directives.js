@@ -27,9 +27,51 @@ pokemonApp.directive('userConsole', function ($window) {
         restrict: 'A',
         templateUrl: 'app/pages/user-console.html',
         controller: 'userConsoleController',
-        link: function (scope, element, attrs) {            
+        link: function (scope, element, attrs) {   
+//            var container = $(".user-console-wrapper.container-fluid");
+//            $('#scrollbar1').tinyscrollbar();
         }
     };
+});
+
+
+// Prevent body scrolling when inner elemnt is scrolled
+pokemonApp.directive('isolateScrolling', function () {
+  return {
+    restrict: 'A',
+      link: function (scope, element, attr) {
+        element.bind('DOMMouseScroll', function (e) {
+          if (e.detail > 0 && this.clientHeight + this.scrollTop === this.scrollHeight) {
+            this.scrollTop = this.scrollHeight - this.clientHeight;
+            e.stopPropagation();
+            e.preventDefault();
+            return false;
+          }
+          else if (e.detail < 0 && this.scrollTop <= 0) {
+            this.scrollTop = 0;
+            e.stopPropagation();
+            e.preventDefault();
+            return false;
+          }
+        });
+        element.bind('mousewheel', function (e) {
+          if (e.originalEvent.deltaY > 0 && this.clientHeight + this.scrollTop >= this.scrollHeight) {
+            this.scrollTop = this.scrollHeight - this.clientHeight;
+            e.stopPropagation();
+            e.preventDefault();
+            return false;
+          }
+          else if (e.originalEvent.deltaY < 0 && this.scrollTop <= 0) {
+            this.scrollTop = 0;
+            e.stopPropagation();
+            e.preventDefault();
+            return false;
+          }
+
+          return true;
+        });
+      }
+  };
 });
 
 
@@ -72,7 +114,6 @@ pokemonApp.directive('touchMoveDirective', function ($window) {
                 event.stopPropagation();
                 
                 scope.touchmove = event;
-                console.log(event);
                 
                 scope.$apply(function() { 
                     // Invoke touchstart
@@ -97,7 +138,6 @@ pokemonApp.directive('touchEndDirective', function ($window) {
                 event.stopPropagation();
                 
                 scope.touchend = event;
-                console.log(event);
                 
                 //console.log(event);
                 scope.$apply(function() { 

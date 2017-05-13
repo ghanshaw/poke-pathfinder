@@ -26,8 +26,7 @@ pokemonApp.controller('gameboyController', function($scope, $log, $window, $docu
         
         if (view === 'gameboy') {
             gameboy.resize();
-            $scope.defineDpadTouchTarget();
-            
+            $scope.defineDpadTouchTarget();       
         }
     });
     
@@ -298,7 +297,6 @@ pokemonApp.controller('gameboyController', function($scope, $log, $window, $docu
             
             // Update css variable to reflect change
             $scope.dpad.direction = input;
-            console.log('Input is ' + input);
         }
         else {
             // Send input to User Console

@@ -60,6 +60,9 @@ var Gameboy = function(game) {
     
     // Current active waterlayer
     this.currentLayer = 0;
+    
+    // Layer player is currently on
+    this.playerFloor = '';
 
 };
 
@@ -255,12 +258,7 @@ Gameboy.prototype.initFloors = function() {
         this.floors[f] = floor;
         
     };
-    
-    // Arbitrarily activate one of the floors
-    this.activeFloor = 'F1';
-    this.floors['F1'].background.img.show(0);
-    this.floors['F1'].foreground.img.show(0);
-    
+       
 };
 
 // Initialize Grid
@@ -851,10 +849,10 @@ Gameboy.prototype.drawWaterlayer = function(camera) {
     
     this.updateWaterlayer();
     
-    // Get the current water way based on currentLayer index
+    // Get the current water bitmap image based on currentLayer index
     var img = this.waterlayer.img[this.currentLayer];
     
-    // If presentfloor does not have water, hide water
+    // If present floor does not have water, hide water
     if (!this.game.floorHasWater(camera.floorId)) { 
         img.hide(0);
         return;
@@ -887,7 +885,7 @@ Gameboy.prototype.drawFloor = function(camera) {
     
 
     // If floor has changed
-    if (this.activeFloor !== f) {
+    if (this.playerFloor !== f) {
         
         // Hide all the floors
         for (let floorId in this.floors) {
@@ -901,7 +899,7 @@ Gameboy.prototype.drawFloor = function(camera) {
         floor.background.img.show(0);
         floor.foreground.img.show(0);    
         
-        this.activeFloor = f;
+        this.playerFloor = f;
     };
 };
 
